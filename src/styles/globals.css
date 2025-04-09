@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'JosefinSans';
+  src: url('/fonts/JosefinSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JosefinSans';
+  src: url('/fonts/JosefinSans-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JosefinSans';
+  src: url('/fonts/JosefinSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Anton';
+  src: url('/fonts/Anton-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --background: 240 30% 6%;
+    --foreground: 0 0% 100%;
+
+    --card: 240 30% 6%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 240 30% 6%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 255 43% 49%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 40% 70%;
+    --secondary-foreground: 240 30% 6%;
+
+    --muted: 240 10% 20%;
+    --muted-foreground: 0 0% 80%;
+
+    --accent: 40 40% 70%;
+    --accent-foreground: 240 30% 6%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 40 40% 70%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'JosefinSans', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Anton', sans-serif;
+  }
+}
+
+@layer components {
+  .main-gradient {
+    background: linear-gradient(to bottom, #0D1B2A, #283C63);
+  }
+
+  .cinestar-button {
+    @apply bg-[#EBDB40] text-[#13172c] font-bold px-4 py-2 rounded hover:bg-cinestar-yellow transition-colors;
+  }
+
+  .cinestar-button-to {
+    @apply bg-[#EBDB40] text-[#13172c] font-bold px-[70px] py-3 rounded transition-colors;
+
+  }
+
+
+  .cinestar-button-to:hover {
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+  }
+
+  .cinestar-header {
+    @apply bg-[#13172c] text-white;
+  }
+
+  .cinestar-footer {
+    @apply bg-[#4e4cb0] text-white;
+  }
+
+  .movie-card {
+    @apply relative overflow-hidden rounded;
+  }
+
+  .movie-rating {
+    @apply absolute top-2 left-2 bg-red-600 text-white font-bold px-2 py-1 rounded-sm text-xs;
+  }
+}
