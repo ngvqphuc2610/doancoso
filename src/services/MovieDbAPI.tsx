@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_KEY = "0d02ec1fdab5feb11dbc359e9c1c7e65";
-const baseURL = "https://api.themoviedb.org/3";
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+const baseURL = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
 
 // Cache cho genre để không phải gọi API nhiều lần
 let genresCache: Record<number, string> = {};
