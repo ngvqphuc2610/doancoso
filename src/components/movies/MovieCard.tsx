@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import {
   DialogTrigger,
   DialogTitle
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import './MovieCard.scss';
 import { FaEarthAsia } from "react-icons/fa6";
 
@@ -41,40 +42,29 @@ export default function MovieCard({
   format = "2D",
   trailerUrl = ""
 }: MovieProps) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Xử lý rating an toàn
   const safeRating = rating || 'P';
-  const ratingKey = useMemo(() => {
-    if (safeRating && typeof safeRating === 'string' && safeRating.includes(' ')) {
-      return safeRating.split(' ')[0];
-    }
-    return safeRating;
-  }, [safeRating]);
+  let ratingKey = safeRating;
+
+  // Đảm bảo chỉ gọi split khi chuỗi tồn tại và chứa dấu cách
+  if (safeRating && safeRating.includes(' ')) {
+    ratingKey = safeRating.split(' ')[0];
+  }
 
   // Map rating to background color
-  const ratingColor = useMemo(() => {
-    const colors: Record<string, string> = {
-      'T18': 'bg-red-600',
-      'T16': 'bg-orange-600',
-      'T13': 'bg-orange-500',
-      'P': 'bg-green-600',
-      'K': 'bg-blue-600',
-    };
-    return colors[ratingKey] || 'bg-gray-600';
-  }, [ratingKey]);
+  const ratingColor = {
+    'T18': 'bg-red-600',
+    'T16': 'bg-orange-600',
+    'T13': 'bg-orange-500',
+    'P': 'bg-green-600',
+    'K': 'bg-blue-600',
+  }[ratingKey] || 'bg-gray-600';
 
-  // Xử lý trailer URL - chỉ thực hiện trên client
-  const embedTrailerUrl = useMemo(() => {
-    if (trailerUrl && typeof trailerUrl === 'string' && trailerUrl.includes('youtube.com/watch?v=')) {
-      return trailerUrl.replace('youtube.com/watch?v=', 'youtube.com/embed/');
-    }
-    return trailerUrl || '';
-  }, [trailerUrl]);
+  // Xử lý trailer URL
+  const embedTrailerUrl = trailerUrl && trailerUrl.includes('youtube.com/watch?v=')
+    ? trailerUrl.replace('youtube.com/watch?v=', 'youtube.com/embed/')
+    : trailerUrl;
 
   return (
     <Card className="movie-card h-full border-0 overflow-hidden bg-transparent shadow-none rounded-lg">
@@ -134,20 +124,18 @@ export default function MovieCard({
                 </span>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[800px] p-0 bg-black border-none">
-                <DialogTitle className="sr-only">
-                  {title ? `Xem trailer: ${title}` : "Xem trailer"}
+                <DialogTitle>
+                  <VisuallyHidden>{title ? `Xem trailer: ${title}` : "Xem trailer"}</VisuallyHidden>
                 </DialogTitle>
-                {isMounted && (
-                  <iframe
-                    width="100%"
-                    height="450"
-                    src={embedTrailerUrl}
-                    title={`${title || "Movie"} trailer`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="border-0"
-                  ></iframe>
-                )}
+                <iframe
+                  width="100%"
+                  height="450"
+                  src={embedTrailerUrl}
+                  title={`${title || "Movie"} trailer`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="border-0"
+                ></iframe>
               </DialogContent>
             </Dialog>
           )}
