@@ -8,6 +8,7 @@ const nextConfig = {
       "images.unsplash.com",
       "ext.same-assets.com",
       "ugc.same-assets.com",
+      "image.tmdb.org", // Thêm domain của TMDB API
     ],
     remotePatterns: [
       {
@@ -30,8 +31,18 @@ const nextConfig = {
         hostname: "ugc.same-assets.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "image.tmdb.org",
+        pathname: "/**",
+      },
     ],
   },
+  // Sửa lại phần experimental
+  experimental: {
+    // turbpack là tùy chọn chính xác, không phải turbo
+    turbpack: false
+  }
 };
 
 export default nextConfig;
