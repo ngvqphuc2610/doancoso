@@ -12,9 +12,10 @@ import type { Swiper as SwiperType } from 'swiper';
 
 interface PromotionCarouselProps {
   slides?: PromotionProps[];
+  className?: string;
 }
 
-const ProCarousel = ({ slides = promotions }: PromotionCarouselProps) => {
+const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselProps) => {
   const swiperRef = useRef<SwiperType>();
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -39,7 +40,7 @@ const ProCarousel = ({ slides = promotions }: PromotionCarouselProps) => {
   };
 
   return (
-    <div className="relative w-full bg-gradient-to-b from-blue-900 to-blue-800 py-8">
+    <div className={`relative w-full bg-gradient-to-b bg-cinestar-darkblue py-8 ${className}`}>
       <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">KHUYẾN MÃI</h2>
       <Swiper
         modules={[Navigation]}

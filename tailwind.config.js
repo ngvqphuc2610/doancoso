@@ -29,8 +29,10 @@ module.exports = {
           yellow: '#EBDB40',
           purple: '#4e4cb0',
           red: '#cb342d',
-          beige: '#dfd3b7'
+          beige: '#dfd3b7',
+          
         },
+        dark: "#333333",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

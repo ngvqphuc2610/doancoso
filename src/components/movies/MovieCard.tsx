@@ -28,6 +28,7 @@ export interface MovieProps {
   releaseDate?: string;
   voteAverage?: number;
   backdrop?: string | null;
+  isComingSoon?: boolean; //để xác định phim sắp chiếu
 }
 
 export default function MovieCard({
@@ -40,7 +41,9 @@ export default function MovieCard({
   country = "Khác",
   language = "Phụ đề",
   format = "2D",
-  trailerUrl = ""
+  trailerUrl = "",
+  isComingSoon = false,
+  releaseDate = "",
 }: MovieProps) {
 
   // Xử lý rating an toàn
@@ -105,11 +108,17 @@ export default function MovieCard({
         </div>
       </div>
 
-      <CardContent className="p-4 space-y-3 flex flex-col justify-between">
+      <CardContent className="pt-4 space-y-3 flex flex-col justify-between">
         <Link href={`/movie/${id}`} className="block">
-          <h3 className="font-semibold text-white hover:text-cinestar-yellow truncate text-sm md:text-base">
-            {title}
-          </h3>
+            {releaseDate && (
+              <p className=" text-gray-400 text-center pb-3">
+                {isComingSoon ? `Khởi chiếu: ${releaseDate}` : ""}
+          
+              </p>
+            )}
+            <h3 className="font-semibold text-white group-hover:text-cinestar-yellow truncate text-sm md:text-base pl-2 text-center">
+              {title}
+            </h3>
         </Link>
 
         <div className="flex justify-between gap-2 pt-3">
@@ -139,13 +148,17 @@ export default function MovieCard({
               </DialogContent>
             </Dialog>
           )}
-
+          
           <Link
             href={`/movie/${id}`}
-            className="cinestar-button text-xs py-2 px-3 flex-1 text-center hover:bg-cinestar-yellow transition-colors duration-300"
+            className=" text-xs py-2 px-3 ml-auto"
           >
-            ĐẶT VÉ
+            <Button variant="custom3" width="custom3" size={"default"}  >
+              {isComingSoon ? "TÌM HIỂU THÊM" : "ĐẶT VÉ"}
+            
+            </Button>
           </Link>
+            
         </div>
       </CardContent>
     </Card>

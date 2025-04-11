@@ -1,6 +1,6 @@
 import banner from '@/public/images/banner.png';
 import banner2 from '@/public/images/banner2.png';
-import banner3 from '@/public/images/banner3.png';
+
 export const images = [
     {
         src: banner,
@@ -14,12 +14,7 @@ export const images = [
         title: 'Banner Image 2',
         description: 'This is the second banner image.',
     },
-    {
-        src : banner3,
-        alt: 'Banner Image 3',
-        title: 'Banner Image 3',
-        description: 'This is the third banner image.',
-    }
+    
 ]
 
 export default images;

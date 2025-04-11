@@ -7,7 +7,7 @@ const HomePage: React.FC = () => {
     const banners = [
         { id: '1', image: banner, title: 'Banner 1', link: '/movie1' }, // sử dụng StaticImageData
         { id: '2', image: banner2, title: 'Banner 2', link: '/movie2' }, // sử dụng StaticImageData
-        { id: '3', image: banner, title: 'Banner 3', link: '/movie3' }, // sử dụng StaticImageData
+       
     ];
 
     return (
