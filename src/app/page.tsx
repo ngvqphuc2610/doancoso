@@ -8,11 +8,13 @@ import { useState, useEffect } from 'react';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { getNowShowingMovies, getComingSoonMovies, fallbackNowShowingMovies, fallbackComingSoonMovies } from '@/lib/film';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-
+import ProCarousel from '../components/promotions/ProCarousel';
+import MemberCardCarousel from '../components/member/MemberCardCarousel';
+import TaimentCarousel from '@/components/taiment/TaimentGrid';
 // Fix: Correct image imports - no need for @/public prefix
 import bannerImage1 from '../../public/images/banner.png';
 import bannerImage2 from '../../public/images/banner2.jpg';
-import bannerImage3 from '../../public/images/banner3.jpg';
+
 
 export default function Home() {
   const [nowShowingMovies, setNowShowingMovies] = useState<MovieProps[]>([]);
@@ -23,7 +25,7 @@ export default function Home() {
   const banners = [
     { id: '1', image: bannerImage1, title: 'Banner 1', link: '/movie1' },
     { id: '2', image: bannerImage2, title: 'Banner 2', link: '/movie2' },
-    { id: '3', image: bannerImage3, title: 'Banner 3', link: '/movie3' },
+
   ];
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export default function Home() {
     <Layout>
       <HeroBanner banners={banners} />
 
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 ">
         <QuickBookingForm />
 
         {loading ? (
@@ -65,25 +67,28 @@ export default function Home() {
             <LoadingSpinner />
           </div>
         ) : (
-          <>
+            <>
             {error && (
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
-                <p>{error}</p>
+              <p>{error}</p>
               </div>
             )}
 
             <MovieCarousel
               title="PHIM ĐANG CHIẾU"
-              movies={nowShowingMovies}
-              className="mt-8 mb-12"
+              movies={nowShowingMovies.map(movie => ({ ...movie, isComingSoon: false }))}
+              className="mt-8 pb-[100px]"
             />
 
             <MovieCarousel
               title="PHIM SẮP CHIẾU"
-              movies={comingSoonMovies}
-              className="mt-8"
+              movies={comingSoonMovies.map(movie => ({ ...movie, isComingSoon: true }))}
+              className="mt-8 pb-[100px]"
             />
-          </>
+            <ProCarousel className="pb-[100px]" />
+            <MemberCardCarousel className="" />
+            <TaimentCarousel className="pt-[120px]" />
+            </>
         )}
       </div>
     </Layout>

@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
+import { MovieDbAPI } from '@/services/MovieDbAPI';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface Cinema {
   id: string;
@@ -15,24 +17,17 @@ interface Movie {
   title: string;
 }
 
-// Mock data
+// Lấy danh sách rạp từ page.tsx
 const cinemas: Cinema[] = [
-  { id: '1', name: 'Cinestar Quốc Thanh (TP.HCM)' },
-  { id: '2', name: 'Cinestar Hai Bà Trưng (TP.HCM)' },
-  { id: '3', name: 'Cinestar Sinh Viên (Bình Dương)' },
-  { id: '4', name: 'Cinestar Huế (TP. Huế)' },
-  { id: '5', name: 'Cinestar Đà Lạt (TP. Đà Lạt)' },
-  { id: '6', name: 'Cinestar Lâm Đồng (Đức Trọng)' },
-  { id: '7', name: 'Cinestar Mỹ Tho (Tiền Giang)' },
-  { id: '8', name: 'Cinestar Kiên Giang (Rạch Sỏi)' },
-];
+  { id: 'dl', name: 'Cinestar Đà Lạt (TP. Đà Lạt)' },
+  { id: 'qt', name: 'Cinestar Quốc Thanh (TP.HCM)' },
+  { id: 'hbt', name: 'Cinestar Hai Bà Trưng (TP.HCM)' },
+  { id: 'bd', name: 'CINESTAR SINH VIÊN(Bình Dương)' },
+  { id: 'mt', name: 'Mỹ Tho (Tiền Giang)' },
+  { id: 'kd', name: 'Kiên Giang (TP. Kiên Giang)' },
+  { id: 'ld', name: 'Lâm Đồng (TP. Lâm Đồng)' },
+  { id: 'hue', name: 'Cinestar Huế(TP. Huế)' },
 
-const movies: Movie[] = [
-  { id: '1', title: 'ÂM DƯƠNG LỘ (T16)' },
-  { id: '2', title: 'QUỶ NHẬP TRÀNG (T18)' },
-  { id: '3', title: 'SÁT THỦ VŨ CÔNG CỰC HÀI (T16) LT' },
-  { id: '4', title: 'NGHI LỄ TRỤC QUỶ (T18)' },
-  { id: '5', title: 'NHÀ GIÀ MA CHÓ (T18)' },
 ];
 
 // Get current date and next 5 days
@@ -70,6 +65,27 @@ export default function QuickBookingForm() {
   const [selectedMovie, setSelectedMovie] = useState('');
   const [selectedDate, setSelectedDate] = useState(getDates()[0].value);
   const [selectedTime, setSelectedTime] = useState('');
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      setLoading(true);
+      try {
+        // Lấy dữ liệu phim đang chiếu từ API
+        const nowPlayingMovies = await MovieDbAPI.getNowPlayingMovies();
+        setMovies(nowPlayingMovies);
+        setLoading(false);
+      } catch (err) {
+        console.error("Không thể lấy dữ liệu phim:", err);
+        setError("Đã xảy ra lỗi khi tải dữ liệu phim.");
+        setLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, []);
 
   const handleBook = () => {
     if (!selectedCinema || !selectedMovie || !selectedDate || !selectedTime) {
@@ -77,12 +93,33 @@ export default function QuickBookingForm() {
       return;
     }
 
-    router.push(`/booking?cinema=${selectedCinema}&movie=${selectedMovie}&date=${selectedDate}&time=${selectedTime}`);
+    // Lấy thông tin phim được chọn
+    const movie = movies.find(m => m.id === selectedMovie);
+
+    router.push(`/booking?cinema=${selectedCinema}&movie=${selectedMovie}&movieTitle=${encodeURIComponent(movie?.title || '')}&date=${selectedDate}&time=${selectedTime}`);
   };
+
+  if (loading) {
+    return (
+      <div className="bg-cinestar-darkblue py-4 px-4 rounded-md shadow-lg max-w-6xl mx-auto -mt-6 relative z-20">
+        <h2 className="text-xl font-bold mb-4 text-center">ĐẶT VÉ NHANH</h2>
+        <div className="flex justify-center py-8">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-cinestar-darkblue py-4 px-4 rounded-md shadow-lg max-w-6xl mx-auto -mt-6 relative z-20">
       <h2 className="text-xl font-bold mb-4 text-center">ĐẶT VÉ NHANH</h2>
+
+      {error && (
+        <div className="bg-red-500 text-white p-3 rounded mb-4 text-sm">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">

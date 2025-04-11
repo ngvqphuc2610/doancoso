@@ -8,6 +8,7 @@ export interface PromotionProps {
   title: string;
   image: string;
   link: string;
+  
 }
 
 export const promotions: PromotionProps[] = [

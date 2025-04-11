@@ -1,4 +1,5 @@
 import React from 'react';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +9,7 @@ export interface MemberProps {
   title: string;
   image: string;
   link: string;
+  description: string;
 }
 
 export const promotions: MemberProps[] = [
@@ -16,34 +18,46 @@ export const promotions: MemberProps[] = [
     title: 'THÀNH VIÊN C’FRIEND',
     image: '/images/CMember_heeder.webp',
     link: '/member/student-discount',
+    description: 'Thẻ C’FRIEND nhiều ưu đãi cho thành viên mới',
   },
   {
     id: '2',
     title: 'THÀNH VIÊN C’VIP',
     image: '/images/c-vip_header.webp',
     link: '/member/morning-discount',
+    description: 'Thẻ VIP CineStar mang đến sự ưu đãi độc quyền',
   },
-  
+
 ];
 
-export default function MemberCard({ id, title, image, link }: MemberProps) {
+export default function MemberCard({ id, title, image, link, description }: MemberProps) {
   return (
-    <Card className="relative bg-white rounded-lg overflow-hidden shadow-lg h-64 hover:cursor-pointer" >
-      <CardContent className="p-0 h-full">
-        <div className="relative h-full">
+    <Card className="relative rounded-lg overflow-hidden shadow-lg hover:cursor-pointer">
+      <CardContent className="p-0">
+        {/* Image Section */}
+        <div className="relative h-48">
           <Image
             src={image}
             alt={title}
             className="object-cover"
             fill
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-50"></div>
-          <div className="absolute left-4 right-4 text-white">
-     
-            <Link href={link} className="inline-block mt-4 font-bold px-4 py-2 ">
-              
+        </div>
+
+        {/* Content Section */}
+        <div className="p-4 text-white">
+          {/* Title */}
+          <h3 className="text-lg font-bold text-left">{title}</h3>
+
+          {/* Description */}
+          <p className=" text-sm mt-2 text-left">{description}</p>
+
+          {/* Link */}
+          <button className="cinestar-button-to font-bold text-sm md:text-base">
+            <Link href={link} className="block">
+              TÌM HIỂU NGAY
             </Link>
-          </div>
+          </button>
         </div>
       </CardContent>
     </Card>
