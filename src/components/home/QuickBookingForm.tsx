@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
 import { MovieDbAPI } from '@/services/MovieDbAPI';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { NavigationFilter, Select } from '@/components/ui/navigation-filter';
 
 interface Cinema {
   id: string;
@@ -34,6 +35,7 @@ const cinemas: Cinema[] = [
 const getDates = () => {
   const dates = [];
   const today = new Date();
+  const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
   for (let i = 0; i < 7; i++) {
     const date = new Date(today);
@@ -42,11 +44,11 @@ const getDates = () => {
     // Format as "DD/MM"
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const dayOfWeek = daysOfWeek[date.getDay()];
 
     // Add a label for today and tomorrow
-    let label = `${day}/${month}`;
-    if (i === 0) label = `Hôm nay ${label}`;
-    if (i === 1) label = `Ngày mai ${label}`;
+    let label = `${dayOfWeek}, ${day}/${month}`;
+
 
     dates.push({ value: `${day}/${month}/${date.getFullYear()}`, label });
   }
@@ -87,6 +89,22 @@ export default function QuickBookingForm() {
     fetchMovies();
   }, []);
 
+  // Reset dependent values when parent value changes
+  useEffect(() => {
+    setSelectedMovie('');
+    setSelectedDate('');
+    setSelectedTime('');
+  }, [selectedCinema]);
+
+  useEffect(() => {
+    setSelectedDate('');
+    setSelectedTime('');
+  }, [selectedMovie]);
+
+  useEffect(() => {
+    setSelectedTime('');
+  }, [selectedDate]);
+
   const handleBook = () => {
     if (!selectedCinema || !selectedMovie || !selectedDate || !selectedTime) {
       alert('Vui lòng chọn đầy đủ thông tin');
@@ -101,114 +119,88 @@ export default function QuickBookingForm() {
 
   if (loading) {
     return (
-      <div className="bg-cinestar-darkblue py-4 px-4 rounded-md shadow-lg max-w-6xl mx-auto -mt-6 relative z-20">
-        <h2 className="text-xl font-bold mb-4 text-center">ĐẶT VÉ NHANH</h2>
-        <div className="flex justify-center py-8">
-          <LoadingSpinner />
-        </div>
-      </div>
+      <NavigationFilter variant="dark" className="flex items-center justify-center py-4">
+        <LoadingSpinner />
+      </NavigationFilter>
     );
   }
 
   return (
-    <div className="bg-cinestar-darkblue py-4 px-4 rounded-md shadow-lg max-w-6xl mx-auto -mt-6 relative z-20">
-      <h2 className="text-xl font-bold mb-4 text-center">ĐẶT VÉ NHANH</h2>
+    <NavigationFilter className="-mt-6 z-20 mx-auto max-w-full">
+      <div className="flex items-center space-x-6">
+        <h2 className="text-xl text-[#464545] font-bold whitespace-nowrap">ĐẶT VÉ NHANH</h2>
 
-      {error && (
-        <div className="bg-red-500 text-white p-3 rounded mb-4 text-sm">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="bg-cinestar-yellow text-cinestar-darkblue font-bold rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
-            <span>Chọn rạp</span>
-          </div>
-          <select
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
+        <div className="flex-1 grid grid-cols-4 gap-4">
+          <Select
             value={selectedCinema}
             onChange={(e) => setSelectedCinema(e.target.value)}
+            variant={selectedCinema ? 'custom1' : 'default'}
           >
-            <option value="">Chọn rạp</option>
+            <option value="">1.Chọn rạp</option>
             {cinemas.map((cinema) => (
-              <option key={cinema.id} value={cinema.id}>
-                {cinema.name}
-              </option>
+              <option key={cinema.id} value={cinema.id}>{cinema.name}</option>
             ))}
-          </select>
-        </div>
+          </Select>
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="bg-cinestar-yellow text-cinestar-darkblue font-bold rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
-            <span>Chọn phim</span>
-          </div>
-          <select
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
+          <Select
             value={selectedMovie}
             onChange={(e) => setSelectedMovie(e.target.value)}
+            state={!selectedCinema ? 'disabled' : 'default'}
             disabled={!selectedCinema}
+            variant={selectedMovie ? 'custom1' : 'default'}
           >
-            <option value="">Chọn phim</option>
+            <option value="">2.Chọn phim</option>
             {movies.map((movie) => (
-              <option key={movie.id} value={movie.id}>
-                {movie.title}
-              </option>
+              <option key={movie.id} value={movie.id}>{movie.title}</option>
             ))}
-          </select>
-        </div>
+          </Select>
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="bg-cinestar-yellow text-cinestar-darkblue font-bold rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
-            <span>Chọn ngày</span>
-          </div>
-          <select
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
+          <Select
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
+            state={!selectedMovie ? 'disabled' : 'default'}
             disabled={!selectedMovie}
+            variant={selectedDate ? 'custom1' : 'default'}
           >
-            {getDates().map((date, index) => (
-              <option key={index} value={date.value}>
-                {date.label}
-              </option>
+            <option value="">3.Chọn ngày</option>
+            {selectedMovie && getDates().map((date) => (
+              <option key={date.value} value={date.value}>{date.label}</option>
             ))}
-          </select>
-        </div>
+          </Select>
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="bg-cinestar-yellow text-cinestar-darkblue font-bold rounded-full w-6 h-6 flex items-center justify-center text-sm">4</span>
-            <span>Chọn suất</span>
-          </div>
-          <select
-            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"
+          <Select
             value={selectedTime}
             onChange={(e) => setSelectedTime(e.target.value)}
+            state={!selectedDate ? 'disabled' : 'default'}
             disabled={!selectedDate}
+            variant={selectedTime ? 'custom1' : 'default'}
           >
-            <option value="">Chọn suất</option>
+            <option value="">4.Chọn suất </option>
             {showtimes.map((time, index) => (
-              <option key={index} value={time}>
-                {time}
-              </option>
+              <option key={index} value={time}>{time}</option>
             ))}
-          </select>
+          </Select>
         </div>
-      </div>
 
-      <div className="mt-4 flex justify-center">
         <Button
+          variant={selectedCinema && selectedMovie && selectedDate && selectedTime ? 'custom6' : 'custom5'}
+          size="custom5"
+          width="custom5"
           onClick={handleBook}
-          className="cinestar-button font-bold px-8 py-2"
           disabled={!selectedCinema || !selectedMovie || !selectedDate || !selectedTime}
+          className="whitespace-nowrap transform transition duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           ĐẶT NGAY
         </Button>
       </div>
-    </div>
+
+      {
+        error && (
+          <div className="mt-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
+            <p className="font-medium">{error}</p>
+          </div>
+        )
+      }
+    </NavigationFilter >
   );
 }

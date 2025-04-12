@@ -1,7 +1,23 @@
 {
-  "name": "nextjs-shadcn",
+  "name": "bookingmovie",
   "version": "0.1.0",
   "private": true,
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+  "homepage": "https://github.com/ngvqphuc2610/doancoso#readme",
+  "bugs": {
+    "url": "https://github.com/ngvqphuc2610/doancoso/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ngvqphuc2610/doancoso.git"
+  },
+  "license": "ISC",
+  "author": "quangphuc",
+  "type": "module",
+  "main": "tailwind.config.js",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0 --turbopack",
     "build": "next build",
@@ -16,19 +32,26 @@
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
     "lucide-react": "^0.475.0",
+    "mysql2": "^3.14.0",
     "next": "^15.2.4",
+    "nodemailer": "^6.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "sass": "^1.86.3",
     "swiper": "^11.2.6",
-    "tailwind-merge": "^3.0.1",
+    "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/express": "^5.0.1",
     "@types/node": "^20",
+    "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "eslint": "^9",

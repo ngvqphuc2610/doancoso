@@ -8,7 +8,8 @@ import { Navigation, Pagination } from 'swiper/modules';
 import { Button } from '@/components/ui/button';
 import { SwiperProvider, useSwiper } from '../swiper/SwiperContext';
 import SwiperNavigation from '../swiper/SwiperNavigation';
-
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Link from 'next/link';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -33,6 +34,10 @@ const MovieCarouselInner = ({ title, movies, className = '', showNavigation = tr
     swiperRef.current = swiper;
     setTotalSlides(movies.length);
   };
+
+  // Kiểm tra xem có phải là phim sắp chiếu không
+  const isComingSoon = movies.length > 0 && movies[0].isComingSoon;
+  const viewAllLink = isComingSoon ? '/movie/upcoming' : '/movie/showing';
 
   return (
     <div className={`movie-carousel ${className}`}>
@@ -72,21 +77,32 @@ const MovieCarouselInner = ({ title, movies, className = '', showNavigation = tr
       {showNavigation && <SwiperNavigation showArrows={false} showDots={true} className="mt-4" />}
 
       <div className="text-center mt-12">
-        <Button variant={"default"} width={"full"} className="cinestar-button px-6 py-2">
-          Xem Thêm
-        </Button>
+        <Link href={viewAllLink}>
+          <Button variant="default" width="full" className="cinestar-button px-6 py-2">
+            Xem Thêm
+          </Button>
+        </Link>
       </div>
     </div>
   );
 };
 
 // Wrapper component to provide SwiperContext
-const MovieCarousel = (props: MovieCarouselProps) => {
+export default function MovieCarousel({ title, movies, className = '', showNavigation = true }: MovieCarouselProps) {
+  if (!movies || movies.length === 0) {
+    return (
+      <div className={`py-8 ${className}`}>
+        {title && <h2 className="text-2xl md:text-3xl text-center font-bold mb-6">{title}</h2>}
+        <div className="flex justify-center items-center h-[300px]">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <SwiperProvider id={props.id || props.title}>
-      <MovieCarouselInner {...props} />
+    <SwiperProvider id={title}>
+      <MovieCarouselInner title={title} movies={movies} className={className} showNavigation={showNavigation} />
     </SwiperProvider>
   );
-};
-
-export default MovieCarousel;
+}

@@ -35,7 +35,7 @@ const Carousel = ({ banners }: CarouselProps) => {
     };
 
     return (
-        <div className="relative h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden">
+        <div className="relative h-[200px] sm:h-[300px] md:h-[400px] lg:h-[400px] overflow-hidden">
             {/* Custom navigation buttons */}
             <button
                 onClick={handlePrev}
@@ -79,7 +79,7 @@ const Carousel = ({ banners }: CarouselProps) => {
                                 className='object-contain'
                                 priority={index === 0}
                             />
-                            <div className="absolute bottom-10 right-[330px] bottom-[10px] z-20 w-[260px] h-[45px] ">
+                            <div className="absolute bottom-10 right-[100px] bottom-[10px] z-20 w-[260px] h-[45px] ">
                                 <Link href={banner.link} className="cinestar-button-to font-bold text-sm md:text-base button-datve">
                                     ĐẶT VÉ NGAY
                                 </Link>

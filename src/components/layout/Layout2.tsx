@@ -13,7 +13,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="col-span-1 bg-cinestar-darkblue hidden lg:block"></div>
         <main className="col-span-10">
           <Header />
-         
+          <QuickBookingForm />
           {children}
         </main>
         <div className="col-span-1 bg-cinestar-darkblue hidden lg:block"></div>

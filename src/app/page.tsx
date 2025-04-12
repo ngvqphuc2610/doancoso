@@ -11,9 +11,12 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ProCarousel from '../components/promotions/ProCarousel';
 import MemberCardCarousel from '../components/member/MemberCardCarousel';
 import TaimentCarousel from '@/components/taiment/TaimentGrid';
+import ContactPage from '../components/contact/ContactPage';
+
 // Fix: Correct image imports - no need for @/public prefix
 import bannerImage1 from '../../public/images/banner.png';
 import bannerImage2 from '../../public/images/banner2.jpg';
+
 
 
 export default function Home() {
@@ -33,12 +36,13 @@ export default function Home() {
       setLoading(true);
       try {
         // Sử dụng các hàm từ lib/film.tsx để lấy dữ liệu phim
-        const nowPlayingMovies = await getNowShowingMovies();
+        const [nowPlayingMovies, upcomingMovies] = await Promise.all([
+          getNowShowingMovies(),
+          getComingSoonMovies()
+        ]);
+
         setNowShowingMovies(nowPlayingMovies);
-
-        const upcomingMovies = await getComingSoonMovies();
         setComingSoonMovies(upcomingMovies);
-
         setLoading(false);
       } catch (err) {
         console.error("Không thể lấy dữ liệu phim:", err);
@@ -59,18 +63,22 @@ export default function Home() {
     <Layout>
       <HeroBanner banners={banners} />
 
-      <div className="container mx-auto px-4 ">
+
+      <div className="container mx-auto px-0 ">
         <QuickBookingForm />
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner />
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+              <LoadingSpinner />
+              <p className="mt-4 text-gray-600">Đang tải dữ liệu phim...</p>
+            </div>
           </div>
         ) : (
-            <>
+          <>
             {error && (
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
-              <p>{error}</p>
+                <p>{error}</p>
               </div>
             )}
 
@@ -88,7 +96,9 @@ export default function Home() {
             <ProCarousel className="pb-[100px]" />
             <MemberCardCarousel className="" />
             <TaimentCarousel className="pt-[120px]" />
-            </>
+            <ContactPage />
+
+          </>
         )}
       </div>
     </Layout>

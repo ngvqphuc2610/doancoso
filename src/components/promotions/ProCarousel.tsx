@@ -42,6 +42,7 @@ const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselP
   return (
     <div className={`relative w-full bg-gradient-to-b bg-cinestar-darkblue py-8 ${className}`}>
       <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">KHUYẾN MÃI</h2>
+      <Link href="/chuong-trinh-khuyen-mai/">
       <Swiper
         modules={[Navigation]}
         spaceBetween={24}
@@ -61,13 +62,15 @@ const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselP
               id={slide.id}
               title={slide.title}
               image={slide.image}
-              link={slide.link}
+              link={`${slide.link}/`}
             />
           </SwiperSlide>
         ))}
+        
       </Swiper>
+      </Link>
       <div className="text-center mt-8">
-        <Link href="/promotions">
+        <Link href="/chuong-trinh-khuyen-mai/">
           <button className="cinestar-button-to font-bold text-sm md:text-base">
             TẤT CẢ ƯU ĐÃI
           </button>

@@ -41,7 +41,7 @@ const nextConfig = {
   // Sửa lại phần experimental
   experimental: {
     // turbpack là tùy chọn chính xác, không phải turbo
-    turbpack: false
+    turbopack: false
   }
 };
 
