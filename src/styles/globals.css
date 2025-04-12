@@ -108,6 +108,11 @@
     color: white;
   }
 
+  .contact-button {
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+  }
+
   .cinestar-header {
     @apply bg-[#13172c] text-white;
   }

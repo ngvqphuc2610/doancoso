@@ -8,6 +8,7 @@ import { Navigation, Pagination, Grid } from 'swiper/modules'; // Thêm Grid mod
 import { Button } from '@/components/ui/button';
 import { SwiperProvider, useSwiper } from '../swiper/SwiperContext';
 import SwiperNavigation from '@/components/swiper/SwiperNavigation';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -31,6 +32,17 @@ const TaimentCarouselInner = ({
 }: TaimentCarouselProps) => {
     const { swiperRef, setCurrentSlide, setTotalSlides } = useSwiper();
 
+    if (!taiment || taiment.length === 0) {
+        return (
+            <div className={`py-8 ${className}`}>
+                <h2 className="text-4xl font-bold mb-6 text-center text-[#464545]">{title}</h2>
+                <div className="flex justify-center items-center h-[300px]">
+                    <LoadingSpinner />
+                </div>
+            </div>
+        );
+    }
+
     const handleSlideChange = (swiper: SwiperType) => {
         setCurrentSlide(swiper.activeIndex);
     };
@@ -48,7 +60,7 @@ const TaimentCarouselInner = ({
         <div className={`taiment-carousel ${className}`}>
             {title && <h1 className="text-3xl font-bold mb-6 text-center text-white">{title}</h1>}
             <p className="text-center mb-6">Ngoài hệ thống rạp chiếu phim chất lượng cao, Cinestar còn cung cấp cho bạn nhiều loại <br />
-                 hình giải trí tuyệt vời khác.</p>
+                hình giải trí tuyệt vời khác.</p>
 
             {showNavigation && <SwiperNavigation showArrows={true} showDots={false} className="mb-4" />}
 
@@ -100,7 +112,7 @@ const TaimentCarouselInner = ({
 
             {showNavigation && <SwiperNavigation showArrows={false} showDots={true} className="mt-4" />}
 
-        
+
         </div>
     );
 };

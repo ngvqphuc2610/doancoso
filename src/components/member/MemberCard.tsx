@@ -32,6 +32,7 @@ export const promotions: MemberProps[] = [
 
 export default function MemberCard({ id, title, image, link, description }: MemberProps) {
   return (
+    <Link href="/membership">
     <Card className="relative rounded-lg overflow-hidden shadow-lg hover:cursor-pointer">
       <CardContent className="p-0">
         {/* Image Section */}
@@ -54,12 +55,13 @@ export default function MemberCard({ id, title, image, link, description }: Memb
 
           {/* Link */}
           <button className="cinestar-button-to font-bold text-sm md:text-base">
-            <Link href={link} className="block">
+            <Link href="/membership" className="block">
               TÌM HIỂU NGAY
             </Link>
           </button>
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }
