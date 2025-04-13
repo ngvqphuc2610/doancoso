@@ -4,7 +4,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSwiper } from './SwiperContext';
-
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 interface SwiperNavigationProps {
   showDots?: boolean;
   showArrows?: boolean;
@@ -37,21 +37,25 @@ const SwiperNavigation = ({
       {showArrows && totalSlides > slidesPerGroup && (
         <div className="flex justify-between mb-4">
           <Button
-            variant="ghost"
-            className="text-white hover:bg-black/30 hover:text-white justify-start"
+             variant="nav"
+             size={"swiper"}
+             width={"swiper"}
+            className="text-white hover:bg-[#13172C] hover:text-[#EBDB40] justify-start text-2xl p-5"
             onClick={handlePrev}
             aria-label="Previous"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <FaAngleLeft  />
           </Button>
 
           <Button
-            variant="ghost"
-            className="text-white hover:bg-black/30 hover:text-white justify-end"
+            variant="nav"
+            size={"swiper"}
+            width={"swiper"}
+            className="text-white hover:bg-[#13172C] hover:text-[#EBDB40] justify-end text-2xl p-5"
             onClick={handleNext}
             aria-label="Next"
           >
-            <ChevronRight className="h-6 w-6" />
+            <FaAngleRight  />
           </Button>
         </div>
       )}

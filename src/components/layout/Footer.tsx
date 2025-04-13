@@ -2,8 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Youtube } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-cinestar-purple text-white pt-8 pb-4">
       <div className="container mx-auto px-4">
@@ -19,14 +22,13 @@ export default function Footer() {
                 className="h-10 w-auto mb-4"
               />
             </Link>
-            <p className="text-sm font-light mb-4">BE HAPPY. BE A STAR</p>
+            <p className="text-sm font-light mb-4">{t('footer.beHappy')}</p>
             <div className="flex gap-4 mb-4">
               <Link href="/movie" className="cinestar-button text-sm py-1 px-4 ">
-
-                ĐẶT VÉ
+                {t('header.bookTicket')}
               </Link>
               <Link href="/popcorn-drink" className="bg-transparent border border-white text-white font-bold px-4 py-1 rounded hover:bg-white/10 transition-colors text-sm">
-                ĐẶT BẮP NƯỚC
+                {t('header.bookSnacks')}
               </Link>
             </div>
             <div className="flex items-center gap-4">
@@ -57,62 +59,38 @@ export default function Footer() {
 
           {/* Account */}
           <div className="col-span-1">
-            <h3 className="text-sm font-bold uppercase mb-4">Tài khoản</h3>
+            <h3 className="text-sm font-bold uppercase mb-4">{t('footer.account.title')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/login" className="hover:text-cinestar-yellow">Đăng nhập</Link></li>
-              <li><Link href="/register" className="hover:text-cinestar-yellow">Đăng ký</Link></li>
-              <li><Link href="/membership" className="hover:text-cinestar-yellow">Membership</Link></li>
+              <li><Link href="/login" className="hover:text-cinestar-yellow">{t('footer.account.login')}</Link></li>
+              <li><Link href="/register" className="hover:text-cinestar-yellow">{t('footer.account.register')}</Link></li>
+              <li><Link href="/membership" className="hover:text-cinestar-yellow">{t('footer.account.membership')}</Link></li>
             </ul>
           </div>
 
           {/* Events */}
           <div className="col-span-1">
-            <h3 className="text-sm font-bold uppercase mb-4">Thuê sự kiện</h3>
+            <h3 className="text-sm font-bold uppercase mb-4">{t('footer.support.title')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/rent" className="hover:text-cinestar-yellow">Thuê rạp</Link></li>
-              <li><Link href="/corporate-events" className="hover:text-cinestar-yellow">Các loại hình cho thuê khác</Link></li>
+              <li><Link href="/about-us" className="hover:text-cinestar-yellow">{t('footer.support.about')}</Link></li>
+              <li><Link href="/contact" className="hover:text-cinestar-yellow">{t('footer.support.contact')}</Link></li>
+              <li><Link href="/careers" className="hover:text-cinestar-yellow">{t('footer.support.career')}</Link></li>
             </ul>
           </div>
 
           {/* Cinemas */}
-          <div className="col-span-1">
-            <h3 className="text-sm font-bold uppercase mb-4">Xem Phim</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/movie/showing" className="hover:text-cinestar-yellow">Phim đang chiếu</Link></li>
-              <li><Link href="/movie/coming-soon" className="hover:text-cinestar-yellow">Phim sắp chiếu</Link></li>
-              <li><Link href="/special-screenings" className="hover:text-cinestar-yellow">Suất chiếu đặc biệt</Link></li>
-            </ul>
-          </div>
-
-          {/* Cinema Chain */}
-          <div className="col-span-1">
-            <h3 className="text-sm font-bold uppercase mb-4">Cinestar</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/about-us" className="hover:text-cinestar-yellow">Giới thiệu</Link></li>
-              <li><Link href="/contact" className="hover:text-cinestar-yellow">Liên hệ</Link></li>
-              <li><Link href="/careers" className="hover:text-cinestar-yellow">Tuyển dụng</Link></li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Theaters */}
-        <div className="mt-8 border-t border-white/20 pt-8">
-          <h3 className="text-sm font-bold uppercase mb-4">Hệ thống rạp</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/theaters/quoc-thanh" className="hover:text-cinestar-yellow">Cinestar Quốc Thanh (TP.HCM)</Link></li>
-              <li><Link href="/theaters/hai-ba-trung" className="hover:text-cinestar-yellow">Cinestar Hai Bà Trưng (TP.HCM)</Link></li>
-              <li><Link href="/theaters/sinh-vien" className="hover:text-cinestar-yellow">Cinestar Sinh Viên (Bình Dương)</Link></li>
-            </ul>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/theaters/my-tho" className="hover:text-cinestar-yellow">Cinestar Mỹ Tho (Tiền Giang)</Link></li>
-              <li><Link href="/theaters/kien-giang" className="hover:text-cinestar-yellow">Cinestar Kiên Giang (Rạch Sỏi)</Link></li>
-              <li><Link href="/theaters/lam-dong" className="hover:text-cinestar-yellow">Cinestar Lâm Đồng (Đức Trọng)</Link></li>
-            </ul>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/theaters/da-lat" className="hover:text-cinestar-yellow">Cinestar Đà Lạt (TP Đà Lạt)</Link></li>
-              <li><Link href="/theaters/hue" className="hover:text-cinestar-yellow">Cinestar Huế (TP Huế)</Link></li>
-            </ul>
+          <div className="col-span-2">
+            <h3 className="text-sm font-bold uppercase mb-4">{t('footer.cinemas.title')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/theaters/quoc-thanh" className="hover:text-cinestar-yellow">{t('footer.cinemas.quocThanh')}</Link></li>
+                <li><Link href="/theaters/hai-ba-trung" className="hover:text-cinestar-yellow">{t('footer.cinemas.haiBaTrung')}</Link></li>
+                <li><Link href="/theaters/sinh-vien" className="hover:text-cinestar-yellow">{t('footer.cinemas.sinhVien')}</Link></li>
+              </ul>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/theaters/da-lat" className="hover:text-cinestar-yellow">{t('footer.cinemas.daLat')}</Link></li>
+                <li><Link href="/theaters/hue" className="hover:text-cinestar-yellow">{t('footer.cinemas.hue')}</Link></li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -146,8 +124,8 @@ export default function Footer() {
 
         {/* Company info */}
         <div className="mt-4 text-center text-xs opacity-80 max-w-4xl mx-auto">
-          <p>CÔNG TY CỔ PHẦN GIẢI TRÍ PHÁT HÀNH PHIM - RẠP CHIẾU PHIM NGÔI SAO</p>
-          <p>ĐỊA CHỈ: 135 HAI BÀ TRƯNG, PHƯỜNG BẾN NGHÉ, QUẬN 1, TP.HCM</p>
+          <p>{t('footer.company')}</p>
+          <p>{t('footer.address')}</p>
           <p>GIẤY CHỨNG NHẬN ĐĂNG KÝ KINH DOANH SỐ: 0312742804, ĐĂNG KÝ THAY ĐỔI LẦN THỨ 2 NGÀY 15/09/2014, CẤP BỞI SỞ KH&ĐT TP.HCM</p>
         </div>
       </div>

@@ -1,0 +1,139 @@
+{
+    "header": {
+        "bookTicket": "ĐẶT VÉ NGAY",
+        "bookSnacks": "ĐẶT BẮP NƯỚC",
+        "login": "Đăng nhập",
+        "search": "Tìm phim, rạp...",
+        "language": "VN",
+        "home": "TRANG CHỦ"
+    },
+    "navigation": {
+        "home": "TRANG CHỦ",
+        "movies": "PHIM",
+        "theaters": "RẠP",
+        "showtimes": "LỊCH CHIẾU",
+        "promotion": "KHUYẾN MÃI",
+        "membership": "THÀNH VIÊN"
+    },
+    "select" : {
+        "title": "ĐẶT VÉ NHANH",
+        "theater": "Chọn rạp",
+        "movie": "Chọn phim",
+        "date": "Chọn ngày",
+        "time": "Chọn suất",
+        "button" : "ĐẶT NGAY"
+
+    },
+    
+    "movie": {
+        "nowShowing": "PHIM ĐANG CHIẾU",
+        "comingSoon": "PHIM SẮP CHIẾU",
+        "viewMore": "Xem Thêm",
+        "learnMore": "TÌM HIỂU THÊM",
+        "bookNow": "ĐẶT VÉ",
+        "watchTrailer": "Xem Trailer",
+        "releaseDate": "Khởi chiếu: {{date}}",
+        "duration": "{{time}} phút",
+        "language": "Phụ đề",
+        "format": "2D"
+    },
+    "menu": {
+        "chooseTheater": "Chọn rạp",
+        "schedule": "Lịch chiếu",
+        "promotion": "Khuyến mãi",
+        "events": "Thuê sự kiện",
+        "entertainment": "Tất cả các giải trí",
+        "about": "Giới thiệu"
+    },
+    "theater": {
+        "all": "TẤT CẢ CÁC PHIM",
+        "today": "Hôm nay",
+        "noSchedule": "Không có lịch chiếu nào hiện tại.",
+        "noMatchingSchedule": "Không tìm thấy lịch chiếu phù hợp với lựa chọn của bạn."
+    },
+    "footer": {
+        "beHappy": "BE HAPPY. BE A STAR",
+        "cinemas": {
+            "title": "Hệ thống rạp",
+            "quocThanh": "Cinestar Quốc Thanh (TP.HCM)",
+            "haiBaTrung": "Cinestar Hai Bà Trưng (TP.HCM)",
+            "daLat": "Cinestar Đà Lạt (TP Đà Lạt)",
+            "hue": "Cinestar Huế (TP Huế)",
+            "sinhVien": "Cinestar Sinh Viên (Bình Dương)",
+            "myTho": "Cinestar Mỹ Tho (Tiền Giang)",
+            "kienGiang": "Cinestar Kiên Giang (Rạch Sỏi)",
+            "lamDong": "Cinestar Lâm Đồng (Đức Trọng)"
+        },
+        "account": {
+            "title": "Tài khoản",
+            "login": "Đăng nhập",
+            "register": "Đăng ký",
+            "membership": "Thành viên"
+        },
+        "support": {
+            "title": "Hỗ trợ",
+            "about": "Về chúng tôi",
+            "contact": "Liên hệ",
+            "career": "Tuyển dụng",
+            "terms": "Điều khoản chung",
+            "policy": "Chính sách & Quy định",
+            "faq": "Câu hỏi thường gặp"
+        },
+        "address": "ĐỊA CHỈ: 135 HAI BÀ TRƯNG, PHƯỜNG BẾN NGHÉ, QUẬN 1, TP.HCM",
+        "company": "CÔNG TY CỔ PHẦN GIẢI TRÍ PHÁT HÀNH PHIM - RẠP CHIẾU PHIM NGÔI SAO"
+    },
+    "contact": {
+        "title": "LIÊN HỆ VỚI CHÚNG TÔI",
+        "name": "Họ và Tên",
+        "email": "Điền email",
+        "message": "Thông tin liên hệ hoặc phản ánh",
+        "send": "Gửi ngay",
+        "sending": "Đang gửi...",
+        "hotline": "1900.0085",
+        "emailContact": "cskh@cinestar.com.vn"
+    },
+    "member": {
+        "title" : "CHƯƠNG TRÌNH THÀNH VIÊN",
+        "name" : "THANH VIEN C'FRIEND",
+        "name2" : "THANH VIEN C' VIP",
+        "description" : "Thẻ C'Friend nhiều ưu đãi cho thành viên mới",
+        "description2" : "Thẻ VIP CineStar mang đến sự ưu đãi độc quyền",
+        "button" : "TÌM HIỂU NGAY"
+
+    },
+    "discount": {
+        "title" : "KHUYẾN MÃI",
+        "button": "TẤT CẢ ƯU ĐÃI"
+    }
+    ,
+    "taiment": {
+        "title": "TẤT CẢ CÁC GIẢI TRÍ",
+        "subtitle": "Ngoài hệ thống rạp chiếu phim chất lượng cao, Cinestar còn cung cấp cho bạn nhiều loại hình giải trí tuyệt vời khác.",
+        "items": {
+            "kidzone": {
+                "title": "KIDZONE",
+                "desc": "Giải phóng trí tưởng tượng của con bạn tại Kidzone, sân chơi trong nhà tuyệt đỉnh."
+            },
+            "bowling": {
+                "title": "BOWLING",
+                "desc": "Tận hưởng niềm vui tại C Bowling - Thành phố Đà Lạt & Huế!"
+            },
+            "billiard": {
+                "title": "BILLIARD",
+                "desc": "Thỏa sức thể hiện tài năng ca hát của bạn tại Karaoke CineStar!"
+            },
+            "restaurant": {
+                "title": "NHÀ HÀNG",
+                "desc": "Bắt tay vào cuộc phiêu lưu ẩm thực tại Món Ngon Đà Lạt & Huế!"
+            },
+            "gym": {
+                "title": "GYM",
+                "desc": "Đạt được mục tiêu thể hình của bạn tại C Gym - Đà Lạt & Thành phố Hồ Chí Minh!"
+            },
+            "opera": {
+                "title": "OPERA HOUSE",
+                "desc": "Chứng kiến sự hùng vĩ ở trung tâm thành phố"
+            }
+        }
+    }
+}

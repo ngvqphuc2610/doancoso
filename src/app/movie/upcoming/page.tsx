@@ -6,8 +6,9 @@ import MovieCarousel from '@/components/movies/MovieCarousel';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { getComingSoonMovies, fallbackComingSoonMovies } from '@/lib/film';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-
+import { useTranslation } from 'react-i18next';
 export default function UpcomingPage() {
+    const { t } = useTranslation();
     const [movies, setMovies] = useState<MovieProps[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

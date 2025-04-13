@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface ContactIconProps {
     className?: string;
@@ -15,9 +16,11 @@ const handleZaloChat = () => {
 };
 
 export default function ContactIcon({ className = '' }: ContactIconProps) {
+    const { t } = useTranslation();
+
     return (
         <div className={`space-y-6 ${className}`}>
-            <h1 className=" text-4xl font-bold text-white text-center mb-8">LIÊN HỆ VỚI CHÚNG TÔI</h1>
+            <h1 className=" text-4xl font-bold text-white text-center mb-8">{t('contact.title')}</h1>
             <div className='flex justify-center items-center flex-col'>
                 <Link href="https://www.facebook.com/cinestarcinemasvietnam/" target="_blank" rel="noopener noreferrer">
                     <Button
@@ -63,8 +66,5 @@ export default function ContactIcon({ className = '' }: ContactIconProps) {
                 </Link>
             </div>
         </div>
-
-
-
     );
 }

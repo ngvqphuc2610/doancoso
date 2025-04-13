@@ -12,6 +12,7 @@ import {
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import './MovieCard.scss';
 import { FaEarthAsia } from "react-icons/fa6";
+import { useTranslation } from 'react-i18next';
 
 export interface MovieProps {
   id: string;
@@ -45,6 +46,7 @@ export default function MovieCard({
   isComingSoon = false,
   releaseDate = "",
 }: MovieProps) {
+  const { t } = useTranslation();
 
   // Xử lý rating an toàn
   const safeRating = rating || 'P';
@@ -95,7 +97,7 @@ export default function MovieCard({
           </p>
           <p>
             <img src="/images/icon-infofilm-clock.svg" className='class-img-infofilm' alt="Duration icon" />
-            {duration} phút
+            {t('movie.duration', { time: duration })}
           </p>
           <p>
             <FaEarthAsia className='icon-infofilm-earth' />
@@ -103,7 +105,7 @@ export default function MovieCard({
           </p>
           <p>
             <img src="/images/icon-infofilm-subtitle.svg" className='class-img-infofilm' alt="Language icon" />
-            {language}
+            {t('movie.language')}
           </p>
         </div>
       </div>
@@ -112,29 +114,29 @@ export default function MovieCard({
         <Link href={`/movie/${id}`} className="block">
             {releaseDate && (
               <p className=" text-gray-400 text-center pb-3">
-                {isComingSoon ? `Khởi chiếu: ${releaseDate}` : ""}
+                {isComingSoon ? t('movie.releaseDate', { date: releaseDate }) : ""}
           
               </p>
             )}
-            <h3 className="font-semibold text-white group-hover:text-cinestar-yellow truncate text-sm md:text-base pl-2 text-center">
+            <p className="font-semibold text-white group-hover:text-cinestar-yellow truncate  md:text-base pl-2 text-center">
               {title}
-            </h3>
+            </p>
         </Link>
 
         <div className="flex justify-between gap-2 pt-3">
           {trailerUrl && (
             <Dialog>
               <DialogTrigger asChild>
-                <span className="text-xs py-2 px-3 bg-transparent border-white text-white cursor-pointer flex items-center gap-1 underline">
+                <span className="text-sm py-2 px-3 bg-transparent border-white text-white cursor-pointer flex items-center gap-1 underline">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 0C3.6 0 0 3.6 0 8C0 12.4 3.6 16 8 16C12.4 16 16 12.4 8 0ZM6 11.5V4.5L12 8L6 11.5Z" fill="currentColor" />
                   </svg>
-                  Xem Trailer
+                  {t('movie.watchTrailer')}
                 </span>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[800px] p-0 bg-black border-none">
                 <DialogTitle>
-                  <VisuallyHidden>{title ? `Xem trailer: ${title}` : "Xem trailer"}</VisuallyHidden>
+                  <VisuallyHidden>{title ? `${t('movie.watchTrailer')}: ${title}` : t('movie.watchTrailer')}</VisuallyHidden>
                 </DialogTitle>
                 <iframe
                   width="100%"
@@ -151,10 +153,10 @@ export default function MovieCard({
           
           <Link
             href={`/movie/${id}`}
-            className=" text-xs py-2 px-3 ml-auto"
+            className=" text-xs py-2 px-0 ml-auto"
           >
             <Button variant="custom3" width="custom3" size={"default"}  >
-              {isComingSoon ? "TÌM HIỂU THÊM" : "ĐẶT VÉ"}
+              {isComingSoon ? t('movie.learnMore') : t('movie.bookNow')}
             
             </Button>
           </Link>

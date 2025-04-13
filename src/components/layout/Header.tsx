@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -7,17 +9,26 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MenuIcon, Search, User } from 'lucide-react';
 import { FaCaretDown } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
-export default function Header() {
-  const menuItems = [
-    { href: "/chonrap/", label: "Chọn rạp" },
-    { href: "/showtimes/", label: "Lịch chiếu" },
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../language/LanguageSwitcher';
 
+export default function Header() {
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
+  const menuItems = [
+    { href: "/chonrap/", label: t('menu.chooseTheater') },
+    { href: "/showtimes/", label: t('menu.schedule') },
   ];
+
   const menuItems2 = [
-    { href: "/chuong-trinh-khuyen-mai/", label: "Khuyến mãi" },
-    { href: "/to-chuc-su-kien/", label: "Thuê sự kiện" },
-    { href: "/cac-loai-hinh-giai-tri-khac/", label: "Tất cả các giải trí" },
-    { href: "/about-us/", label: "Giới thiệu" },
+    { href: "/chuong-trinh-khuyen-mai/", label: t('menu.promotion') },
+    { href: "/to-chuc-su-kien/", label: t('menu.events') },
+    { href: "/cac-loai-hinh-giai-tri-khac/", label: t('menu.entertainment') },
+    { href: "/about-us/", label: t('menu.about') },
   ];
 
   return (
@@ -40,12 +51,12 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="bg-cinestar-darkblue text-white">
               <nav className="flex flex-col gap-4 mt-8">
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">TRANG CHỦ</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">ĐẶT VÉ </Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">BẮP NƯỚC</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">LỊCH CHIẾU</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">KHUYẾN MÃI</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">THÀNH VIÊN</Link>
+                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.home')}</Link>
+                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('header.bookTicket')}</Link>
+                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('header.bookSnacks')}</Link>
+                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.showtimes')}</Link>
+                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.promotion')}</Link>
+                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.membership')}</Link>
               </nav>
             </SheetContent>
           </Sheet>
@@ -72,7 +83,7 @@ export default function Header() {
                   width={20}
                   height={20}
                 />
-                ĐẶT VÉ NGAY
+                {t('header.bookTicket')}
               </Button>
             </Link>
             <Link href="/popcorn-drink" className="flex items-center gap-1 font-semibold hover:text-cinestar-yellow">
@@ -83,7 +94,7 @@ export default function Header() {
                   width={20}
                   height={20}
                 />
-                ĐẶT BẮP NƯỚC
+                {t('header.bookSnacks')}
               </Button>
             </Link>
           </nav>
@@ -94,7 +105,7 @@ export default function Header() {
           <div className="relative hidden md:block">
             <Input
               type="search"
-              placeholder="Tìm phim, rạp..."
+              placeholder={t('header.search')}
               className="bg-white text-black pl-5 pr-9 py-1 rounded-full w-[250px] h-[40px]"
             />
             <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -102,22 +113,10 @@ export default function Header() {
           <div className="flex items-center gap-4 ">
             <Link href="/login" className="flex items-center gap-1 pl-7">
               <User size={16} />
-              Đăng nhập
+              {t('header.login')}
             </Link>
-            <div className="flex items-center gap-1 pl-7">
-              <Image
-                src="/images/header-vietnam.svg"
-                alt="Vietnam Icon"
-                width={20}
-                height={20}
-              />
-              <span className="inline-block">VN</span>
-              <FaCaretDown className="inline-block" />
-
-            </div>
+            <LanguageSwitcher className="pl-7" />
           </div>
-
-
         </div>
       </div>
 

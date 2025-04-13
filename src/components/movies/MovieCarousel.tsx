@@ -10,6 +10,7 @@ import { SwiperProvider, useSwiper } from '../swiper/SwiperContext';
 import SwiperNavigation from '../swiper/SwiperNavigation';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -24,6 +25,7 @@ interface MovieCarouselProps {
 }
 
 const MovieCarouselInner = ({ title, movies, className = '', showNavigation = true }: MovieCarouselProps) => {
+  const { t } = useTranslation();
   const { swiperRef, setCurrentSlide, setTotalSlides } = useSwiper();
 
   const handleSlideChange = (swiper: SwiperType) => {
@@ -79,7 +81,7 @@ const MovieCarouselInner = ({ title, movies, className = '', showNavigation = tr
       <div className="text-center mt-12">
         <Link href={viewAllLink}>
           <Button variant="default" width="full" className="cinestar-button px-6 py-2">
-            Xem Thêm
+            {t('movie.viewMore')}
           </Button>
         </Link>
       </div>
