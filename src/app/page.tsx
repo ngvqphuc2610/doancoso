@@ -12,14 +12,16 @@ import ProCarousel from '../components/promotions/ProCarousel';
 import MemberCardCarousel from '../components/member/MemberCardCarousel';
 import TaimentCarousel from '@/components/taiment/TaimentGrid';
 import ContactPage from '../components/contact/ContactPage';
-
+import { useTranslation } from 'react-i18next';
 // Fix: Correct image imports - no need for @/public prefix
 import bannerImage1 from '../../public/images/banner.png';
 import bannerImage2 from '../../public/images/banner2.jpg';
 
 
 
+
 export default function Home() {
+  const { t } = useTranslation();
   const [nowShowingMovies, setNowShowingMovies] = useState<MovieProps[]>([]);
   const [comingSoonMovies, setComingSoonMovies] = useState<MovieProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,13 +85,13 @@ export default function Home() {
             )}
 
             <MovieCarousel
-              title="PHIM ĐANG CHIẾU"
+              title={t('movie.nowShowing')}
               movies={nowShowingMovies.map(movie => ({ ...movie, isComingSoon: false }))}
               className="mt-8 pb-[100px]"
             />
 
             <MovieCarousel
-              title="PHIM SẮP CHIẾU"
+              title={t('movie.comingSoon')}
               movies={comingSoonMovies.map(movie => ({ ...movie, isComingSoon: true }))}
               className="mt-8 pb-[100px]"
             />

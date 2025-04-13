@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { MovieDbAPI } from '@/services/MovieDbAPI';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { NavigationFilter, Select } from '@/components/ui/navigation-filter';
-
+import { useTranslation } from 'react-i18next';
 interface Cinema {
   id: string;
   name: string;
@@ -62,6 +62,7 @@ const showtimes = [
 ];
 
 export default function QuickBookingForm() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [selectedCinema, setSelectedCinema] = useState('');
   const [selectedMovie, setSelectedMovie] = useState('');
@@ -128,7 +129,7 @@ export default function QuickBookingForm() {
   return (
     <NavigationFilter className="-mt-6 z-20 mx-auto max-w-full">
       <div className="flex items-center space-x-6">
-        <h2 className="text-xl text-[#464545] font-bold whitespace-nowrap">ĐẶT VÉ NHANH</h2>
+        <h2 className="text-xl text-[#464545] font-bold whitespace-nowrap">{t('select.title')}</h2>
 
         <div className="flex-1 grid grid-cols-4 gap-4">
           <Select
@@ -136,7 +137,7 @@ export default function QuickBookingForm() {
             onChange={(e) => setSelectedCinema(e.target.value)}
             variant={selectedCinema ? 'custom1' : 'default'}
           >
-            <option value="">1.Chọn rạp</option>
+            <option value="">1.{t('select.theater')}</option>
             {cinemas.map((cinema) => (
               <option key={cinema.id} value={cinema.id}>{cinema.name}</option>
             ))}
@@ -149,7 +150,7 @@ export default function QuickBookingForm() {
             disabled={!selectedCinema}
             variant={selectedMovie ? 'custom1' : 'default'}
           >
-            <option value="">2.Chọn phim</option>
+            <option value="">2.{t('select.movie')}</option>
             {movies.map((movie) => (
               <option key={movie.id} value={movie.id}>{movie.title}</option>
             ))}
@@ -162,7 +163,7 @@ export default function QuickBookingForm() {
             disabled={!selectedMovie}
             variant={selectedDate ? 'custom1' : 'default'}
           >
-            <option value="">3.Chọn ngày</option>
+            <option value="">3.{t('select.date')}</option>
             {selectedMovie && getDates().map((date) => (
               <option key={date.value} value={date.value}>{date.label}</option>
             ))}
@@ -175,7 +176,7 @@ export default function QuickBookingForm() {
             disabled={!selectedDate}
             variant={selectedTime ? 'custom1' : 'default'}
           >
-            <option value="">4.Chọn suất </option>
+            <option value="">4.{t('select.time')} </option>
             {showtimes.map((time, index) => (
               <option key={index} value={time}>{time}</option>
             ))}
@@ -190,7 +191,7 @@ export default function QuickBookingForm() {
           disabled={!selectedCinema || !selectedMovie || !selectedDate || !selectedTime}
           className="whitespace-nowrap transform transition duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          ĐẶT NGAY
+          {t('select.button')}
         </Button>
       </div>
 

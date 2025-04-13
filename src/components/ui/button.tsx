@@ -26,6 +26,9 @@ const buttonVariants = cva(
           "bg-[#7436A7] text-primary-foreground text-[#EBDB40] font-bold shadow hover:bg-primary/90 flex border border-[#EBDB40]", 
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        nav : "",
+        custom7:  //button dat ve header
+          "bg-[#EBDB40] font-bold  text-dark shadow hover:bg-primary/90 ",
 
 
       },
@@ -35,6 +38,8 @@ const buttonVariants = cva(
         lg: "h-[102px] rounded-md px-8",
         icon: "h-9 w-9",
         custom5: "h-[50px] rounded-md px-8",
+        swiper : "h-5 w-5",
+        custom7 : "h-[40px] ",
       },
       width: {
 
@@ -44,6 +49,8 @@ const buttonVariants = cva(
         custom3: "w-[131px]",
         custom4: "w-[359px]",
         custom5: "w-[100px]",
+        swiper : "w-5",
+        custom7 : "w-[240px]"
       },
       position: {
 

@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Layout2 from '@/components/layout/Layout2';
+import Layout from '@/components/layout/Layout';
 import MovieCarousel from '@/components/movies/MovieCarousel';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getNowShowingMovies, getComingSoonMovies, fallbackNowShowingMovies, fallbackComingSoonMovies } from '@/lib/film';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-
+import { useTranslation } from 'react-i18next';
+import QuickBookingForm from '@/components/home/QuickBookingForm';
 export default function MoviePage() {
+  const { t } = useTranslation();
   const [nowShowingMovies, setNowShowingMovies] = useState<MovieProps[]>([]);
   const [comingSoonMovies, setComingSoonMovies] = useState<MovieProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,38 +45,39 @@ export default function MoviePage() {
 
   if (loading) {
     return (
-      <Layout2>
+      <Layout>
         <div className="container mx-auto px-4 py-16 flex justify-center items-center">
           <LoadingSpinner />
         </div>
-      </Layout2>
+      </Layout>
     );
   }
 
   return (
-    <Layout2>
-      <div className="container mx-auto px-4 py-8">
+    <Layout>
+      <div className="container mx-auto px-0 py-8">
         {error && (
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
             <p>{error}</p>
           </div>
         )}
+        <QuickBookingForm  />
 
 
         <MovieCarousel
-          title="PHIM ĐANG CHIẾU"
+          title={t('movie.nowShowing')}
           movies={nowShowingMovies.map(movie => ({ ...movie, isComingSoon: false }))}
           className="mt-8 pb-[100px]"
         />
 
         <MovieCarousel
-          title="PHIM SẮP CHIẾU"
+          title={t('movie.comingSoon')}
           movies={comingSoonMovies.map(movie => ({ ...movie, isComingSoon: true }))}
           className="mt-8 pb-[100px]"
         />
 
 
       </div>
-    </Layout2>
+    </Layout>
   );
 }

@@ -1,0 +1,138 @@
+{
+    "header": {
+        "bookTicket": "BUY TICKET",
+        "bookSnacks": "BUY POPCORN",
+        "login": "Sign In",
+        "search": "Find movies, theaters...",
+        "language": "ENG",
+        "home": "HOME"
+    },
+    "navigation": {
+        "home": "HOME",
+        "movies": "MOVIES",
+        "theaters": "THEATERS",
+        "showtimes": "SHOWTIMES",
+        "promotion": "PROMOTIONS",
+        "membership": "MEMBERSHIP"
+    },
+    "select" : {
+        "title": "QUICK BOOK",
+        "theater": "Select Theater",
+        "movie": "Select Movie",
+        "date": "Select Date",
+        "time": "Select Screen",
+        "button" : "BOOKING"
+
+    },
+    "movie": {
+        "nowShowing": "NOW SHOWING",
+        "comingSoon": "COMING SOON",
+        "viewMore": "SEE MORE",
+        "learnMore": "VIEW DETAILS",
+        "bookNow": "BOOK NOW",
+        "watchTrailer": "Watch Trailer",
+        "releaseDate": "Premiere: {{date}}",
+        "duration": "{{time}} minutes",
+        "language": "Subtitled",
+        "format": "2D"
+    },
+    "menu": {
+        "chooseTheater": "Select Theater",
+        "schedule": "Showtimes",
+        "promotion": "Discount",
+        "events": "Event Rental",
+        "entertainment": "Entertainment Options",
+        "about": "About Us"
+    },
+    "theater": {
+        "all": "ALL MOVIES",
+        "today": "Today",
+        "noSchedule": "No showtimes available.",
+        "noMatchingSchedule": "No showtimes found matching your selection."
+    },
+    "footer": {
+        "beHappy": "BE HAPPY. BE A STAR",
+        "cinemas": {
+            "title": "Our Theaters",
+            "quocThanh": "Cinestar Quoc Thanh (HCMC)",
+            "haiBaTrung": "Cinestar Hai Ba Trung (HCMC)",
+            "daLat": "Cinestar Da Lat (Da Lat City)",
+            "hue": "Cinestar Hue (Hue City)",
+            "sinhVien": "Cinestar Sinh Vien (Binh Duong)",
+            "myTho": "Cinestar My Tho (Tien Giang)",
+            "kienGiang": "Cinestar Kien Giang (Rach Soi)",
+            "lamDong": "Cinestar Lam Dong (Duc Trong)"
+        },
+        "account": {
+            "title": "Account",
+            "login": "Login",
+            "register": "Register",
+            "membership": "Membership"
+        },
+        "support": {
+            "title": "Support",
+            "about": "About Us",
+            "contact": "Contact",
+            "career": "Careers",
+            "terms": "Terms & Conditions",
+            "policy": "Policies & Regulations",
+            "faq": "FAQ"
+        },
+        "address": "ADDRESS: 135 HAI BA TRUNG, BEN NGHE WARD, DISTRICT 1, HO CHI MINH CITY",
+        "company": "MOVIE ENTERTAINMENT AND DISTRIBUTION JOINT STOCK COMPANY - STAR CINEMA"
+    },
+    "contact": {
+        "title": "CONTACT US",
+        "name": "Name (Last, First)",
+        "email": "Fill in email",
+        "message": "The message you want to convey",
+        "send": "Send",
+        "sending": "Sending...",
+        "hotline": "1900.0085",
+        "emailContact": "cskh@cinestar.com.vn"
+    },
+    "member": {
+        "title" : "MEMBERSHIP PROGRAM",
+        "name" : "C'FRIEND MEMBER",
+        "name2" : "C'VIP MEMBER",
+        "description" : "C'Friend Card Offers Many Benefits for New Members",
+        "description2" : "CineStar VIP Card Offers Exclusive Benefits",
+        "button" : "LEARN MORE"
+
+    },
+    "discount": {
+        "title" : "DISCOUNTS",
+        "button": "ALL DISCOUNTS AND PROMOTIONS"
+    }
+    ,
+    "taiment": {
+        "title": "ENTERTAINMENT OPTIONS",
+        "subtitle": "In addition to the high-quality cinema system, Cinestar also provides you with many other great types of entertainment.",
+        "items": {
+            "kidzone": {
+                "title": "KIDZONE",
+                "desc": "Unleash your child's imagination at Kidzone, the ultimate indoor playground."
+            },
+            "bowling": {
+                "title": "BOWLING",
+                "desc": "Enjoy the fun at C Bowling - Da Lat & Hue City!"
+            },
+            "billiard": {
+                "title": "BILLIARD",
+                "desc": "Show off your singing talent at CineStar Karaoke!"
+            },
+            "restaurant": {
+                "title": "RESTAURANT",
+                "desc": "Embark on a culinary adventure at Mon Ngon Da Lat & Hue!"
+            },
+            "gym": {
+                "title": "GYM",
+                "desc": "Achieve your fitness goals at C Gym - Da Lat & Ho Chi Minh City!"
+            },
+            "opera": {
+                "title": "OPERA HOUSE",
+                "desc": "Witness the grandeur in the heart of the city"
+            }
+        }
+    }
+}
