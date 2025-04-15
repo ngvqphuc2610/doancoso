@@ -39,7 +39,7 @@ const buttonVariants = cva(
         icon: "h-9 w-9",
         custom5: "h-[50px] rounded-md px-8",
         swiper : "h-5 w-5",
-        custom7 : "h-[40px] ",
+        custom7 : "h-[40px] rounded-md ",
       },
       width: {
 
@@ -50,7 +50,7 @@ const buttonVariants = cva(
         custom4: "w-[359px]",
         custom5: "w-[100px]",
         swiper : "w-5",
-        custom7 : "w-[240px]"
+        custom7 : "w-[270px]"
       },
       position: {
 

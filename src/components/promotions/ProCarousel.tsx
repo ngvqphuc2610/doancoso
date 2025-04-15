@@ -10,6 +10,7 @@ import ProCard, { promotions, PromotionProps } from './ProCard';
 import Link from 'next/link';
 import type { Swiper as SwiperType } from 'swiper';
 import { useTranslation } from 'react-i18next';
+
 interface PromotionCarouselProps {
   slides?: PromotionProps[];
   className?: string;
@@ -43,7 +44,6 @@ const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselP
   return (
     <div className={`relative w-full bg-gradient-to-b bg-cinestar-darkblue py-8 ${className}`}>
       <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">{t('discount.title')}</h2>
-      <Link href="/chuong-trinh-khuyen-mai/">
       <Swiper
         modules={[Navigation]}
         spaceBetween={24}
@@ -63,18 +63,20 @@ const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselP
               id={slide.id}
               title={slide.title}
               image={slide.image}
-              link={`${slide.link}/`}
+              link={slide.link}
             />
           </SwiperSlide>
         ))}
-        
       </Swiper>
-      </Link>
+
       <div className="text-center mt-8">
-        <Link href="/chuong-trinh-khuyen-mai/">
-          <button className="cinestar-button-to font-bold text-sm md:text-base">
+        <Link href="/chuong-trinh-khuyen-mai">
+          <Button variant="custom7"
+              size="custom7"
+              width="custom7"
+              className="md:text-base ">
             {t('discount.button')}
-          </button>
+          </Button>
         </Link>
       </div>
     </div>
