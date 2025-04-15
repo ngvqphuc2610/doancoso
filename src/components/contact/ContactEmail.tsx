@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 interface ContactFormData {
   name: string;
   email: string;
+  subject: string;
   message: string;
 }
 
@@ -17,9 +18,14 @@ const ContactForm = () => {
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
+    subject: '',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -32,20 +38,40 @@ const ContactForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setNotification(null);
 
     try {
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Form submitted:', formData);
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      // Reset form
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Có lỗi xảy ra khi gửi liên hệ');
+      }
+
+      setNotification({
+        type: 'success',
+        message: data.message || 'Gửi liên hệ thành công!'
+      });
+
+      // Reset form only on success
       setFormData({
         name: '',
         email: '',
+        subject: '',
         message: ''
       });
-    } catch (error) {
-      console.error('Error submitting form:', error);
+    } catch (error: any) {
+      setNotification({
+        type: 'error',
+        message: error.message || 'Không thể gửi liên hệ. Vui lòng thử lại sau.'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -54,6 +80,14 @@ const ContactForm = () => {
   return (
     <div className="bg-blue-600 rounded-lg p-6 shadow-lg">
       <h2 className="text-2xl font-bold mb-4 text-white">THÔNG TIN LIÊN HỆ</h2>
+
+      {notification && (
+        <div className={`mb-4 p-4 rounded-md ${notification.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+          {notification.message}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex items-start gap-3">
           <svg className="w-5 h-5 text-cinestar-yellow mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -105,6 +139,19 @@ const ContactForm = () => {
             type="email"
             placeholder={t('contact.email')}
             value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full bg-white text-white border-gray-600"
+          />
+        </div>
+
+        <div>
+          <Input
+            id="subject"
+            name="subject"
+            type="text"
+            placeholder={t('contact.subject')}
+            value={formData.subject}
             onChange={handleChange}
             required
             className="w-full bg-white text-white border-gray-600"

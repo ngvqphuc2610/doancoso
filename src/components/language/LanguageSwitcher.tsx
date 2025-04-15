@@ -39,10 +39,10 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
             </button>
 
             {isHovered && (
-                <div className="absolute top-full left- mt-1 bg-[#3366CCCC] shadow-lg rounded-md overflow-hidden">
+                <div className="absolute top-full left- mt-0 bg-[#3366CCCC] shadow-lg rounded-md overflow-hidden">
                     {currentLanguage === 'en' && (
                         <button
-                            className="w-full px-4 py-2 text-left  flex items-center gap-2"
+                            className="w-full px-6 py-3 text-left  flex items-center gap-2"
                             onClick={() => handleLanguageChange('vi')}
                         >
                             <Image
@@ -56,7 +56,7 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
                     )}
                     {currentLanguage === 'vi' && (
                         <button
-                            className="w-full px-4 py-2 text-left  flex items-center gap-2"
+                            className="w-full px-6 py-3 text-left  flex items-center gap-2"
                             onClick={() => handleLanguageChange('en')}
                         >
                             <Image
