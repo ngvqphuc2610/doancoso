@@ -112,32 +112,32 @@ export default function MovieCard({
 
       <CardContent className="pt-4 space-y-3 flex flex-col justify-between">
         <Link href={`/movie/${id}`} className="block">
-            {releaseDate && (
-              <p className=" text-gray-400 text-center pb-3">
-                {isComingSoon ? t('movie.releaseDate', { date: releaseDate }) : ""}
-          
-              </p>
-            )}
-            <p className="font-semibold text-white group-hover:text-cinestar-yellow truncate  md:text-base pl-2 text-center">
-              {title}
+          {releaseDate && (
+            <p className=" text-gray-400 text-center pb-3">
+              {isComingSoon ? t('movie.releaseDate', { date: releaseDate }) : ""}
+
             </p>
+          )}
+          <p className="font-semibold text-white group-hover:text-cinestar-yellow truncate  md:text-base pl-2 text-center">
+            {title}
+          </p>
         </Link>
 
         <div className="flex justify-between gap-2 pt-3">
-          {trailerUrl && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <span className="text-sm py-2 px-3 bg-transparent border-white text-white cursor-pointer flex items-center gap-1 underline">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 0C3.6 0 0 3.6 0 8C0 12.4 3.6 16 8 16C12.4 16 16 12.4 8 0ZM6 11.5V4.5L12 8L6 11.5Z" fill="currentColor" />
-                  </svg>
-                  {t('movie.watchTrailer')}
-                </span>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[800px] p-0 bg-black border-none">
-                <DialogTitle>
-                  <VisuallyHidden>{title ? `${t('movie.watchTrailer')}: ${title}` : t('movie.watchTrailer')}</VisuallyHidden>
-                </DialogTitle>
+          <Dialog>
+            <DialogTrigger asChild>
+              <span className="text-sm py-2 px-3 bg-transparent border-white text-white cursor-pointer flex items-center gap-1 underline">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 0C3.6 0 0 3.6 0 8C0 12.4 3.6 16 8 16C12.4 16 16 12.4 8 0ZM6 11.5V4.5L12 8L6 11.5Z" fill="currentColor" />
+                </svg>
+                {t('movie.watchTrailer')}
+              </span>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[800px] p-0 bg-black border-none">
+              <DialogTitle>
+                <VisuallyHidden>{title ? `${t('movie.watchTrailer')}: ${title}` : t('movie.watchTrailer')}</VisuallyHidden>
+              </DialogTitle>
+              {embedTrailerUrl ? (
                 <iframe
                   width="100%"
                   height="450"
@@ -147,20 +147,24 @@ export default function MovieCard({
                   allowFullScreen
                   className="border-0"
                 ></iframe>
-              </DialogContent>
-            </Dialog>
-          )}
-          
+              ) : (
+                <div className="flex items-center justify-center h-[450px] text-white">
+                  {t('movie.noTrailer', 'Trailer chưa được cập nhật')}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
           <Link
             href={`/movie/${id}`}
             className=" text-xs py-2 px-0 ml-auto"
           >
             <Button variant="custom3" width="custom3" size={"default"}  >
               {isComingSoon ? t('movie.learnMore') : t('movie.bookNow')}
-            
+
             </Button>
           </Link>
-            
+
         </div>
       </CardContent>
     </Card>

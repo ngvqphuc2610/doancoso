@@ -32,6 +32,7 @@
         "learnMore": "TÌM HIỂU THÊM",
         "bookNow": "ĐẶT VÉ",
         "watchTrailer": "Xem Trailer",
+        "noTrailerAvailable": "Không có trailer",
         "releaseDate": "Khởi chiếu: {{date}}",
         "duration": "{{time}} phút",
         "language": "Phụ đề",

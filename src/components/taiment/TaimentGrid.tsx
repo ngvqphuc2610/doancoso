@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import TaimentCard, { TaimentProps, taimentItems } from '@/components/taiment/TaimentCard';
+import TaimentCard, { TaimentProps } from '@/components/taiment/TaimentCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperType } from 'swiper';
 import { Navigation, Pagination, Grid } from 'swiper/modules';
@@ -9,6 +9,7 @@ import { SwiperProvider, useSwiper } from '../swiper/SwiperContext';
 import SwiperNavigation from '@/components/swiper/SwiperNavigation';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { taimentItems } from '@/lib/taiment';
 
 // Import Swiper styles
 import 'swiper/css';

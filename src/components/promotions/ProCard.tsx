@@ -1,63 +1,42 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardProduct } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 export interface PromotionProps {
   id: string;
   title: string;
   image: string;
   link: string;
-  
+  variant?: 'card1' | 'card2';
 }
 
-export const promotions: PromotionProps[] = [
-  {
-    id: '1',
-    title: 'STUDENT - 45K CHO HỌC SINH SINH VIÊN ',
-    image: '/images/pro_MEMBER.png',
-    link: '/promotions/student-discount',
-  },
-  {
-    id: '2',
-    title: 'Đồng Giá 45K Trước 10H Sáng',
-    image: '/images/pro_student.png',
-    link: '/promotions/morning-discount',
-  },
-  {
-    id: '3',
-    title: 'TEN - HAPPY HOUR - 45K/ 2D MỐC 10H  ',
-    image: '/images/pro_ten.png',
-    link: '/promotions/monday-special',
-  },
-  {
-    id: '4',
-    title: 'MONDAY - HAPPY DAY - ĐỒNG GIÁ 45K/ 2D ',
-    image: '/images/pro_monday.jpg',
-    link: '/promotions/tuesday-special',
-  }
-];
+export default function ProCard({ id, title, image, link, variant = 'card1' }: PromotionProps) {
+  const { t } = useTranslation();
 
-export default function ProCard({ id, title, image, link }: PromotionProps) {
-  return (
-    <Card className="relative bg-white rounded-lg overflow-hidden shadow-lg h-64 hover:cursor-pointer" >
-      <CardContent className="p-0 h-full">
-        <div className="relative h-full">
-          <Image
-            src={image}
-            alt={title}
-            className="object-cover"
-            fill
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-50"></div>
-          <div className="absolute left-4 right-4 text-white">
-     
-            <Link href={link} className="inline-block mt-4 font-bold px-4 py-2 ">
-              
-            </Link>
+  if (variant === 'card1') {
+    return (
+      <Card className="card1 overflow-hidden">
+        <Link href={link}>
+          <div className="relative w-full h-[200px]">
+            <Image src={image} alt={title} fill className="object-cover" />
           </div>
+        </Link>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="card2 overflow-hidden">
+      <Link href={link}>
+        <div className="relative w-full h-[200px]">
+          <Image src={image} alt={title} fill className="object-cover" />
         </div>
-      </CardContent>
+        <CardContent className="p-4">
+          <h3 className="text-lg font-semibold line-clamp-2">{title}</h3>
+        </CardContent>
+      </Link>
     </Card>
   );
 }
