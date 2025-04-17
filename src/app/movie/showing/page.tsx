@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout2 from '@/components/layout/Layout2';
-import MovieCarousel from '@/components/movies/MovieCarousel';
+import MovieGrid from '@/components/movies/MovieGrid';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { getNowShowingMovies, fallbackNowShowingMovies } from '@/lib/film';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-
+import { useTranslation } from 'react-i18next';
 export default function ShowingPage() {
+    const { t } = useTranslation();
     const [movies, setMovies] = useState<MovieProps[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export default function ShowingPage() {
                 )}
 
                 <div className='mb-32'>
-                    <MovieCarousel movies={movies} title="PHIM ĐANG CHIẾU" />
+                    <MovieGrid movies={movies} title={t('movie.nowShowing')} />
                 </div>
             </div>
         </Layout2>

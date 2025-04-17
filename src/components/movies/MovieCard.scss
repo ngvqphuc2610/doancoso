@@ -1,66 +1,88 @@
 * {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 15px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
 }
+
 .movie-card {
-    position: relative;
-    overflow: hidden;
-    height: 100%;
-  }
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  position: relative;
+  overflow: hidden;
+  height: 100%;
 }
-  .movie-info {
+
+@keyframes fadeIn {
+  from {
     opacity: 0;
-    transition: opacity 0.3s ease;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    animation: fadeIn 0.25s ease-in-out;
-  }
-  
-  .movie-card:hover .movie-info {
-    opacity: 1;
-    animation: fadeIn 0.25s ease-in-out;
-  }
-  
-  .movie-info h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  
-  .movie-info p {
-    margin: 5px 0;
-    display: flex;
-    align-items: center;
-  }
-  
-  .movie-info svg {
-    margin-right: 5px;
+    transform: translateY(-20px);
   }
 
-  .class-img-infofilm {
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  .icon-infofilm-earth {
-    color: yellow;
+}
+
+.movie-info {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  animation: fadeIn 0.25s ease-in-out;
+ 
+ 
+}
+
+.movie-card:hover .movie-info {
+  opacity: 1;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.movie-info h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.movie-info p {
+  margin: 5px 0;
+  display: flex;
+  align-items: center;
+}
+
+.movie-info svg {
+  margin-right: 5px;
+}
+
+.class-img-infofilm {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+}
+
+.icon-infofilm-earth {
+  color: yellow;
+}
+
+.movie-card {
+  &:hover {
+    .movie-info {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
+
+  .movie-info {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+}

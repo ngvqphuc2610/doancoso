@@ -31,10 +31,12 @@
         "learnMore": "VIEW DETAILS",
         "bookNow": "BOOK NOW",
         "watchTrailer": "Watch Trailer",
+        "noTrailerAvailable": "No trailer available",
         "releaseDate": "Premiere: {{date}}",
         "duration": "{{time}} minutes",
         "language": "Subtitled",
         "format": "2D"
+
     },
     "menu": {
         "chooseTheater": "Select Theater",

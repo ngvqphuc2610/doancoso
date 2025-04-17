@@ -34,7 +34,6 @@ interface ProductCardProps
   description?: string;
   price: string;
   image: string;
-  link: string;
   quantity?: number;
   onIncrease?: () => void;
   onDecrease?: () => void;
@@ -49,7 +48,6 @@ const CardProduct = React.forwardRef<HTMLDivElement, ProductCardProps>(
       description,
       price,
       image,
-      link,
       quantity = 0,
       onIncrease,
       onDecrease,
@@ -85,22 +83,23 @@ const CardProduct = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
       {/* Quantity Controls */}
       <div className="flex items-center justify-center gap-4 mt-2">
-        <button className="flex items-center justify-center bg-[#94A3B8] hover:bg-[#EBDB40] hover:text-dark text-white rounded-md text-xl font-bold">
-          <button
-
+        <div className="flex items-center justify-center bg-[#94A3B8] hover:bg-[#EBDB40] hover:text-dark text-white rounded-md text-xl font-bold">
+          <div
+            role="button"
             onClick={onDecrease}
-            className="w-8 h-8 flex items-center justify-center   text-dark rounded-md text-xl font-bold"
+            className="w-8 h-8 flex items-center justify-center text-dark rounded-md text-xl font-bold cursor-pointer"
           >
-            <FiMinus className="w-4 hover:bg-[#663399] rounded-full  " />
-          </button>
+            <FiMinus className="w-4 hover:bg-[#663399] rounded-full" />
+          </div>
           <span className="w-12 text-center text-lg font-medium text-dark">{quantity}</span>
-          <button
+          <div
+            role="button"
             onClick={onIncrease}
-            className="w-8 h-8 flex items-center justify-center  rounded-full   text-dark  text-xl font-bold"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-dark text-xl font-bold cursor-pointer"
           >
-            <FiPlus className="w-4 hover:bg-[#663399] rounded-full " />
-          </button>
-        </button>
+            <FiPlus className="w-4 hover:bg-[#663399] rounded-full" />
+          </div>
+        </div>
       </div>
     </div>
   )

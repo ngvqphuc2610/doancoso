@@ -4,7 +4,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSwiper } from './SwiperContext';
-import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
+
 interface SwiperNavigationProps {
   showDots?: boolean;
   showArrows?: boolean;
@@ -44,7 +44,7 @@ const SwiperNavigation = ({
             onClick={handlePrev}
             aria-label="Previous"
           >
-            <FaAngleLeft  />
+            <ChevronLeft  />
           </Button>
 
           <Button
@@ -55,7 +55,7 @@ const SwiperNavigation = ({
             onClick={handleNext}
             aria-label="Next"
           >
-            <FaAngleRight  />
+            <ChevronRight  />
           </Button>
         </div>
       )}
@@ -69,7 +69,7 @@ const SwiperNavigation = ({
               onClick={() => goToSlide(index * slidesPerGroup)}
               className={`w-2 h-2 rounded-full ${
                 currentGroup === index 
-                  ? 'bg-cinestar-yellow' 
+                  ? 'bg-white' 
                   : 'bg-white bg-opacity-50'
               }`}
               aria-label={`Go to slide group ${index + 1}`}

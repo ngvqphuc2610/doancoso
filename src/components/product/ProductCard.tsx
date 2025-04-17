@@ -1,30 +1,50 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardProduct } from '@/components/ui/card';
-import { ProductProps1 } from './ProductData';
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Card, CardContent, CardProduct } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
-const ProductCard = (props: ProductProps1) => {
-    const [quantity, setQuantity] = useState(props.quantity);
+interface ProductCardProps {
+    id: string;
+    title: string;
+    image: string;
+    price: string;
+    description?: string;
+    className?: string;
+    quantity: number;
+    onIncrease?: () => void;
+    onDecrease?: () => void;
+}
 
-    const handleIncrease = () => {
-        setQuantity(prev => prev + 1);
-    };
-
-    const handleDecrease = () => {
-        setQuantity(prev => Math.max(0, prev - 1));
-    };
+export default function ProductCard({
+    id,
+    title,
+    image,
+    price,
+    description,
+    quantity,
+    onIncrease,
+    onDecrease,
+    className = ''
+}: ProductCardProps) {
+    const { t } = useTranslation();
 
     return (
-        
-            <CardProduct
-                {...props}
-                quantity={quantity}
-                onIncrease={handleIncrease}
-                onDecrease={handleDecrease}
-            />
-       
+        <CardProduct
+            id={id}
+            title={title}
+            image={image}
+            price={price}
+            description={description}
+            quantity={quantity}
+            onIncrease={onIncrease}
+            onDecrease={onDecrease}
+            variant="default"
+            size="default"
+            className={className}
+        />
     );
-};
-
-export default ProductCard;
+}

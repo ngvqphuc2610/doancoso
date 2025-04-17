@@ -11,7 +11,7 @@ export default function MovieGrid({ title, movies, className = '' }: MovieGridPr
   return (
     <div className={`py-8 ${className}`}>
       {title && <h2 className="text-2xl md:text-3xl text-center font-bold mb-6 ">{title}</h2>}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4  gap-4 md:gap-8">
         {movies.map((movie) => (
           <MovieCard key={movie.id} {...movie} />
         ))}

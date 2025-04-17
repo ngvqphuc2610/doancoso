@@ -6,10 +6,11 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Button } from '@/components/ui/button';
-import ProCard, { promotions, PromotionProps } from './ProCard';
 import Link from 'next/link';
 import type { Swiper as SwiperType } from 'swiper';
 import { useTranslation } from 'react-i18next';
+import { promotions, type PromotionProps } from '@/lib/promotions';
+import ProCard from './ProCard';
 
 interface PromotionCarouselProps {
   slides?: PromotionProps[];
@@ -23,13 +24,13 @@ const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselP
 
   const handlePrev = () => {
     if (!swiperRef.current) return;
-    const targetSlide = Math.max();
+    const targetSlide = Math.max(0, currentSlide - 1);
     swiperRef.current.slideTo(targetSlide);
   };
 
   const handleNext = () => {
     if (!swiperRef.current) return;
-    const targetSlide = Math.min();
+    const targetSlide = Math.min(slides.length - 1, currentSlide + 1);
     swiperRef.current.slideTo(targetSlide);
   };
 
@@ -60,10 +61,8 @@ const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselP
         {slides.map((slide) => (
           <SwiperSlide key={slide.id}>
             <ProCard
-              id={slide.id}
-              title={slide.title}
-              image={slide.image}
-              link={slide.link}
+              {...slide}
+              variant="card1"
             />
           </SwiperSlide>
         ))}
@@ -72,9 +71,9 @@ const ProCarousel = ({ slides = promotions, className = '' }: PromotionCarouselP
       <div className="text-center mt-8">
         <Link href="/chuong-trinh-khuyen-mai">
           <Button variant="custom7"
-              size="custom7"
-              width="custom7"
-              className="md:text-base ">
+            size="custom7"
+            width="custom7"
+            className="md:text-base ">
             {t('discount.button')}
           </Button>
         </Link>

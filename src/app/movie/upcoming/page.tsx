@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout2 from '@/components/layout/Layout2';
-import MovieCarousel from '@/components/movies/MovieCarousel';
+import MovieGrid from '@/components/movies/MovieGrid';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { getComingSoonMovies, fallbackComingSoonMovies } from '@/lib/film';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -43,15 +43,15 @@ export default function UpcomingPage() {
 
     return (
         <Layout2>
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-0 py-8">
                 {error && (
                     <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
                         <p>{error}</p>
                     </div>
                 )}
 
-                <div className='mb-32'>
-                    <MovieCarousel movies={movies} title="PHIM SẮP CHIẾU" />
+                <div className='mt-8 pb-[100px]'>
+                    <MovieGrid movies={movies} title={t('movie.comingSoon')} />
                 </div>
             </div>
         </Layout2>
