@@ -1,7 +1,7 @@
-
-
+npm i
 
 npm run dev
 
-tailwind
-nextjs
+lay APIKEY trên themoviedb
+
+APP_PASS  tự tạo trên gg
