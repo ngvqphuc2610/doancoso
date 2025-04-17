@@ -32,6 +32,49 @@ export const MovieDbAPI = {
       return {};
     }
   },
+  //lấy thông tin diễn viên và đạo diễn của phim
+  getMovieCredits: async (movieId: number) => {
+    try {
+      const response = await axios.get(`${baseURL}/movie/${movieId}/credits`, {
+        params: {
+          api_key: API_KEY,
+          language: "vi-VN"
+        }
+      });
+  
+      // Trả về danh sách diễn viên chính (ví dụ: lấy top 5)
+      const cast = response.data.cast
+        .slice(0, 5)
+        .map((actor: any) => ({
+          id: actor.id,
+          name: actor.name,
+          character: actor.character,
+          profile_path: actor.profile_path
+            ? `https://image.tmdb.org/t/p/w300${actor.profile_path}`
+            : "/images/no-avatar.png"
+        }));
+  
+      // Trả về đạo diễn (crew có job là "Director")
+      const director = response.data.crew.find((member: any) => member.job === "Director");
+  
+      return {
+        director: director ? {
+          id: director.id,
+          name: director.name,
+          profile_path: director.profile_path
+            ? `https://image.tmdb.org/t/p/w300${director.profile_path}`
+            : "/images/no-avatar.png"
+        } : null,
+        cast
+      };
+    } catch (error) {
+      console.error(`Lỗi khi lấy diễn viên và đạo diễn phim ${movieId}:`, error);
+      return {
+        director: null,
+        cast: []
+      };
+    }
+  },
 
   // Lấy chi tiết phim
   getMovieDetails: async (movieId: number) => {
