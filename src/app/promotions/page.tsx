@@ -12,7 +12,7 @@ export default function PromotionsPage() {
     return (
         <Layout2>
             <div className="container mx-auto px-4 py-8">
-                <h1 className="text-4xl font-bold text-center text-white mb-12">{t('promotions.title')}</h1>
+               
                 <ProGrid promotions={promotions} className="mb-12" />
             </div>
         </Layout2>

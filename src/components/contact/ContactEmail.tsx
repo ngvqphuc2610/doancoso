@@ -128,7 +128,7 @@ const ContactForm = () => {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full bg-white text-white border-gray-600"
+            className="w-full bg-white text-black border-gray-600"
           />
         </div>
 
@@ -141,7 +141,7 @@ const ContactForm = () => {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full bg-white text-white border-gray-600"
+            className="w-full bg-white text-black border-gray-600"
           />
         </div>
 
@@ -154,7 +154,7 @@ const ContactForm = () => {
             value={formData.subject}
             onChange={handleChange}
             required
-            className="w-full bg-white text-white border-gray-600"
+            className="w-full bg-white text-black border-gray-600"
           />
         </div>
 

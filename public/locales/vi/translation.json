@@ -105,6 +105,27 @@
     "discount": {
         "title" : "KHUYẾN MÃI",
         "button": "TẤT CẢ ƯU ĐÃI"
+    },
+    "promotion": {
+       
+        "items": {
+            "studentTicket": {
+                "title": "STUDENT - 45K CHO HỌC SINH SINH VIÊN ",
+                "desc": "Đồng giá 45K/2D cho HSSV/GV/U22 cả tuần tại mọi cụm rạp Cinestar"
+            },
+            "hourTicket": {
+                "title": "Đồng Giá 45K Trước 10H Sáng",
+                "desc": "Áp dụng giá 45K/ 2D và 55K/ 3D cho khách hàng xem phim trước 10h sáng và sau 10h tối."
+            },
+            "memberTicket": {
+                "title": "TEN - HAPPY HOUR - 45K/ 2D MỐC 10H T",
+                "desc": "Áp dụng giá 45K/ 2D và 55K/ 3D cho khách hàng là thành viên Cinestar vào ngày thứ 4 hàng tuần."
+            },
+            "mondayTicket": {
+                "title": "MONDAY - HAPPY DAY - ĐỒNG GIÁ 45K/ 2D",
+                "desc": "Đồng giá 45K/2D, 55K/3D vào thứ 2 hàng tuần"
+            }
+        }
     }
     ,
     "taiment": {

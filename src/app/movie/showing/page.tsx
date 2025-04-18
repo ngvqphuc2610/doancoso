@@ -5,7 +5,7 @@ import Layout2 from '@/components/layout/Layout2';
 import MovieGrid from '@/components/movies/MovieGrid';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { getNowShowingMovies, fallbackNowShowingMovies } from '@/lib/film';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+
 import { useTranslation } from 'react-i18next';
 export default function ShowingPage() {
     const { t } = useTranslation();
@@ -30,16 +30,6 @@ export default function ShowingPage() {
 
         fetchMovies();
     }, []);
-
-    if (loading) {
-        return (
-            <Layout2>
-                <div className="container mx-auto px-4 py-16 flex justify-center items-center">
-                    <LoadingSpinner />
-                </div>
-            </Layout2>
-        );
-    }
 
     return (
         <Layout2>
