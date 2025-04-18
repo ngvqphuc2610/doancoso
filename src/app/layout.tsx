@@ -21,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body>
+    
         <I18nProvider>
           <Providers>
             <LanguageProvider>
@@ -28,6 +29,7 @@ export default function RootLayout({
             </LanguageProvider>
           </Providers>
         </I18nProvider>
+      
       </body>
     </html>
   );

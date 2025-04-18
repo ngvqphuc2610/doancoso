@@ -79,7 +79,7 @@ const Carousel = ({ banners }: CarouselProps) => {
                                 className='object-contain'
                                 priority={index === 0}
                             />
-                            <div className="absolute bottom-10 right-[100px] bottom-[10px] z-20 w-[260px] h-[45px] ">
+                            <div className="absolute right-[100px] bottom-[10px] z-20 w-[260px] h-[45px] ">
                                 <Link href={banner.link} className="cinestar-button-to font-bold text-sm md:text-base button-datve">
                                     ĐẶT VÉ NGAY
                                 </Link>

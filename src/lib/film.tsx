@@ -23,6 +23,49 @@ export async function getComingSoonMovies(): Promise<MovieProps[]> {
     return fallbackComingSoonMovies; // Trả về dữ liệu dự phòng khi gặp lỗi
   }
 }
+
+export async function getPopularMovies(): Promise<MovieProps[]> {
+  try {
+    // Không cần map lại vì MovieDbAPI.getPopularMovies() đã format dữ liệu
+    return await MovieDbAPI.getPopularMovies();
+  } catch (error) {
+    console.error("Lỗi khi lấy phim phổ biến:", error);
+    return fallbackNowShowingMovies; // Trả về dữ liệu dự phòng khi gặp lỗi
+  }
+}
+
+export async function getMovieDetails(id: number): Promise<MovieProps | null> {
+  try {
+    const movieDetails = await MovieDbAPI.getMovieDetails(id);
+    return movieDetails ? await MovieDbAPI.formatMovieData(movieDetails) : null;
+  } catch (error) {
+    console.error("Lỗi khi lấy chi tiết phim:", error);
+    return null; // Trả về null nếu không tìm thấy phim
+  }
+}
+
+export async function getMovieGenres(): Promise<{ [key: number]: string }> {
+  try {
+    const genres = await MovieDbAPI.getGenres();
+    return genres;
+  } catch (error) {
+    console.error("Lỗi khi lấy thể loại phim:", error);
+    return {}; // Trả về đối tượng rỗng nếu gặp lỗi
+  }
+}
+
+export async function getMovieCredits(id: number): Promise<any> {
+  try {
+    const credits = await MovieDbAPI.getMovieCredits(id);
+    return credits;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin diễn viên:", error);
+    return null; // Trả về null nếu không tìm thấy thông tin
+  }
+}
+
+
+// Mock data for now showing movies
 //du lieu phim de phong
 export const fallbackNowShowingMovies: MovieProps[] = [
   {

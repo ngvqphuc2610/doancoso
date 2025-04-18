@@ -112,7 +112,7 @@ const ProductGridInner = ({ title, products, className = '' }: ProductGridProps)
     };
 
     return (
-        <div className={`product-grid ${className} relative w-full bg-gradient-to-b bg-cinestar-darkblue py-8`}>
+        <div className={`product-grid ${className} relative w-full bg-gradient-to-b bg-cinestar-darkblue py-8 `}>
             <h2 className="text-4xl font-bold text-white mb-8 text-center">{title}</h2>
 
             <Swiper

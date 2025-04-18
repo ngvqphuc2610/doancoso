@@ -16,7 +16,6 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/grid';
-
 interface TaimentCarouselProps {
     title?: string;
     taiment?: TaimentProps[];
@@ -44,72 +43,16 @@ const TaimentCarouselInner = ({
             </div>
         );
     }
-
-    const handleSlideChange = (swiper: SwiperType) => {
-        setCurrentSlide(swiper.activeIndex);
-    };
-
-    const onSwiper = (swiper: SwiperType) => {
-        swiperRef.current = swiper;
-        const slidesPerView = swiper.params.slidesPerView as number;
-        const totalSlides = Math.ceil(taiment.length / (slidesPerView * 2)); // 2 rows
-        setTotalSlides(totalSlides);
-    };
-
     return (
         <div className={`taiment-carousel ${className}`}>
             {title && <h1 className="text-3xl font-bold mb-6 text-center text-white">{t('taiment.title')}</h1>}
             <p className="text-center mb-6">{t('taiment.subtitle')}</p>
 
-            {showNavigation && <SwiperNavigation showArrows={true} showDots={false} className="mb-4" />}
-
-            <Swiper
-                onSwiper={onSwiper}
-                onSlideChange={handleSlideChange}
-                modules={[Navigation, Pagination, Grid]}
-                spaceBetween={20}
-                slidesPerView={3}
-                slidesPerGroup={3}
-                grid={{
-                    rows: 2,
-                    fill: 'row'
-                }}
-                speed={500}
-                watchSlidesProgress={true}
-                breakpoints={{
-                    320: {
-                        slidesPerView: 1,
-                        grid: { rows: 2, fill: 'row' },
-                        spaceBetween: 16
-                    },
-                    640: {
-                        slidesPerView: 2,
-                        grid: { rows: 2, fill: 'row' },
-                        spaceBetween: 20
-                    },
-                    768: {
-                        slidesPerView: 2,
-                        grid: { rows: 2, fill: 'row' },
-                        spaceBetween: 20
-                    },
-                    1024: {
-                        slidesPerView: 3,
-                        grid: { rows: 2, fill: 'row' },
-                        spaceBetween: 24
-                    },
-                }}
-                navigation={false}
-                pagination={false}
-                className="grid-swiper"
-            >
-                {taiment.map((item) => (
-                    <SwiperSlide key={item.id} className="pb-1">
-                        <TaimentCard {...item} />
-                    </SwiperSlide>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {taiment.map((item, index) => (
+                    <TaimentCard key={index} {...item} />
                 ))}
-            </Swiper>
-
-            {showNavigation && <SwiperNavigation showArrows={false} showDots={true} className="mt-4" />}
+            </div>
         </div>
     );
 };
