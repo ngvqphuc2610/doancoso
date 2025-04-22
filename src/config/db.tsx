@@ -6,11 +6,11 @@ dotenv.config();
 
 // Tạo pool connections thay vì connection đơn lẻ để quản lý tốt hơn
 const pool = mysql.createPool({
-    host: process.env.DB_HOST ,
+    host: process.env.DB_HOST,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3307,
-    user: process.env.DB_USER ,
-    password: process.env.DB_PASSWORD ,
-    database: process.env.DB_NAME ,
+    user: process.env.DB_USERNAME,  // Changed from DB_USER to DB_USERNAME
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

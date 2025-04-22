@@ -7,10 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MenuIcon, Search, User } from 'lucide-react';
-import { FaCaretDown } from "react-icons/fa";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import { FaLocationDot } from "react-icons/fa6";
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../language/LanguageSwitcher';
+import { Cinema, cinemas } from '@/lib/cinema';
 
 export default function Header() {
   const { t, i18n } = useTranslation();
@@ -20,7 +27,11 @@ export default function Header() {
   };
 
   const menuItems = [
-    { href: "/chonrap/", label: t('menu.chooseTheater') },
+    {
+      href: "#",
+      label: t('menu.chooseTheater'),
+      hasDropdown: true,
+    },
     { href: "/showtimes/", label: t('menu.schedule') },
   ];
 
@@ -121,22 +132,50 @@ export default function Header() {
       </div>
 
       {/* Secondary navigation */}
-      {/* goi lai menuitem */}
       <div className="hidden md:flex items-center justify-between py-2 border-t border-gray-700">
-
         <div className="flex items-start gap-6">
-          {menuItems.map((item: { href: string; label: string }) => (
-            <div key={item.href} className="flex items-center gap-2 hover:text-cinestar-yellow pb-3">
-              <FaLocationDot />
+          {menuItems.map((item) => (
+            item.hasDropdown ? (
+              <div key={item.href} className="group relative">
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-2 hover:text-cinestar-yellow pb-3"
+                >
+                  <FaLocationDot className="text-cinestar-yellow" />
+                  <span className="text-sm font-semibold">{item.label}</span>
+                </Link>
+                {/* Dropdown menu wrapper */}
+                <div className="hidden group-hover:block absolute left-0 w-screen bg-cinestar-darkblue shadow-lg z-40"
+                  style={{ transform: 'translateX(calc((100vw - 100%) / -2))' }}>
+                  <div className="container -mx-2">
+                    <ul className="grid grid-cols-3 gap-4 py-6">
+                      {cinemas.map((cinema) => (
+                        <li key={cinema.id}>
+                          <Link
+                            href={`/chonrap/${cinema.id}`}
+                            className="block px-2 py-3 text-sm text-white hover:text-cinestar-yellow transition-colors duration-200 border-l-2 border-transparent hover:border-cinestar-yellow"
+                          >
+                            {cinema.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ) : (
               <Link
+                key={item.href}
                 href={item.href}
-                className="text-sm font-semibold "
+                className="flex items-center gap-2 hover:text-cinestar-yellow pb-3"
               >
-                {item.label}
+                <FaLocationDot className="text-cinestar-yellow" />
+                <span className="text-sm font-semibold">{item.label}</span>
               </Link>
-            </div>
+            )
           ))}
         </div>
+
         <div className="flex items-center gap-6">
           {menuItems2.map((item: { href: string; label: string }) => (
             <Link
@@ -149,7 +188,6 @@ export default function Header() {
           ))}
         </div>
       </div>
-
     </header>
   );
 }

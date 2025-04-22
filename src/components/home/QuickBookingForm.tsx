@@ -8,28 +8,12 @@ import { MovieDbAPI } from '@/services/MovieDbAPI';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { NavigationFilter, Select } from '@/components/ui/navigation-filter';
 import { useTranslation } from 'react-i18next';
-interface Cinema {
-  id: string;
-  name: string;
-}
+import { Cinema, cinemas } from '@/lib/cinema';
 
 interface Movie {
   id: string;
   title: string;
 }
-
-// Lấy danh sách rạp từ page.tsx
-const cinemas: Cinema[] = [
-  { id: 'dl', name: 'Cinestar Đà Lạt (TP. Đà Lạt)' },
-  { id: 'qt', name: 'Cinestar Quốc Thanh (TP.HCM)' },
-  { id: 'hbt', name: 'Cinestar Hai Bà Trưng (TP.HCM)' },
-  { id: 'bd', name: 'CINESTAR SINH VIÊN(Bình Dương)' },
-  { id: 'mt', name: 'Mỹ Tho (Tiền Giang)' },
-  { id: 'kd', name: 'Kiên Giang (TP. Kiên Giang)' },
-  { id: 'ld', name: 'Lâm Đồng (TP. Lâm Đồng)' },
-  { id: 'hue', name: 'Cinestar Huế(TP. Huế)' },
-
-];
 
 // Get current date and next 5 days
 const getDates = () => {
