@@ -22,7 +22,7 @@ export default function LoginPage() {
           backgroundPosition: 'center',
         }}
       >
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md ">
           <div className="mt-10 bg-white p-8 rounded-lg shadow-md">
             <div className="flex justify-between mb-8">
               <button
