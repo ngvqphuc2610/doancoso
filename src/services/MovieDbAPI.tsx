@@ -41,7 +41,7 @@ export const MovieDbAPI = {
           language: "vi-VN"
         }
       });
-  
+
       // Trả về danh sách diễn viên chính (ví dụ: lấy top 5)
       const cast = response.data.cast
         .slice(0, 5)
@@ -53,10 +53,10 @@ export const MovieDbAPI = {
             ? `https://image.tmdb.org/t/p/w300${actor.profile_path}`
             : "/images/no-avatar.png"
         }));
-  
+
       // Trả về đạo diễn (crew có job là "Director")
       const director = response.data.crew.find((member: any) => member.job === "Director");
-  
+
       return {
         director: director ? {
           id: director.id,
@@ -334,5 +334,27 @@ export const MovieDbAPI = {
       console.error("Lỗi khi tìm kiếm phim:", error);
       return [];
     }
-  }
+  },
+
+  // Phương thức để đồng bộ hóa phim với database
+  syncWithDatabase: async () => {
+    try {
+      // Gọi API để kích hoạt đồng bộ hóa
+      const response = await fetch('/api/admin/movies/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Có lỗi khi đồng bộ phim');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Lỗi khi đồng bộ phim với database:", error);
+      throw error;
+    }
+  },
 };
