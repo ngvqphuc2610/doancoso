@@ -22,7 +22,10 @@
     "dev": "next dev -H 0.0.0.0 --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "server": "node --loader ts-node/esm src/server.ts",
+    "server:ngrok": "node --loader ts-node/esm scripts/start-with-ngrok.js",
+    "dev:server": "nodemon --exec node --loader ts-node/esm src/server.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",
@@ -39,6 +42,7 @@
     "i18next": "^24.2.3",
     "i18next-browser-languagedetector": "^8.0.4",
     "i18next-resources-to-backend": "^1.2.1",
+    "inngest": "^3.35.1",
     "lucide-react": "^0.475.0",
     "mysql2": "^3.14.0",
     "next": "^15.2.4",
@@ -49,6 +53,7 @@
     "react-i18next": "^15.4.1",
     "react-icons": "^5.5.0",
     "sass": "^1.86.3",
+    "serialize-error-cjs": "^0.2.0",
     "swiper": "^11.2.6",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7"

@@ -1,3 +1,5 @@
+"use server";
+
 import { Request, Response } from 'express';
 import pool from "../config/db.js";
 import nodemailer from "nodemailer";
