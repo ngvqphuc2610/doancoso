@@ -2,18 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
 // Get API URL from environment variables with fallback
-const API_URL = process.env.NGROK_URL || process.env.API_URL || 'http://localhost:5000';
+const API_URL = 'http://localhost:5000';
 
 // Route để đồng bộ phim từ TMDB API vào database
 export async function POST(req: NextRequest) {
-    try {
-        console.log(`Connecting to API at: ${API_URL}/api/admin/movies/sync`);
+    try {        // Xác định đúng endpoint cho API
+        const apiEndpoint = `${API_URL}/api/admin/movies/sync`;
+
+        console.log(`Connecting to API at: ${apiEndpoint}`);
 
         // Gọi đến backend endpoint chính xác để đồng bộ phim
-        const response = await axios.post(`${API_URL}/api/admin/movies/sync`, {
+        const response = await axios.post(apiEndpoint, {
             forceUpdate: true // Thêm tham số để yêu cầu cập nhật
         }, {
-            timeout: 30000 // Tăng timeout lên 30 giây vì quá trình đồng bộ có thể mất thời gian
+            timeout: 60000 // Tăng timeout lên 60 giây vì quá trình đồng bộ có thể mất thời gian
         });
 
         return NextResponse.json(response.data);

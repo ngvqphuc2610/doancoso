@@ -1,0 +1,118 @@
+"use client";
+
+
+import Link from 'next/link';
+import React, { ReactNode } from 'react';
+interface AdminSectionProps {
+  title: string;
+  description: string;
+  href: string;
+  icon: ReactNode;
+}
+
+const AdminSection = ({ title, description, href, icon }: AdminSectionProps) => {
+  return (
+    <Link href={href}>
+      <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow border border-gray-200">
+        <div className="flex items-center mb-4">
+          <div className="p-3 rounded-full bg-blue-500 text-white mr-4">
+            {icon}
+          </div>
+          <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+        </div>
+        <p className="text-gray-600">{description}</p>
+      </div>
+    </Link>
+  );
+};
+
+export default function AdminDashboard() {
+  return (
+    <div className="container mx-auto">
+      <h1 className="text-3xl font-bold mb-8">Trang quản trị CineStar</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AdminSection
+          title="Quản lý Phim"
+          description="Thêm, sửa, xóa phim và đồng bộ dữ liệu từ TMDB"
+          href="/admin/movies"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h18M3 16h18" /></svg>}
+        />
+
+        <AdminSection
+          title="Quản lý Rạp"
+          description="Quản lý thông tin, phòng chiếu và lịch chiếu của các rạp"
+          href="/admin/cinema"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+        />
+
+        <AdminSection
+          title="Quản lý Thành viên"
+          description="Quản lý thông tin và quyền lợi của các thành viên"
+          href="/admin/members"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+        />
+
+        <AdminSection
+          title="Quản lý Sản phẩm"
+          description="Quản lý bắp nước, đồ ăn và các sản phẩm khác"
+          href="/admin/products"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>}
+        />
+
+        <AdminSection
+          title="Quản lý Khuyến mãi"
+          description="Quản lý các chương trình khuyến mãi và ưu đãi"
+          href="/admin/promotions"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>}
+        />
+
+        <AdminSection
+          title="Quản lý Giải trí"
+          description="Quản lý các dịch vụ giải trí tại rạp"
+          href="/admin/entertainment"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+        />
+        <AdminSection
+          title="Quản lý showtime"
+          description="Quản lý các suất chiếu của các rạp"
+          href="/admin/showtimes"
+          icon={
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m8-2.5a9.5 9.5 0 11-19 0 9.5 9.5 0 0119 0z" /></svg>}
+        />
+        <AdminSection
+          title="Quản lý ghế ngồi"
+          description="Quản lý các ghế ngồi của các phòng chiếu"
+          href="/admin/seats"
+          icon={
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m8-2.5a9.5 9.5 0 11-19 0 9.5 9.5 0 0119 0z" /></svg>}
+        />
+        <AdminSection
+          title="Quản lý phòng chiếu"
+          description="Quản lý các phòng chiếu của các rạp"
+          href="/admin/seats"
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <rect x="3" y="4" width="18" height="6" rx="1.5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+              <path d="M4 14h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+            </svg>
+          }
+        />
+      </div>
+    </div>
+  );
+}
