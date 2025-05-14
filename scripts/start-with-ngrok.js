@@ -40,17 +40,22 @@ async function updateEnvFile(ngrokUrl) {
             // File không tồn tại - sẽ tạo mới
         }
 
-        // Kiểm tra xem NGROK_URL đã tồn tại chưa
+        // Cập nhật hoặc thêm NGROK_URL
         if (envContent.includes('NGROK_URL=')) {
-            // Cập nhật NGROK_URL
             envContent = envContent.replace(/NGROK_URL=.*$/m, `NGROK_URL=${ngrokUrl}`);
         } else {
-            // Thêm NGROK_URL
             envContent += `\nNGROK_URL=${ngrokUrl}\n`;
         }
 
+        // Cập nhật hoặc thêm NEXT_PUBLIC_API_URL
+        if (envContent.includes('NEXT_PUBLIC_API_URL=')) {
+            envContent = envContent.replace(/NEXT_PUBLIC_API_URL=.*$/m, `NEXT_PUBLIC_API_URL=${ngrokUrl}`);
+        } else {
+            envContent += `\n# URL API cho frontend sử dụng\nNEXT_PUBLIC_API_URL=${ngrokUrl}\n`;
+        }
+
         await fs.writeFile(envPath, envContent);
-        console.log(`Đã cập nhật .env với NGROK_URL=${ngrokUrl}`);
+        console.log(`Đã cập nhật .env với NGROK_URL=${ngrokUrl} và NEXT_PUBLIC_API_URL=${ngrokUrl}`);
     } catch (error) {
         console.error('Lỗi khi cập nhật file .env:', error);
     }

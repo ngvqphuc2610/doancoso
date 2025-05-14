@@ -1,12 +1,27 @@
 "use server";
 
 import pool from '../config/db.js';
+import { QueryResultHeader } from './types/database';
 
-// Helper function for database queries với retry logic cho độ tin cậy cao hơn
-export async function query(sql: string, params?: any[], retries = 2) {
+/**
+ * Generic type for database query results
+ * T: The expected return type (e.g., Movie[], Product, etc.)
+ */
+export type QueryResult<T = any> = T;
+
+/**
+ * Helper function for database queries with retry logic for better reliability
+ * 
+ * @template T - The expected return type of the query
+ * @param {string} sql - The SQL query to execute
+ * @param {any[]} [params] - Optional parameters for the prepared statement
+ * @param {number} [retries=2] - Number of retry attempts on connection failure
+ * @returns {Promise<T>} - The query results with the specified type
+ */
+export async function query<T = any>(sql: string, params?: any[], retries = 2): Promise<T> {
     try {
         const [results] = await pool.execute(sql, params);
-        return results;
+        return results as T;
     } catch (error: any) {
         // Nếu lỗi là do mất kết nối và còn lần retry
         if ((error.code === 'PROTOCOL_CONNECTION_LOST' ||
@@ -14,7 +29,7 @@ export async function query(sql: string, params?: any[], retries = 2) {
             error.code === 'ETIMEDOUT') && retries > 0) {
             console.log(`Kết nối database bị mất. Thử kết nối lại... (còn ${retries} lần thử)`);
             await new Promise(resolve => setTimeout(resolve, 1000));
-            return query(sql, params, retries - 1);
+            return query<T>(sql, params, retries - 1);
         }
 
         console.error('Database error:', error);
@@ -24,12 +39,19 @@ export async function query(sql: string, params?: any[], retries = 2) {
     }
 }
 
-// Hàm mới để thực thi các lệnh giao dịch không dùng prepared statements
-export async function executeTransaction(sql: string, retries = 2) {
+/**
+ * Execute transactions without using prepared statements
+ * 
+ * @template T - The expected return type of the transaction
+ * @param {string} sql - The SQL statement to execute
+ * @param {number} [retries=2] - Number of retry attempts on connection failure
+ * @returns {Promise<T>} - The transaction results with the specified type
+ */
+export async function executeTransaction<T = any>(sql: string, retries = 2): Promise<T> {
     try {
         // Sử dụng query() thay vì execute() để tránh dùng prepared statements
         const [results] = await pool.query(sql);
-        return results;
+        return results as T;
     } catch (error: any) {
         // Nếu lỗi là do mất kết nối và còn lần retry
         if ((error.code === 'PROTOCOL_CONNECTION_LOST' ||
@@ -37,7 +59,7 @@ export async function executeTransaction(sql: string, retries = 2) {
             error.code === 'ETIMEDOUT') && retries > 0) {
             console.log(`Kết nối database bị mất. Thử kết nối lại... (còn ${retries} lần thử)`);
             await new Promise(resolve => setTimeout(resolve, 1000));
-            return executeTransaction(sql, retries - 1);
+            return executeTransaction<T>(sql, retries - 1);
         }
 
         console.error('Transaction error:', error);

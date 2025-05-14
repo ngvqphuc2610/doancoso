@@ -1,0 +1,391 @@
+
+-- CINEMAS table
+CREATE TABLE CINEMAS (
+    id_cinema INT AUTO_INCREMENT PRIMARY KEY,
+    cinema_name VARCHAR(100) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    description TEXT NULL,
+    image VARCHAR(255) NULL,
+    contact_number VARCHAR(20) NULL,
+    email VARCHAR(100) NULL,
+    status VARCHAR(20) NULL DEFAULT 'active',
+    CONSTRAINT chk_cinema_status CHECK (status IN ('active', 'inactive'))
+);
+
+-- OPERATION_HOURS table
+CREATE TABLE OPERATION_HOURS (
+    id_operation INT AUTO_INCREMENT PRIMARY KEY,
+    id_cinema INT NULL,
+    day_of_week TINYINT NOT NULL,
+    opening_time TIME NOT NULL,
+    closing_time TIME NOT NULL,
+    is_holiday BOOLEAN NULL DEFAULT FALSE,
+    special_note VARCHAR(255) NULL,
+    CONSTRAINT UQ_CinemaDay UNIQUE (id_cinema, day_of_week),
+    CONSTRAINT chk_day_of_week CHECK (day_of_week BETWEEN 1 AND 7),
+    CONSTRAINT fk_operation_cinema FOREIGN KEY (id_cinema) 
+        REFERENCES CINEMAS (id_cinema) ON DELETE CASCADE
+);
+
+-- SCREEN table
+CREATE TABLE SCREEN (
+    id_screen INT AUTO_INCREMENT PRIMARY KEY,
+    id_cinema INT NULL,
+    screen_name VARCHAR(50) NOT NULL,
+    capacity INT NOT NULL,
+    screen_type VARCHAR(20) NULL DEFAULT 'regular',
+    status VARCHAR(20) NULL DEFAULT 'active',
+    CONSTRAINT UQ_CinemaScreen UNIQUE (id_cinema, screen_name),
+    CONSTRAINT chk_screen_capacity CHECK (capacity > 0),
+    CONSTRAINT chk_screen_type CHECK (screen_type IN ('regular', 'VIP', 'IMAX', '4DX')),
+    CONSTRAINT chk_screen_status CHECK (status IN ('active', 'inactive')),
+    CONSTRAINT fk_screen_cinema FOREIGN KEY (id_cinema) 
+        REFERENCES CINEMAS (id_cinema) ON DELETE CASCADE
+);
+
+-- SEAT_TYPE table
+CREATE TABLE SEAT_TYPE (
+    id_seattype INT AUTO_INCREMENT PRIMARY KEY,
+    type_name VARCHAR(50) NOT NULL,
+    price_multiplier DECIMAL(3, 2) NOT NULL DEFAULT 1.00,
+    description VARCHAR(255) NULL,
+    icon_url VARCHAR(255) NULL,
+    CONSTRAINT UQ_SeatTypeName UNIQUE (type_name),
+    CONSTRAINT chk_price_multiplier CHECK (price_multiplier > 0)
+);
+
+-- SEAT table
+CREATE TABLE SEAT (
+    id_seats INT AUTO_INCREMENT PRIMARY KEY,
+    id_screen INT NULL,
+    id_seattype INT NULL,
+    seat_row CHAR(2) NOT NULL,
+    seat_number INT NOT NULL,
+    status VARCHAR(20) NULL DEFAULT 'active',
+    CONSTRAINT UQ_ScreenSeat UNIQUE (id_screen, seat_row, seat_number),
+    CONSTRAINT chk_seat_number CHECK (seat_number > 0),
+    CONSTRAINT chk_seat_status CHECK (status IN ('active', 'inactive', 'maintenance')),
+    CONSTRAINT fk_seat_screen FOREIGN KEY (id_screen) 
+        REFERENCES SCREEN (id_screen) ON DELETE CASCADE,
+    CONSTRAINT fk_seat_type FOREIGN KEY (id_seattype) 
+        REFERENCES SEAT_TYPE (id_seattype)
+);
+
+-- MOVIES table
+CREATE TABLE MOVIES (
+    id_movie INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    original_title VARCHAR(255) NULL,
+    director VARCHAR(100) NULL,
+    actors TEXT NULL,
+    duration INT NOT NULL,
+    release_date DATE NOT NULL,
+    end_date DATE NULL,
+    language VARCHAR(50) NULL,
+    subtitle VARCHAR(50) NULL,
+    country VARCHAR(50) NULL,
+    description TEXT NULL,
+    poster_image VARCHAR(255) NULL,
+    trailer_url VARCHAR(255) NULL,
+    age_restriction VARCHAR(10) NULL,
+    status VARCHAR(20) NULL DEFAULT 'coming soon',
+    CONSTRAINT chk_movie_duration CHECK (duration > 0),
+    CONSTRAINT chk_movie_status CHECK (status IN ('coming soon', 'now showing', 'ended')),
+    CONSTRAINT chk_enddate CHECK (end_date IS NULL OR end_date >= release_date)
+);
+
+-- GENRE table
+CREATE TABLE GENRE (
+    id_genre INT AUTO_INCREMENT PRIMARY KEY,
+    genre_name VARCHAR(50) NOT NULL,
+    description VARCHAR(255) NULL,
+    CONSTRAINT UQ_GenreName UNIQUE (genre_name)
+);
+
+-- GENRE_MOVIES junction table
+CREATE TABLE GENRE_MOVIES (
+    id_genre INT NOT NULL,
+    id_movie INT NOT NULL,
+    PRIMARY KEY (id_genre, id_movie),
+    CONSTRAINT fk_genremovies_genre FOREIGN KEY (id_genre) 
+        REFERENCES GENRE (id_genre) ON DELETE CASCADE,
+    CONSTRAINT fk_genremovies_movie FOREIGN KEY (id_movie) 
+        REFERENCES MOVIES (id_movie) ON DELETE CASCADE
+);
+
+-- SHOWTIMES table
+CREATE TABLE SHOWTIMES (
+    id_showtime INT AUTO_INCREMENT PRIMARY KEY,
+    id_movie INT NULL,
+    id_screen INT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    show_date DATE NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    format VARCHAR(10) NULL DEFAULT '2D',
+    language VARCHAR(50) NULL,
+    subtitle VARCHAR(50) NULL,
+    status VARCHAR(20) NULL DEFAULT 'available',
+    CONSTRAINT UQ_Showtime UNIQUE (id_screen, show_date, start_time),
+    CONSTRAINT chk_showtime_price CHECK (price >= 0),
+    CONSTRAINT chk_showtime_format CHECK (format IN ('2D', '3D', '4DX', 'IMAX')),
+    CONSTRAINT chk_showtime_status CHECK (status IN ('available', 'sold out', 'cancelled')),
+    CONSTRAINT chk_showtimes_times CHECK (end_time > start_time),
+    CONSTRAINT fk_showtimes_movie FOREIGN KEY (id_movie) 
+        REFERENCES MOVIES (id_movie) ON DELETE CASCADE,
+    CONSTRAINT fk_showtimes_screen FOREIGN KEY (id_screen) 
+        REFERENCES SCREEN (id_screen) ON DELETE CASCADE
+);
+
+-- TYPE_STAFF table
+CREATE TABLE TYPE_STAFF (
+    id_typestaff INT AUTO_INCREMENT PRIMARY KEY,
+    type_name VARCHAR(50) NOT NULL,
+    description VARCHAR(255) NULL,
+    permission_level INT NOT NULL DEFAULT 1,
+    CONSTRAINT UQ_StaffTypeName UNIQUE (type_name),
+    CONSTRAINT chk_permission_level CHECK (permission_level BETWEEN 1 AND 10)
+);
+
+-- STAFF table
+CREATE TABLE STAFF (
+    id_staff INT AUTO_INCREMENT PRIMARY KEY,
+    id_typestaff INT NULL,
+    staff_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(20) NULL,
+    address VARCHAR(255) NULL,
+    date_of_birth DATE NULL,
+    hire_date DATE NULL DEFAULT (CURRENT_DATE),
+    status VARCHAR(20) NULL DEFAULT 'active',
+    profile_image VARCHAR(255) NULL,
+    CONSTRAINT UQ_StaffEmail UNIQUE (email),
+    CONSTRAINT chk_staff_status CHECK (status IN ('active', 'inactive')),
+    CONSTRAINT fk_staff_type FOREIGN KEY (id_typestaff) 
+        REFERENCES TYPE_STAFF (id_typestaff)
+);
+
+-- USERS table
+CREATE TABLE USERS (
+    id_users INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20) NULL,
+    date_of_birth DATE NULL,
+    gender VARCHAR(10) NULL,
+    address VARCHAR(255) NULL,
+    profile_image VARCHAR(255) NULL,
+    created_at DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    role VARCHAR(20) NULL DEFAULT 'user',
+    status VARCHAR(20) NULL DEFAULT 'active',
+    CONSTRAINT UQ_UserEmail UNIQUE (email),
+    CONSTRAINT UQ_Username UNIQUE (username),
+    CONSTRAINT chk_user_gender CHECK (gender IN ('Male', 'Female', 'Other')),
+    CONSTRAINT chk_user_role CHECK (role IN ('admin', 'user')),
+    CONSTRAINT chk_user_status CHECK (status IN ('active', 'inactive'))
+);
+
+-- PROMOTIONS table
+CREATE TABLE PROMOTIONS (
+    id_promotions INT AUTO_INCREMENT PRIMARY KEY,
+    promotion_code VARCHAR(20) NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    discount_percent DECIMAL(5, 2) NULL DEFAULT 0,
+    discount_amount DECIMAL(10, 2) NULL DEFAULT 0,
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NULL,
+    min_purchase DECIMAL(10, 2) NULL DEFAULT 0,
+    max_discount DECIMAL(10, 2) NULL,
+    usage_limit INT NULL,
+    status VARCHAR(20) NULL DEFAULT 'active',
+    CONSTRAINT UQ_PromotionCode UNIQUE (promotion_code),
+    CONSTRAINT chk_discount_percent CHECK (discount_percent BETWEEN 0 AND 100),
+    CONSTRAINT chk_discount_amount CHECK (discount_amount >= 0),
+    CONSTRAINT chk_min_purchase CHECK (min_purchase >= 0),
+    CONSTRAINT chk_max_discount CHECK (max_discount IS NULL OR max_discount >= 0),
+    CONSTRAINT chk_usage_limit CHECK (usage_limit IS NULL OR usage_limit > 0),
+    CONSTRAINT chk_promo_status CHECK (status IN ('active', 'inactive')),
+    CONSTRAINT chk_promotion_dates CHECK (end_date IS NULL OR end_date >= start_date),
+    CONSTRAINT chk_discount_type CHECK (
+        (discount_percent > 0 AND discount_amount = 0) OR 
+        (discount_percent = 0 AND discount_amount > 0)
+    )
+);
+
+-- BOOKINGS table
+CREATE TABLE BOOKINGS (
+    id_booking INT AUTO_INCREMENT PRIMARY KEY,
+    id_users INT NULL,
+    id_showtime INT NULL,
+    id_staff INT NULL,
+    id_promotions INT NULL,
+    booking_date DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    payment_status VARCHAR(20) NULL DEFAULT 'unpaid',
+    booking_status VARCHAR(20) NULL DEFAULT 'pending',
+    booking_code VARCHAR(20) NULL,
+    CONSTRAINT UQ_BookingCode UNIQUE (booking_code),
+    CONSTRAINT chk_booking_total CHECK (total_amount >= 0),
+    CONSTRAINT chk_payment_status CHECK (payment_status IN ('unpaid', 'paid', 'refunded')),
+    CONSTRAINT chk_booking_status CHECK (booking_status IN ('pending', 'confirmed', 'cancelled')),
+    CONSTRAINT fk_bookings_user FOREIGN KEY (id_users) 
+        REFERENCES USERS (id_users),
+    CONSTRAINT fk_bookings_showtime FOREIGN KEY (id_showtime) 
+        REFERENCES SHOWTIMES (id_showtime),
+    CONSTRAINT fk_bookings_staff FOREIGN KEY (id_staff) 
+        REFERENCES STAFF (id_staff),
+    CONSTRAINT fk_bookings_promotion FOREIGN KEY (id_promotions) 
+        REFERENCES PROMOTIONS (id_promotions)
+);
+
+-- DETAIL_BOOKING table
+CREATE TABLE DETAIL_BOOKING (
+    id_booking INT NOT NULL,
+    id_seats INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    PRIMARY KEY (id_booking, id_seats),
+    CONSTRAINT chk_detail_price CHECK (price >= 0),
+    CONSTRAINT fk_detailbooking_booking FOREIGN KEY (id_booking) 
+        REFERENCES BOOKINGS (id_booking) ON DELETE CASCADE,
+    CONSTRAINT fk_detailbooking_seat FOREIGN KEY (id_seats) 
+        REFERENCES SEAT (id_seats)
+);
+
+-- PAYMENTS table
+CREATE TABLE PAYMENTS (
+    id_payment INT AUTO_INCREMENT PRIMARY KEY,
+    id_booking INT NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    payment_date DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_id VARCHAR(100) NULL,
+    status VARCHAR(20) NULL DEFAULT 'pending',
+    payment_details TEXT NULL,
+    CONSTRAINT UQ_TransactionID UNIQUE (transaction_id),
+    CONSTRAINT chk_payment_amount CHECK (amount > 0),
+    CONSTRAINT chk_payment_status_payment CHECK (status IN ('pending', 'completed', 'failed')),
+    CONSTRAINT fk_payment_booking FOREIGN KEY (id_booking) 
+        REFERENCES BOOKINGS (id_booking) ON DELETE CASCADE
+);
+
+SELECT TABLE_NAME, CONSTRAINT_NAME
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+WHERE CONSTRAINT_NAME = 'chk_payment_status';
+
+-- TYPE_PRODUCT table
+CREATE TABLE TYPE_PRODUCT (
+    id_typeproduct INT AUTO_INCREMENT PRIMARY KEY,
+    type_name VARCHAR(50) NOT NULL,
+    description VARCHAR(255) NULL,
+    image VARCHAR(255) NULL,
+    CONSTRAINT UQ_ProductTypeName UNIQUE (type_name)
+);
+
+-- PRODUCT table
+CREATE TABLE PRODUCT (
+    id_product INT AUTO_INCREMENT PRIMARY KEY,
+    id_typeproduct INT NULL,
+    product_name VARCHAR(100) NOT NULL,
+    description VARCHAR(255) NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    image VARCHAR(255) NULL,
+    status VARCHAR(20) NULL DEFAULT 'available',
+    CONSTRAINT chk_product_price CHECK (price >= 0),
+    CONSTRAINT chk_product_status CHECK (status IN ('available', 'unavailable')),
+    CONSTRAINT fk_product_type FOREIGN KEY (id_typeproduct) 
+        REFERENCES TYPE_PRODUCT (id_typeproduct)
+);
+
+-- ORDER_PRODUCT table
+CREATE TABLE ORDER_PRODUCT (
+    id_orderproduct INT AUTO_INCREMENT PRIMARY KEY,
+    id_booking INT NULL,
+    id_product INT NULL,
+    id_staff INT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    order_status VARCHAR(20) NULL DEFAULT 'pending',
+    CONSTRAINT chk_order_quantity CHECK (quantity > 0),
+    CONSTRAINT chk_order_price CHECK (price >= 0),
+    CONSTRAINT chk_order_status CHECK (order_status IN ('pending', 'completed', 'cancelled')),
+    CONSTRAINT fk_orderproduct_booking FOREIGN KEY (id_booking) 
+        REFERENCES BOOKINGS (id_booking) ON DELETE CASCADE,
+    CONSTRAINT fk_orderproduct_product FOREIGN KEY (id_product) 
+        REFERENCES PRODUCT (id_product),
+    CONSTRAINT fk_orderproduct_staff FOREIGN KEY (id_staff) 
+        REFERENCES STAFF (id_staff)
+);
+
+-- REVIEW table
+CREATE TABLE REVIEW (
+    id_users INT NOT NULL,
+    id_movie INT NOT NULL,
+    rating TINYINT NOT NULL,
+    comment TEXT NULL,
+    review_date DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    is_approved BOOLEAN NULL DEFAULT FALSE,
+    likes_count INT NULL DEFAULT 0,
+    PRIMARY KEY (id_users, id_movie),
+    CONSTRAINT chk_rating CHECK (rating BETWEEN 1 AND 5),
+    CONSTRAINT chk_likes_count CHECK (likes_count >= 0),
+    CONSTRAINT fk_review_user FOREIGN KEY (id_users) 
+        REFERENCES USERS (id_users) ON DELETE CASCADE,
+    CONSTRAINT fk_review_movie FOREIGN KEY (id_movie) 
+        REFERENCES MOVIES (id_movie) ON DELETE CASCADE
+);
+
+-- CONTACT table
+CREATE TABLE CONTACT (
+    id_contact INT AUTO_INCREMENT PRIMARY KEY,
+    id_staff INT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    contact_date DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) NULL DEFAULT 'unread',
+    reply TEXT NULL,
+    reply_date DATETIME NULL,
+    CONSTRAINT chk_contact_status CHECK (status IN ('unread', 'read', 'replied')),
+    CONSTRAINT fk_contact_staff FOREIGN KEY (id_staff) 
+        REFERENCES STAFF (id_staff)
+);
+
+-- NEWS table
+CREATE TABLE NEWS (
+    id_new INT AUTO_INCREMENT PRIMARY KEY,
+    id_staff INT NULL,
+    id_movie INT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    image_url VARCHAR(255) NULL,
+    published_date DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) NULL DEFAULT 'active',
+    views_count INT NULL DEFAULT 0,
+    featured BOOLEAN NULL DEFAULT FALSE,
+    CONSTRAINT chk_news_status CHECK (status IN ('active', 'inactive')),
+    CONSTRAINT chk_views_count CHECK (views_count >= 0),
+    CONSTRAINT fk_news_staff FOREIGN KEY (id_staff) 
+        REFERENCES STAFF (id_staff),
+    CONSTRAINT fk_news_movie FOREIGN KEY (id_movie) 
+        REFERENCES MOVIES (id_movie)
+);
+
+-- USER_LOGS table
+CREATE TABLE USER_LOGS (
+    id_userlog INT AUTO_INCREMENT PRIMARY KEY,
+    id_users INT NULL,
+    action_type VARCHAR(50) NOT NULL,
+    action_time DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45) NULL,
+    device_info VARCHAR(255) NULL,
+    additional_info TEXT NULL,
+    CONSTRAINT fk_userlog_user FOREIGN KEY (id_users) 
+        REFERENCES USERS (id_users) ON DELETE CASCADE
+);

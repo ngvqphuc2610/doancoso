@@ -27,7 +27,7 @@ export default function AdminMoviesPage() {
         setError(null);
         try {
             const response = await axios.get('/api/admin/movies', {
-                timeout: 8000, // 8 second timeout
+                timeout: 15000, // set timeout
                 headers: {
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache'
@@ -55,14 +55,14 @@ export default function AdminMoviesPage() {
         }
     };
 
-    // Sync movies from TMDB API
+    // lấy movie từ api themoviedb
     const handleSyncMovies = async () => {
         setSyncingMovies(true);
         setSyncStatus('Đang đồng bộ phim từ TMDB...');
 
         try {
             const response = await axios.post('/api/admin/movies/sync', {}, {
-                timeout: 15000, // 15 second timeout for sync operation
+                timeout: 15000, // set timeout
             });
 
             if (response.data.success) {
@@ -116,7 +116,7 @@ export default function AdminMoviesPage() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Quản lý phim</h1>
+                <h1 className="text-3xl font-bold text-dark">Quản lý phim</h1>
                 <div className="flex gap-4">
                     <button
                         onClick={handleSyncMovies}
@@ -157,18 +157,18 @@ export default function AdminMoviesPage() {
                     <table className="min-w-full bg-white border border-gray-300">
                         <thead>
                             <tr>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">ID</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Poster</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Tên phim</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Ngày chiếu</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Trạng thái</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Thao tác</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">ID</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Poster</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Tên phim</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Ngày chiếu</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Trạng thái</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             {movies.map((movie) => (
                                 <tr key={movie.id_movie}>
-                                    <td className="py-3 px-4 border-b">{movie.id_movie}</td>
+                                    <td className="py-3 px-4 border-b text-dark">{movie.id_movie}</td>
                                     <td className="py-3 px-4 border-b">
                                         <img
                                             src={movie.poster_image}
@@ -176,8 +176,8 @@ export default function AdminMoviesPage() {
                                             className="w-16 h-auto"
                                         />
                                     </td>
-                                    <td className="py-3 px-4 border-b">{movie.title}</td>
-                                    <td className="py-3 px-4 border-b">
+                                    <td className="py-3 px-4 border-b text-dark">{movie.title}</td>
+                                    <td className="py-3 px-4 border-b text-dark">
                                         {new Date(movie.release_date).toLocaleDateString('vi-VN')}
                                     </td>
                                     <td className="py-3 px-4 border-b">
