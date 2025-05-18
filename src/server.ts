@@ -56,7 +56,7 @@ app.get('/', (req: Request, res: Response) => {
             movies: '/api/admin/movies',
             cinema: '/api/admin/cinema',
             members: '/api/admin/members',
-            products: '/api/admin/products',
+            product: '/api/admin/products',
             promotions: '/api/admin/promotions',
             entertainment: '/api/admin/entertainment',
             contacts: '/api/contacts',
@@ -906,16 +906,47 @@ app.delete('/api/admin/members/:id', asyncHandler(async (req: Request, res: Resp
 // Lấy danh sách tất cả các sản phẩm
 app.get('/api/admin/products', asyncHandler(async (req: Request, res: Response) => {
     try {
-        const results = await query('SELECT * FROM product ORDER BY id_product DESC');
+        const result = await query('SELECT * FROM product ORDER BY id_product ASC');
+
+        // Đảm bảo cinemas luôn là mảng
+        let product;
+        if (Array.isArray(result)) {
+            // Nếu result là mảng (kết quả thông thường của MySQL)
+            product = result;
+        } else if (Array.isArray(result[0])) {
+            // Nếu result[0] là mảng (kết quả của mysql2)
+            product = result[0];
+        } else {
+            // Trường hợp còn lại, đảm bảo luôn là mảng
+            product = result && typeof result === 'object' ?
+                (Object.keys(result).length > 0 ? [result] : []) :
+                (result ? [result] : []);
+        }
+
+        console.log('Kết quả truy vấn danh sách sản phẩm', product);
+        console.log('Số lượng sản phẩm : ', Array.isArray(product) ? product.length : 0);
+
+        // Trả về kết quả thành công
         res.json({
             success: true,
-            data: results
+            data: product // Đảm bảo trả về mảng
         });
-    } catch (error) {
-        console.error('Lỗi khi truy vấn danh sách sản phẩm:', error);
+    } catch (error: any) {
+        // In ra chi tiết lỗi để debug
+        console.error('Lỗi khi truy vấn danh sách product:', error);
+        console.error('Chi tiết lỗi:', error.message);
+        console.error('Stack trace:', error.stack);
+
+        // Trả về thông tin lỗi chi tiết
         res.status(500).json({
             success: false,
-            message: 'Không thể lấy danh sách sản phẩm'
+            message: 'Không thể lấy danh sách product',
+            errorDetails: {
+                message: error.message,
+                code: error.code,
+                sqlMessage: error.sqlMessage,
+                sqlState: error.sqlState
+            }
         });
     }
 }));
@@ -1397,16 +1428,47 @@ app.delete('/api/admin/promotions/:id', asyncHandler(async (req: Request, res: R
 // Lấy danh sách tất cả các dịch vụ giải trí
 app.get('/api/admin/entertainment', asyncHandler(async (req: Request, res: Response) => {
     try {
-        const results = await query('SELECT * FROM entertainment ORDER BY id_entertainment DESC');
+        const result = await query('SELECT * FROM entertainment ORDER BY id_entertainment ASC');
+
+        // Đảm bảo cinemas luôn là mảng
+        let entertainment;
+        if (Array.isArray(result)) {
+            // Nếu result là mảng (kết quả thông thường của MySQL)
+            entertainment = result;
+        } else if (Array.isArray(result[0])) {
+            // Nếu result[0] là mảng (kết quả của mysql2)
+            entertainment = result[0];
+        } else {
+            // Trường hợp còn lại, đảm bảo luôn là mảng
+            entertainment = result && typeof result === 'object' ?
+                (Object.keys(result).length > 0 ? [result] : []) :
+                (result ? [result] : []);
+        }
+
+        console.log('Kết quả truy vấn danh sách phòng chiếu', entertainment);
+        console.log('Số lượng phòng chiếu : ', Array.isArray(entertainment) ? entertainment.length : 0);
+
+        // Trả về kết quả thành công
         res.json({
             success: true,
-            data: results
+            data: entertainment // Đảm bảo trả về mảng
         });
-    } catch (error) {
-        console.error('Lỗi khi truy vấn danh sách dịch vụ giải trí:', error);
+    } catch (error: any) {
+        // In ra chi tiết lỗi để debug
+        console.error('Lỗi khi truy vấn danh sách entertainment:', error);
+        console.error('Chi tiết lỗi:', error.message);
+        console.error('Stack trace:', error.stack);
+
+        // Trả về thông tin lỗi chi tiết
         res.status(500).json({
             success: false,
-            message: 'Không thể lấy danh sách dịch vụ giải trí'
+            message: 'Không thể lấy danh sách entertainment',
+            errorDetails: {
+                message: error.message,
+                code: error.code,
+                sqlMessage: error.sqlMessage,
+                sqlState: error.sqlState
+            }
         });
     }
 }));
