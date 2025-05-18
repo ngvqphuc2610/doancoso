@@ -3,24 +3,24 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 interface Product {
     id_product: number;
+    id_typeproduct: number | null;
     product_name: string;
-    category: string;
+    description: string | null;
     price: number;
-    image_url: string;
-    description: string;
-    stock: number;
+    image: string | null;
     status: string;
+    quantity: number;
 }
 
-export default function AdminProductsPage() {
+export default function AdminProductPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();    // Fetch products from the database
+
+    // Fetch products from the database
     const fetchProducts = async () => {
         setLoading(true);
         setError(null);
@@ -53,7 +53,30 @@ export default function AdminProductsPage() {
         }
     };
 
-    // Delete a product
+    // Toggle product status
+    const handleToggleStatus = async (id: number, currentStatus: string) => {
+        const newStatus = currentStatus === 'available' ? 'unavailable' : 'available';
+        try {
+            const response = await axios.patch(`/api/admin/products/${id}`, {
+                status: newStatus
+            });
+
+            if (response.data.success) {
+                setProducts(products.map(product =>
+                    product.id_product === id
+                        ? { ...product, status: newStatus }
+                        : product
+                ));
+            } else {
+                alert(`Lỗi: ${response.data.message}`);
+            }
+        } catch (err) {
+            console.error('Lỗi khi cập nhật trạng thái sản phẩm:', err);
+            alert('Đã xảy ra lỗi khi cập nhật trạng thái sản phẩm');
+        }
+    };
+
+    // Delete product
     const handleDeleteProduct = async (id: number) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
             try {
@@ -81,17 +104,6 @@ export default function AdminProductsPage() {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
     };
 
-    // Get translated category name
-    const getCategoryName = (category: string) => {
-        switch (category) {
-            case 'popcorn': return 'Bắp rang';
-            case 'drinks': return 'Đồ uống';
-            case 'combo': return 'Combo';
-            case 'snacks': return 'Đồ ăn nhẹ';
-            default: return category;
-        }
-    };
-
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
@@ -114,64 +126,51 @@ export default function AdminProductsPage() {
                     <p className="text-xl">Đang tải danh sách sản phẩm...</p>
                 </div>
             ) : products.length > 0 ? (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-300">
-                        <thead>
-                            <tr>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">ID</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Hình ảnh</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Tên sản phẩm</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Loại</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Giá</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Tồn kho</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Trạng thái</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {products.map((product) => (
-                                <tr key={product.id_product}>
-                                    <td className="py-3 px-4 border-b">{product.id_product}</td>
-                                    <td className="py-3 px-4 border-b">
-                                        <img
-                                            src={product.image_url || '/images/no-image.png'}
-                                            alt={product.product_name}
-                                            className="w-16 h-16 object-cover rounded"
-                                        />
-                                    </td>
-                                    <td className="py-3 px-4 border-b">{product.product_name}</td>
-                                    <td className="py-3 px-4 border-b">{getCategoryName(product.category)}</td>
-                                    <td className="py-3 px-4 border-b">{formatPrice(product.price)}</td>
-                                    <td className="py-3 px-4 border-b">{product.stock}</td>
-                                    <td className="py-3 px-4 border-b">
-                                        <span
-                                            className={`px-2 py-1 rounded ${product.status === 'available'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
-                                                }`}
-                                        >
-                                            {product.status === 'available' ? 'Có sẵn' : 'Hết hàng'}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-4 border-b">
-                                        <div className="flex gap-2">
-                                            <Link href={`/admin/products/edit/${product.id_product}`}>
-                                                <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded text-sm">
-                                                    Sửa
-                                                </button>
-                                            </Link>
-                                            <button
-                                                onClick={() => handleDeleteProduct(product.id_product)}
-                                                className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
-                                            >
-                                                Xóa
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {products.map((product) => (
+                        <div key={product.id_product} className="bg-white rounded-lg shadow-lg overflow-hidden border">
+                            <div className="h-48 bg-gray-200 relative">
+                                <img
+                                    src={product.image || '/images/no-image.jpg'}
+                                    alt={product.product_name}
+                                    className="w-full h-full object-cover"
+                                />
+                                <span className={`absolute top-2 right-2 px-2 py-1 rounded ${product.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    {product.status === 'available' ? 'Đang bán' : 'Ngừng bán'}
+                                </span>
+                            </div>
+                            <div className="p-4">
+                                <h3 className="text-xl font-bold">{product.product_name}</h3>
+                                <p className="text-gray-600 mt-2">{product.description || 'Không có mô tả'}</p>
+                                <div className="mt-2">
+                                    <p><strong>Giá:</strong> {formatPrice(product.price)}</p>
+                                    <p><strong>Số lượng:</strong> {product.quantity}</p>
+                                </div>
+                                <div className="mt-4 flex gap-2">
+                                    <Link href={`/admin/products/edit/${product.id_product}`}>
+                                        <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-3 py-1 rounded">
+                                            Sửa
+                                        </button>
+                                    </Link>
+                                    <button
+                                        onClick={() => handleToggleStatus(product.id_product, product.status)}
+                                        className={`${product.status === 'available'
+                                                ? 'bg-gray-500 hover:bg-gray-700'
+                                                : 'bg-green-500 hover:bg-green-700'
+                                            } text-white px-3 py-1 rounded`}
+                                    >
+                                        {product.status === 'available' ? 'Ngừng bán' : 'Kích hoạt'}
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteProduct(product.id_product)}
+                                        className="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded ml-auto"
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <div className="text-center py-10">

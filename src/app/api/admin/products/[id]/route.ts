@@ -2,9 +2,9 @@ import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Get API URL from environment variables with fallback
-const API_URL = process.env.NGROK_URL || process.env.API_URL || 'http://localhost:5000';
+const API_URL = 'http://localhost:5000';
 
-// Route để lấy chi tiết một sản phẩm
+// Route để lấy chi tiết một rạp
 export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } }
@@ -16,15 +16,15 @@ export async function GET(
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error fetching product ${params.id}:`, error.message);
+        console.error(`Error fetching products ${params.id}:`, error.message);
         return NextResponse.json(
-            { success: false, message: 'Không thể tải thông tin sản phẩm' },
+            { success: false, message: 'Không thể tải sản phẩm ' },
             { status: error.response?.status || 500 }
         );
     }
 }
 
-// Route để cập nhật thông tin sản phẩm
+// Route để cập nhật thông tin rạp
 export async function PUT(
     req: NextRequest,
     { params }: { params: { id: string } }
@@ -37,7 +37,7 @@ export async function PUT(
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error updating product ${params.id}:`, error.message);
+        console.error(`Error updating products ${params.id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể cập nhật thông tin sản phẩm' },
             { status: error.response?.status || 500 }
@@ -45,7 +45,7 @@ export async function PUT(
     }
 }
 
-// Route để xóa sản phẩm
+// Route để xóa rạp
 export async function DELETE(
     req: NextRequest,
     { params }: { params: { id: string } }
@@ -57,7 +57,7 @@ export async function DELETE(
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error deleting product ${params.id}:`, error.message);
+        console.error(`Error deleting products ${params.id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể xóa sản phẩm' },
             { status: error.response?.status || 500 }
@@ -65,7 +65,7 @@ export async function DELETE(
     }
 }
 
-// Route để cập nhật trạng thái sản phẩm (PATCH)
+// Route để cập nhật trạng thái rạp (PATCH)
 export async function PATCH(
     req: NextRequest,
     { params }: { params: { id: string } }
@@ -78,7 +78,7 @@ export async function PATCH(
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error updating product status ${params.id}:`, error.message);
+        console.error(`Error updating products status ${params.id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể cập nhật trạng thái sản phẩm' },
             { status: error.response?.status || 500 }

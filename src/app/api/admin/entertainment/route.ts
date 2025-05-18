@@ -1,22 +1,37 @@
 import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Get API URL from environment variables with fallback
-const API_URL = process.env.NGROK_URL || process.env.API_URL || 'http://localhost:5000';
+// Hardcode API URL để đảm bảo luôn hoạt động đúng
+const API_URL = 'http://localhost:5000';
 
-// Route để lấy danh sách dịch vụ giải trí từ database
+// Route để lấy danh sách phòng chiếu từ database
 export async function GET(req: NextRequest) {
     try {
-        console.log(`Connecting to API at: ${API_URL}/api/admin/entertainment`);
+        console.log(`[entertainment API] Connecting to Express API at: ${API_URL}/api/admin/entertainment`);
+
         const response = await axios.get(`${API_URL}/api/admin/entertainment`, {
-            timeout: 5000 // 5 second timeout
+            timeout: 10000,
+            headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'If-Modified-Since': new Date(0).toUTCString()
+            }
         });
-        return NextResponse.json(response.data);
+
+        const originalData = response.data;
+        const raw = originalData.data;
+
+        const normalizedData = Array.isArray(raw) ? raw : raw ? [raw] : [];
+
+        return NextResponse.json({
+            ...originalData,
+            data: normalizedData
+        });
     } catch (error: any) {
-        console.error('Error fetching entertainment services:', error.message);
+        console.error('Error fetching entertainment:', error.message);
         console.error('API URL being used:', API_URL);
 
-        // Provide more specific error messages based on error type
         if (error.code === 'ECONNREFUSED' || error.code === 'ECONNABORTED') {
             return NextResponse.json(
                 { success: false, message: `Không thể kết nối đến máy chủ API (${API_URL}). Vui lòng kiểm tra server đã được khởi động chưa.` },
@@ -27,7 +42,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Không thể tải danh sách dịch vụ giải trí',
+                message: 'Không thể tải dịch vụ giải trí',
                 error: error.response?.data || error.message
             },
             { status: error.response?.status || 500 }
@@ -35,15 +50,15 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// Route để thêm dịch vụ giải trí mới vào database
+// Route để thêm phòng chiếu mới vào database
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
         // Validate required fields
-        if (!body.name || !body.type || !body.location) {
+        if (!body.title) {
             return NextResponse.json(
-                { success: false, message: 'Tên dịch vụ, loại và địa điểm là bắt buộc' },
+                { success: false, message: 'Tên dịch vụ giải trí là bắt buộc' },
                 { status: 400 }
             );
         }
@@ -53,12 +68,12 @@ export async function POST(req: NextRequest) {
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error('Error creating entertainment service:', error.message);
+        console.error('Error creating entertainment:', error.message);
 
         return NextResponse.json(
             {
                 success: false,
-                message: 'Không thể thêm dịch vụ giải trí mới',
+                message: 'Không thể thêm dịch vu giải trí mới',
                 error: error.response?.data || error.message
             },
             { status: error.response?.status || 500 }
