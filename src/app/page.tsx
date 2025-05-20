@@ -6,7 +6,7 @@ import QuickBookingForm from '@/components/home/QuickBookingForm';
 import MovieCarousel from '@/components/movies/MovieCarousel';
 import { useState, useEffect } from 'react';
 import { MovieProps } from '@/components/movies/MovieCard';
-import { getNowShowingMovies, getComingSoonMovies, fallbackNowShowingMovies, fallbackComingSoonMovies } from '@/lib/film';
+import { getNowShowingMovies, getComingSoonMovies } from '@/lib/film';
 import ProCarousel from '../components/promotions/ProCarousel';
 import MemberCardCarousel from '../components/member/MemberCardCarousel';
 import TaimentCarousel from '@/components/taiment/TaimentCarousel';
@@ -40,10 +40,7 @@ export default function Home() {
         setComingSoonMovies(upcomingMovies);
         setLoading(false);
       } catch (err) {
-        console.error("Không thể lấy dữ liệu phim:", err);
-        setNowShowingMovies(fallbackNowShowingMovies);
-        setComingSoonMovies(fallbackComingSoonMovies);
-        setError("Đã xảy ra lỗi khi tải dữ liệu. Đang hiển thị dữ liệu dự phòng.");
+        
         setLoading(false);
       }
     };

@@ -27,7 +27,7 @@ export default function AdminMoviesPage() {
         setError(null);
         try {
             const response = await axios.get('/api/admin/movies', {
-                timeout: 15000, // set timeout
+                timeout: 30000, // set timeout
                 headers: {
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache'
@@ -62,7 +62,7 @@ export default function AdminMoviesPage() {
 
         try {
             const response = await axios.post('/api/admin/movies/sync', {}, {
-                timeout: 15000, // set timeout
+                timeout: 30000, // set timeout
             });
 
             if (response.data.success) {
@@ -94,16 +94,25 @@ export default function AdminMoviesPage() {
     const handleDeleteMovie = async (id: number) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa phim này?')) {
             try {
+                setLoading(true);
                 const response = await axios.delete(`/api/admin/movies/${id}`);
+
                 if (response.data.success) {
                     setMovies(movies.filter(movie => movie.id_movie !== id));
                     alert('Xóa phim thành công!');
                 } else {
                     alert(`Lỗi: ${response.data.message}`);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Lỗi khi xóa phim:', err);
-                alert('Đã xảy ra lỗi khi xóa phim');
+
+                if (err.response?.data?.message) {
+                    alert(`Lỗi: ${err.response.data.message}`);
+                } else {
+                    alert('Đã xảy ra lỗi khi xóa phim');
+                }
+            } finally {
+                setLoading(false);
             }
         }
     };

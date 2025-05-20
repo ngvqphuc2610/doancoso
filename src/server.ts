@@ -901,7 +901,293 @@ app.delete('/api/admin/members/:id', asyncHandler(async (req: Request, res: Resp
     }
 }));
 
-// ==================== QUẢN LÝ SẢN PHẨM (PRODUCTS) ====================
+// ==================== API SẢN PHẨM CÔNG KHAI (PUBLIC PRODUCT API) ====================
+
+// Lấy tất cả sản phẩm
+app.get('/api/products', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const products = await query<any[]>(`
+            SELECT p.*, tp.type_name 
+            FROM product p 
+            LEFT JOIN type_product tp ON p.id_typeproduct = tp.id_typeproduct
+            WHERE p.status = 'available' 
+            ORDER BY p.id_typeproduct, p.product_name
+        `);
+
+        const formattedProducts = products.map(product => ({
+            id: product.id_product,
+            id_typeproduct: product.id_typeproduct,
+            product_name: product.product_name,
+            description: product.description || '',
+            price: product.price,
+            image: product.image || '',
+            status: product.status || 'available',
+            type_name: product.type_name || 'Khác'
+        }));
+
+        res.json({
+            success: true,
+            data: formattedProducts
+        });
+    } catch (error: any) {
+        console.error('Lỗi khi lấy danh sách sản phẩm:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách sản phẩm',
+            error: error.message
+        });
+    }
+}));
+
+// Lấy sản phẩm theo loại
+app.get('/api/products/type/:typeId', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const typeId = parseInt(req.params.typeId);
+        if (isNaN(typeId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID loại sản phẩm không hợp lệ'
+            });
+        }
+
+        const products = await query<any[]>(
+            `SELECT p.*, tp.type_name 
+            FROM product p 
+            LEFT JOIN type_product tp ON p.id_typeproduct = tp.id_typeproduct
+            WHERE p.status = 'available' AND p.id_typeproduct = ?
+            ORDER BY p.product_name`,
+            [typeId]
+        );
+
+        const formattedProducts = products.map(product => ({
+            id: product.id_product,
+            id_typeproduct: product.id_typeproduct,
+            product_name: product.product_name,
+            description: product.description || '',
+            price: product.price,
+            image: product.image || '',
+            status: product.status || 'available',
+            type_name: product.type_name || 'Khác'
+        }));
+
+        res.json({
+            success: true,
+            data: formattedProducts
+        });
+    } catch (error: any) {
+        console.error(`Lỗi khi lấy sản phẩm theo loại ${req.params.typeId}:`, error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách sản phẩm theo loại',
+            error: error.message
+        });
+    }
+}));
+
+// Lấy sản phẩm theo ID
+app.get('/api/products/:id', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const productId = parseInt(req.params.id);
+        if (isNaN(productId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID sản phẩm không hợp lệ'
+            });
+        }
+
+        const products = await query<any[]>(
+            `SELECT p.*, tp.type_name 
+            FROM product p 
+            LEFT JOIN type_product tp ON p.id_typeproduct = tp.id_typeproduct
+            WHERE p.id_product = ?`,
+            [productId]
+        );
+
+        if (products.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy sản phẩm'
+            });
+        }
+
+        const product = products[0];
+        const formattedProduct = {
+            id: product.id_product,
+            id_typeproduct: product.id_typeproduct,
+            product_name: product.product_name,
+            description: product.description || '',
+            price: product.price,
+            image: product.image || '',
+            status: product.status || 'available',
+            type_name: product.type_name || 'Khác'
+        };
+
+        res.json({
+            success: true,
+            data: formattedProduct
+        });
+    } catch (error: any) {
+        console.error(`Lỗi khi lấy sản phẩm ID ${req.params.id}:`, error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy thông tin sản phẩm',
+            error: error.message
+        });
+    }
+}));
+
+// Lấy danh sách loại sản phẩm
+app.get('/api/product-types', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const types = await query<any[]>(`
+            SELECT * FROM type_product 
+            ORDER BY type_name
+        `);
+
+        res.json({
+            success: true,
+            data: types
+        });
+    } catch (error: any) {
+        console.error('Lỗi khi lấy danh sách loại sản phẩm:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách loại sản phẩm',
+            error: error.message
+        });
+    }
+}));
+
+// ==================== API KHUYẾN MÃI CÔNG KHAI (PUBLIC PROMOTIONS API) ====================
+
+// Lấy tất cả khuyến mãi
+app.get('/api/promotions', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const promotions = await query<any[]>(`
+            SELECT * FROM promotions 
+            WHERE status = 'active' AND end_date >= CURDATE()
+            ORDER BY start_date DESC
+        `);
+
+        const formattedPromotions = promotions.map(promotion => ({
+            id: promotion.id_promotion,
+            title: promotion.title,
+            description: promotion.description || '',
+            image: promotion.image_url || '',
+            start_date: promotion.start_date,
+            end_date: promotion.end_date,
+            discount_amount: promotion.discount_amount,
+            discount_type: promotion.discount_type,
+            coupon_code: promotion.coupon_code,
+            status: promotion.status
+        }));
+
+        res.json({
+            success: true,
+            data: formattedPromotions
+        });
+    } catch (error: any) {
+        console.error('Lỗi khi lấy danh sách khuyến mãi:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách khuyến mãi',
+            error: error.message
+        });
+    }
+}));
+
+// Lấy khuyến mãi đang hoạt động
+app.get('/api/promotions/active', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const promotions = await query<any[]>(
+            `SELECT * FROM promotions 
+            WHERE status = 'active' 
+            AND start_date <= ? 
+            AND end_date >= ?
+            ORDER BY start_date DESC`,
+            [today, today]
+        );
+
+        const formattedPromotions = promotions.map(promotion => ({
+            id: promotion.id_promotion,
+            title: promotion.title,
+            description: promotion.description || '',
+            image: promotion.image_url || '',
+            start_date: promotion.start_date,
+            end_date: promotion.end_date,
+            discount_amount: promotion.discount_amount,
+            discount_type: promotion.discount_type,
+            coupon_code: promotion.coupon_code,
+            status: promotion.status
+        }));
+
+        res.json({
+            success: true,
+            data: formattedPromotions
+        });
+    } catch (error: any) {
+        console.error('Lỗi khi lấy danh sách khuyến mãi đang hoạt động:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách khuyến mãi đang hoạt động',
+            error: error.message
+        });
+    }
+}));
+
+// Lấy khuyến mãi theo ID
+app.get('/api/promotions/:id', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const promotionId = parseInt(req.params.id);
+        if (isNaN(promotionId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID khuyến mãi không hợp lệ'
+            });
+        }
+
+        const promotions = await query<any[]>(
+            `SELECT * FROM promotions WHERE id_promotion = ?`,
+            [promotionId]
+        );
+
+        if (promotions.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy khuyến mãi'
+            });
+        }
+
+        const promotion = promotions[0];
+        const formattedPromotion = {
+            id: promotion.id_promotion,
+            title: promotion.title,
+            description: promotion.description || '',
+            image: promotion.image_url || '',
+            start_date: promotion.start_date,
+            end_date: promotion.end_date,
+            discount_amount: promotion.discount_amount,
+            discount_type: promotion.discount_type,
+            coupon_code: promotion.coupon_code,
+            status: promotion.status
+        };
+
+        res.json({
+            success: true,
+            data: formattedPromotion
+        });
+    } catch (error: any) {
+        console.error(`Lỗi khi lấy khuyến mãi ID ${req.params.id}:`, error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy thông tin khuyến mãi',
+            error: error.message
+        });
+    }
+}));
+
+// ==================== QUẢN LÝ SẢN PHẨM (PRODUCTS ADMIN API) ====================
 
 // Lấy danh sách tất cả các sản phẩm
 app.get('/api/admin/products', asyncHandler(async (req: Request, res: Response) => {
@@ -1702,13 +1988,22 @@ app.delete('/api/admin/entertainment/:id', asyncHandler(async (req: Request, res
     }
 }));
 
-// ==================== SHOW TIMES============
-// Lấy danh sách tất cả các show time
+// ==================== QUẢN LÝ LỊCH CHIẾU (SHOWTIMES) ====================
+
+// Lấy danh sách tất cả các lịch chiếu
 app.get('/api/admin/showtimes', asyncHandler(async (req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM showtimes ORDER BY id_showtime ASC');
+        // Truy vấn lấy thông tin chi tiết hơn bằng JOIN
+        const result = await query(`
+            SELECT s.*, m.title as movie_title, sc.screen_name, c.cinema_name
+            FROM showtimes s
+            LEFT JOIN movies m ON s.id_movie = m.id_movie
+            LEFT JOIN screen sc ON s.id_screen = sc.id_screen
+            LEFT JOIN cinemas c ON sc.id_cinema = c.id_cinema
+            ORDER BY s.show_date DESC, s.start_time ASC
+        `);
 
-        // Đảm bảo cinemas luôn là mảng
+        // Đảm bảo showtimes luôn là mảng
         let showtimes;
         if (Array.isArray(result)) {
             // Nếu result là mảng (kết quả thông thường của MySQL)
@@ -1723,8 +2018,8 @@ app.get('/api/admin/showtimes', asyncHandler(async (req: Request, res: Response)
                 (result ? [result] : []);
         }
 
-        console.log('Kết quả truy vấn danh sách rạp:', showtimes);
-        console.log('Số lượng rạp:', Array.isArray(showtimes) ? showtimes.length : 0);
+        console.log('Kết quả truy vấn danh sách lịch chiếu:', showtimes);
+        console.log('Số lượng lịch chiếu:', Array.isArray(showtimes) ? showtimes.length : 0);
 
         // Trả về kết quả thành công
         res.json({
@@ -1732,15 +2027,13 @@ app.get('/api/admin/showtimes', asyncHandler(async (req: Request, res: Response)
             data: showtimes // Đảm bảo trả về mảng
         });
     } catch (error: any) {
-        // In ra chi tiết lỗi để debug
         console.error('Lỗi khi truy vấn danh sách showtimes:', error);
         console.error('Chi tiết lỗi:', error.message);
         console.error('Stack trace:', error.stack);
 
-        // Trả về thông tin lỗi chi tiết
         res.status(500).json({
             success: false,
-            message: 'Không thể lấy danh sách showtimes',
+            message: 'Không thể lấy danh sách lịch chiếu',
             errorDetails: {
                 message: error.message,
                 code: error.code,
@@ -1751,99 +2044,535 @@ app.get('/api/admin/showtimes', asyncHandler(async (req: Request, res: Response)
     }
 }));
 
-//==============seat==========
-// Lấy danh sách tất cả các show time
-app.get('/api/admin/seats', asyncHandler(async (req: Request, res: Response) => {
+// Lấy thông tin chi tiết của một lịch chiếu
+app.get('/api/admin/showtimes/:id', asyncHandler(async (req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM seat ORDER BY id_seats ASC');
+        const { id } = req.params;
+        // Truy vấn chi tiết với JOIN
+        const results = await query(`
+            SELECT s.*, m.title as movie_title, sc.screen_name, c.cinema_name
+            FROM showtimes s
+            LEFT JOIN movies m ON s.id_movie = m.id_movie
+            LEFT JOIN screen sc ON s.id_screen = sc.id_screen
+            LEFT JOIN cinemas c ON sc.id_cinema = c.id_cinema
+            WHERE s.id_showtime = ?
+        `, [id]);
 
-        // Đảm bảo cinemas luôn là mảng
-        let seats;
-        if (Array.isArray(result)) {
-            // Nếu result là mảng (kết quả thông thường của MySQL)
-            seats = result;
-        } else if (Array.isArray(result[0])) {
-            // Nếu result[0] là mảng (kết quả của mysql2)
-            seats = result[0];
-        } else {
-            // Trường hợp còn lại, đảm bảo luôn là mảng
-            seats = result && typeof result === 'object' ?
-                (Object.keys(result).length > 0 ? [result] : []) :
-                (result ? [result] : []);
+        if (results.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy lịch chiếu với ID này'
+            });
         }
 
-        console.log('Kết quả truy vấn danh sách ghế', seats);
-        console.log('Số lượng ghế : ', Array.isArray(seats) ? seats.length : 0);
-
-        // Trả về kết quả thành công
         res.json({
             success: true,
-            data: seats // Đảm bảo trả về mảng
+            data: results[0]
         });
-    } catch (error: any) {
-        // In ra chi tiết lỗi để debug
-        console.error('Lỗi khi truy vấn danh sách seats:', error);
-        console.error('Chi tiết lỗi:', error.message);
-        console.error('Stack trace:', error.stack);
-
-        // Trả về thông tin lỗi chi tiết
+    } catch (error) {
+        console.error('Lỗi khi truy vấn chi tiết lịch chiếu:', error);
         res.status(500).json({
             success: false,
-            message: 'Không thể lấy danh sách seats',
-            errorDetails: {
-                message: error.message,
-                code: error.code,
-                sqlMessage: error.sqlMessage,
-                sqlState: error.sqlState
-            }
+            message: 'Không thể lấy thông tin lịch chiếu'
         });
     }
 }));
 
-//===============screen=======
-app.get('/api/admin/screen', asyncHandler(async (req: Request, res: Response) => {
+// Thêm lịch chiếu mới
+app.post('/api/admin/showtimes', asyncHandler(async (req: Request, res: Response) => {
     try {
-        const result = await query('SELECT * FROM screen ORDER BY id_screen ASC');
+        const {
+            id_movie,
+            id_screen,
+            start_time,
+            end_time,
+            show_date,
+            price,
+            format,
+            language,
+            subtitle,
+            status
+        } = req.body;
 
-        // Đảm bảo cinemas luôn là mảng
-        let screen;
-        if (Array.isArray(result)) {
-            // Nếu result là mảng (kết quả thông thường của MySQL)
-            screen = result;
-        } else if (Array.isArray(result[0])) {
-            // Nếu result[0] là mảng (kết quả của mysql2)
-            screen = result[0];
-        } else {
-            // Trường hợp còn lại, đảm bảo luôn là mảng
-            screen = result && typeof result === 'object' ?
-                (Object.keys(result).length > 0 ? [result] : []) :
-                (result ? [result] : []);
+        // Validate đầu vào
+        if (!id_movie || !id_screen || !start_time || !end_time || !show_date || !price) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phim, phòng chiếu, thời gian bắt đầu, thời gian kết thúc, ngày chiếu và giá vé là bắt buộc'
+            });
         }
 
-        console.log('Kết quả truy vấn danh sách phòng chiếu', screen);
-        console.log('Số lượng phòng chiếu : ', Array.isArray(screen) ? screen.length : 0);
+        // Kiểm tra xem phòng chiếu có lịch chiếu trùng thời gian không
+        const overlappingShowtimes = await query(`
+            SELECT * FROM showtimes 
+            WHERE id_screen = ? AND show_date = ? AND 
+            ((start_time <= ? AND end_time > ?) OR (start_time < ? AND end_time >= ?) OR (start_time >= ? AND end_time <= ?))
+        `, [id_screen, show_date, start_time, start_time, end_time, end_time, start_time, end_time]);
 
-        // Trả về kết quả thành công
-        res.json({
+        if (overlappingShowtimes.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phòng chiếu đã có lịch chiếu khác trong khoảng thời gian này'
+            });
+        }
+
+        // Thêm lịch chiếu mới
+        const result = await query(
+            `INSERT INTO showtimes (
+                id_movie, id_screen, start_time, end_time, show_date, 
+                price, format, language, subtitle, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                id_movie,
+                id_screen,
+                start_time,
+                end_time,
+                show_date,
+                price,
+                format || '2D',
+                language || null,
+                subtitle || null,
+                status || 'available'
+            ]
+        );
+
+        // Lấy thông tin chi tiết của lịch chiếu vừa thêm
+        const newShowtime = await query(`
+            SELECT s.*, m.title as movie_title, sc.screen_name, c.cinema_name
+            FROM showtimes s
+            LEFT JOIN movies m ON s.id_movie = m.id_movie
+            LEFT JOIN screen sc ON s.id_screen = sc.id_screen
+            LEFT JOIN cinemas c ON sc.id_cinema = c.id_cinema
+            WHERE s.id_showtime = ?
+        `, [result.insertId]);
+
+        res.status(201).json({
             success: true,
-            data: screen // Đảm bảo trả về mảng
+            message: 'Thêm lịch chiếu thành công',
+            data: newShowtime[0]
         });
-    } catch (error: any) {
-        // In ra chi tiết lỗi để debug
-        console.error('Lỗi khi truy vấn danh sách screen:', error);
-        console.error('Chi tiết lỗi:', error.message);
-        console.error('Stack trace:', error.stack);
-
-        // Trả về thông tin lỗi chi tiết
+    } catch (error) {
+        console.error('Lỗi khi thêm lịch chiếu:', error);
         res.status(500).json({
             success: false,
-            message: 'Không thể lấy danh sách screen',
-            errorDetails: {
-                message: error.message,
-                code: error.code,
-                sqlMessage: error.sqlMessage,
-                sqlState: error.sqlState
+            message: 'Không thể thêm lịch chiếu'
+        });
+    }
+}));
+
+// Cập nhật thông tin lịch chiếu
+app.put('/api/admin/showtimes/:id', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const {
+            id_movie,
+            id_screen,
+            start_time,
+            end_time,
+            show_date,
+            price,
+            format,
+            language,
+            subtitle,
+            status
+        } = req.body;
+
+        // Validate đầu vào
+        if (!id_movie || !id_screen || !start_time || !end_time || !show_date || !price) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phim, phòng chiếu, thời gian bắt đầu, thời gian kết thúc, ngày chiếu và giá vé là bắt buộc'
+            });
+        }
+
+        // Kiểm tra lịch chiếu tồn tại
+        const checkExists = await query('SELECT * FROM showtimes WHERE id_showtime = ?', [id]);
+        if (checkExists.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy lịch chiếu để cập nhật'
+            });
+        }
+
+        // Kiểm tra xem phòng chiếu có lịch chiếu trùng thời gian không (trừ chính lịch chiếu này)
+        const overlappingShowtimes = await query(`
+            SELECT * FROM showtimes 
+            WHERE id_screen = ? AND show_date = ? AND id_showtime != ? AND
+            ((start_time <= ? AND end_time > ?) OR (start_time < ? AND end_time >= ?) OR (start_time >= ? AND end_time <= ?))
+        `, [id_screen, show_date, id, start_time, start_time, end_time, end_time, start_time, end_time]);
+
+        if (overlappingShowtimes.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phòng chiếu đã có lịch chiếu khác trong khoảng thời gian này'
+            });
+        }
+
+        // Cập nhật thông tin lịch chiếu
+        await query(
+            `UPDATE showtimes SET 
+                id_movie = ?, id_screen = ?, start_time = ?, end_time = ?, show_date = ?,
+                price = ?, format = ?, language = ?, subtitle = ?, status = ?
+            WHERE id_showtime = ?`,
+            [
+                id_movie,
+                id_screen,
+                start_time,
+                end_time,
+                show_date,
+                price,
+                format,
+                language,
+                subtitle,
+                status,
+                id
+            ]
+        );
+
+        // Lấy thông tin chi tiết của lịch chiếu vừa cập nhật
+        const updatedShowtime = await query(`
+            SELECT s.*, m.title as movie_title, sc.screen_name, c.cinema_name
+            FROM showtimes s
+            LEFT JOIN movies m ON s.id_movie = m.id_movie
+            LEFT JOIN screen sc ON s.id_screen = sc.id_screen
+            LEFT JOIN cinemas c ON sc.id_cinema = c.id_cinema
+            WHERE s.id_showtime = ?
+        `, [id]);
+
+        res.json({
+            success: true,
+            message: 'Cập nhật lịch chiếu thành công',
+            data: updatedShowtime[0]
+        });
+    } catch (error) {
+        console.error('Lỗi khi cập nhật thông tin lịch chiếu:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể cập nhật thông tin lịch chiếu'
+        });
+    }
+}));
+
+// Cập nhật trạng thái lịch chiếu
+app.patch('/api/admin/showtimes/:id', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!status || !['available', 'sold out', 'cancelled'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Trạng thái không hợp lệ. Các trạng thái hợp lệ: available, sold out, cancelled'
+            });
+        }
+
+        const checkExists = await query('SELECT * FROM showtimes WHERE id_showtime = ?', [id]);
+        if (checkExists.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy lịch chiếu để cập nhật'
+            });
+        }
+
+        await query('UPDATE showtimes SET status = ? WHERE id_showtime = ?', [status, id]);
+
+        res.json({
+            success: true,
+            message: 'Cập nhật trạng thái lịch chiếu thành công',
+            data: {
+                id_showtime: parseInt(id),
+                status
             }
+        });
+    } catch (error) {
+        console.error('Lỗi khi cập nhật trạng thái lịch chiếu:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể cập nhật trạng thái lịch chiếu'
+        });
+    }
+}));
+
+// Xóa lịch chiếu
+app.delete('/api/admin/showtimes/:id', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const checkExists = await query('SELECT * FROM showtimes WHERE id_showtime = ?', [id]);
+        if (checkExists.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy lịch chiếu để xóa'
+            });
+        }
+
+        // Kiểm tra xem có vé đã được đặt cho lịch chiếu này không
+        const hasBookings = await query(`
+            SELECT COUNT(*) as count FROM booking_details 
+            WHERE id_showtime = ?
+        `, [id]);
+
+        if (hasBookings[0].count > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Không thể xóa lịch chiếu này vì đã có vé được đặt'
+            });
+        }
+
+        await query('DELETE FROM showtimes WHERE id_showtime = ?', [id]);
+
+        res.json({
+            success: true,
+            message: 'Xóa lịch chiếu thành công'
+        });
+    } catch (error) {
+        console.error('Lỗi khi xóa lịch chiếu:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể xóa lịch chiếu'
+        });
+    }
+}));
+
+// ==================== API PHIM (MOVIES) ====================
+
+// API để lấy tất cả thể loại phim
+app.get('/api/genres', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const genres = await query('SELECT * FROM genre ORDER BY genre_name');
+        res.json({
+            success: true,
+            data: genres
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách thể loại phim:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách thể loại phim'
+        });
+    }
+}));
+
+// API để lấy phim đang chiếu
+app.get('/api/movies/now-showing', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const movies = await query(`
+            SELECT m.*, 
+                GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
+            FROM movies m
+            LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
+            LEFT JOIN genre g ON gm.id_genre = g.id_genre
+            WHERE m.status = 'now showing'
+            GROUP BY m.id_movie
+            ORDER BY m.release_date DESC
+        `);
+        res.json({
+            success: true,
+            data: movies
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách phim đang chiếu:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách phim đang chiếu'
+        });
+    }
+}));
+
+// API để lấy phim sắp chiếu
+app.get('/api/movies/coming-soon', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const movies = await query(`
+            SELECT m.*, 
+                GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
+            FROM movies m
+            LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
+            LEFT JOIN genre g ON gm.id_genre = g.id_genre
+            WHERE m.status = 'coming soon'
+            GROUP BY m.id_movie
+            ORDER BY m.release_date ASC
+        `);
+        res.json({
+            success: true,
+            data: movies
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách phim sắp chiếu:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy danh sách phim sắp chiếu'
+        });
+    }
+}));
+
+// API để lấy thông tin chi tiết của một phim
+app.get('/api/movies/:id', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const movies = await query(`
+            SELECT m.*, 
+                GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
+            FROM movies m
+            LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
+            LEFT JOIN genre g ON gm.id_genre = g.id_genre
+            WHERE m.id_movie = ?
+            GROUP BY m.id_movie
+        `, [id]);
+
+        if (movies.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy phim với ID này'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: movies[0]
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin chi tiết phim:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy thông tin chi tiết phim'
+        });
+    }
+}));
+
+// API để lấy thông tin diễn viên và đạo diễn của phim
+app.get('/api/movies/:id/credits', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const movie = await query('SELECT director, actors FROM movies WHERE id_movie = ?', [id]);
+
+        if (movie.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy phim với ID này'
+            });
+        }
+
+        // Parse director and cast from string if needed
+        const directorString = movie[0].director || '';
+        const castString = movie[0].actors || '';
+
+        // You can format this data as needed
+        const directors = directorString.split(',').map((d: string) => d.trim()).filter((d: string) => d);
+        const cast = castString.split(',').map((c: string) => c.trim()).filter((c: string) => c);
+
+        res.json({
+            success: true,
+            data: {
+                directors,
+                cast
+            }
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin diễn viên và đạo diễn:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy thông tin diễn viên và đạo diễn'
+        });
+    }
+}));
+
+// API để lấy lịch chiếu của một phim
+app.get('/api/movies/:id/showtimes', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { date } = req.query;
+
+        let dateCondition = '';
+        const params: any[] = [id];
+
+        if (date) {
+            dateCondition = 'AND s.show_date = ?';
+            params.push(date as string);
+        } else {
+            dateCondition = 'AND s.show_date >= CURDATE()';
+        }
+
+        const showtimes = await query(`
+            SELECT s.*, c.cinema_name, c.id_cinema, sc.screen_name, sc.screen_type,
+                m.title as movie_title, m.duration, m.poster_url
+            FROM showtimes s
+            JOIN movies m ON s.id_movie = m.id_movie
+            JOIN screen sc ON s.id_screen = sc.id_screen
+            JOIN cinemas c ON sc.id_cinema = c.id_cinema
+            WHERE s.id_movie = ? ${dateCondition}
+            ORDER BY s.show_date, c.cinema_name, s.start_time
+        `, params);
+
+        // Define interfaces for type safety
+        interface Showtime {
+            id_showtime: number;
+            start_time: string;
+            end_time: string;
+            screen_name: string;
+            screen_type: string;
+            price: number;
+            format: string;
+            language: string;
+            subtitle: string;
+            status: string;
+        }
+
+        interface CinemaShowtimes {
+            cinema_name: string;
+            cinema_id: number;
+            showtimes: Showtime[];
+        }
+
+        interface DateShowtimes {
+            [cinemaName: string]: CinemaShowtimes;
+        }
+
+        interface GroupedShowtimes {
+            [date: string]: DateShowtimes;
+        }
+
+        // Group by date and cinema
+        const groupedShowtimes: GroupedShowtimes = {};
+
+        showtimes.forEach((showtime: any) => {
+            const dateKey = showtime.show_date;
+            const cinemaKey = showtime.cinema_name;
+
+            if (!groupedShowtimes[dateKey]) {
+                groupedShowtimes[dateKey] = {};
+            }
+
+            if (!groupedShowtimes[dateKey][cinemaKey]) {
+                groupedShowtimes[dateKey][cinemaKey] = {
+                    cinema_name: cinemaKey,
+                    cinema_id: showtime.id_cinema,
+                    showtimes: []
+                };
+            }
+
+            groupedShowtimes[dateKey][cinemaKey].showtimes.push({
+                id_showtime: showtime.id_showtime,
+                start_time: showtime.start_time,
+                end_time: showtime.end_time,
+                screen_name: showtime.screen_name,
+                screen_type: showtime.screen_type,
+                price: showtime.price,
+                format: showtime.format,
+                language: showtime.language,
+                subtitle: showtime.subtitle,
+                status: showtime.status
+            });
+        });
+
+        res.json({
+            success: true,
+            data: groupedShowtimes
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy lịch chiếu phim:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Không thể lấy lịch chiếu phim'
         });
     }
 }));

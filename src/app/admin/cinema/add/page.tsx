@@ -46,7 +46,7 @@ export default function AddCinema() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 text-dark">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Thêm rạp chiếu mới</h1>
                 <Link href="/admin/cinema">
@@ -63,7 +63,7 @@ export default function AddCinema() {
             )}
 
             <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                <div className="mb-4">
+                <div className="mb-4 text-dark">
                     <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cinema_name">
                         Tên rạp chiếu *
                     </label>

@@ -5,7 +5,7 @@ import Layout from '@/components/layout/Layout';
 import MovieCarousel from '@/components/movies/MovieCarousel';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getNowShowingMovies, getComingSoonMovies, fallbackNowShowingMovies, fallbackComingSoonMovies } from '@/lib/film';
+import { getNowShowingMovies, getComingSoonMovies } from '@/lib/film';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
 import QuickBookingForm from '@/components/home/QuickBookingForm';
@@ -32,8 +32,7 @@ export default function MoviePage() {
         console.error("Không thể lấy dữ liệu phim:", err);
 
         // Sử dụng dữ liệu fallback khi API gặp lỗi
-        setNowShowingMovies(fallbackNowShowingMovies);
-        setComingSoonMovies(fallbackComingSoonMovies);
+
 
         setError("Đã xảy ra lỗi khi tải dữ liệu. Đang hiển thị dữ liệu dự phòng.");
         setLoading(false);
@@ -61,18 +60,15 @@ export default function MoviePage() {
             <p>{error}</p>
           </div>
         )}
-        <QuickBookingForm  />
-
-
-        <MovieCarousel
+        <QuickBookingForm />        <MovieCarousel
           title={t('movie.nowShowing')}
-          movies={nowShowingMovies.map(movie => ({ ...movie, isComingSoon: false }))}
+          movies={nowShowingMovies}
           className="mt-8 pb-[100px]"
         />
 
         <MovieCarousel
           title={t('movie.comingSoon')}
-          movies={comingSoonMovies.map(movie => ({ ...movie, isComingSoon: true }))}
+          movies={comingSoonMovies}
           className="mt-8 pb-[100px]"
         />
 

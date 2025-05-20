@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MenuIcon, Search, User } from 'lucide-react';
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -17,10 +18,25 @@ import {
 import { FaLocationDot } from "react-icons/fa6";
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../language/LanguageSwitcher';
-import { Cinema, cinemas } from '@/lib/cinema';
+import { Cinema, getAllCinemas } from '@/lib/cinema';
 
 export default function Header() {
   const { t, i18n } = useTranslation();
+  const [cinemaList, setCinemaList] = useState<Cinema[]>([]);
+
+  // Fetch cinemas on component mount
+  useEffect(() => {
+    const fetchCinemas = async () => {
+      try {
+        const cinemas = await getAllCinemas();
+        setCinemaList(cinemas);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách rạp:", error);
+      }
+    };
+
+    fetchCinemas();
+  }, []);
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -149,7 +165,7 @@ export default function Header() {
                   style={{ transform: 'translateX(calc((100vw - 100%) / -2))' }}>
                   <div className="container -mx-2">
                     <ul className="grid grid-cols-3 gap-4 py-6">
-                      {cinemas.map((cinema) => (
+                      {cinemaList.map((cinema) => (
                         <li key={cinema.id}>
                           <Link
                             href={`/chonrap/${cinema.id}`}

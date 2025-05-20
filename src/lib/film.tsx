@@ -1,52 +1,110 @@
 import { MovieProps } from '@/components/movies/MovieCard';
-import { MovieDbAPI } from '@/services/MovieDbAPI';
+import {
+  getNowShowingMovies as fetchNowShowingMovies,
+  getComingSoonMovies as fetchComingSoonMovies,
+  getPopularMovies as fetchPopularMovies,
+  getMovieById as fetchMovieById
+} from './movieDb';
 
+interface DatabaseMovie {
+  id_movie: number;
+  title: string;
+  original_title: string | null;
+  director: string | null;
+  actors: string | null;
+  duration: number;
+  release_date: string;
+  end_date: string | null;
+  language: string | null;
+  subtitle: string | null;
+  country: string | null;
+  description: string | null;
+  poster_image: string | null;
+  trailer_url: string | null;
+  age_restriction: string | null;
+  status: 'coming soon' | 'now showing' | 'ended';
+  genres?: string[];
+}
 
-// Hàm lấy danh sách phim đang chiếu từ API
+function formatMovieResponse(movie: DatabaseMovie): MovieProps {
+  return {
+    id: movie.id_movie.toString(),
+    title: movie.title,
+    originalTitle: movie.original_title ?? undefined,
+    director: movie.director ?? undefined,
+    actors: movie.actors ?? undefined,
+    duration: movie.duration,
+    releaseDate: movie.release_date,
+    endDate: movie.end_date ?? undefined,
+    language: movie.language ?? 'Phụ đề',
+    subtitle: movie.subtitle ?? undefined,
+    country: movie.country ?? 'Việt Nam',
+    description: movie.description ?? undefined,
+    poster: movie.poster_image ?? '/images/movie-placeholder.jpg',
+    trailerUrl: movie.trailer_url ?? undefined,
+    ageRestriction: movie.age_restriction ?? 'P',
+    status: movie.status ?? 'coming soon',
+    genre: Array.isArray(movie.genres) ? movie.genres.join(', ') : undefined,
+    genres: movie.genres
+  };
+}
+
+// Hàm lấy danh sách phim đang chiếu từ Database
 export async function getNowShowingMovies(): Promise<MovieProps[]> {
   try {
-    // Không cần map lại vì MovieDbAPI.getNowPlayingMovies() đã format dữ liệu
-    return await MovieDbAPI.getNowPlayingMovies();
+    const movies = await fetchNowShowingMovies();
+    return movies.map(formatMovieResponse);
   } catch (error) {
     console.error("Lỗi khi lấy phim đang chiếu:", error);
-    return fallbackNowShowingMovies; // Trả về dữ liệu dự phòng khi gặp lỗi
+    return [];
   }
 }
 
-// Hàm lấy danh sách phim sắp chiếu từ API
+// Hàm lấy danh sách phim sắp chiếu từ Database
 export async function getComingSoonMovies(): Promise<MovieProps[]> {
   try {
-    // Không cần map lại vì MovieDbAPI.getUpcomingMovies() đã format dữ liệu
-    return await MovieDbAPI.getUpcomingMovies();
+    const movies = await fetchComingSoonMovies();
+    return movies.map(formatMovieResponse);
   } catch (error) {
     console.error("Lỗi khi lấy phim sắp chiếu:", error);
-    return fallbackComingSoonMovies; // Trả về dữ liệu dự phòng khi gặp lỗi
+    return [];
   }
 }
 
 export async function getPopularMovies(): Promise<MovieProps[]> {
   try {
-    // Không cần map lại vì MovieDbAPI.getPopularMovies() đã format dữ liệu
-    return await MovieDbAPI.getPopularMovies();
+    const movies = await fetchPopularMovies();
+    return movies.map(formatMovieResponse);
   } catch (error) {
     console.error("Lỗi khi lấy phim phổ biến:", error);
-    return fallbackNowShowingMovies; // Trả về dữ liệu dự phòng khi gặp lỗi
+    return [];
   }
 }
 
-export async function getMovieDetails(id: number): Promise<MovieProps | null> {
+export async function getMovieById(id: string): Promise<MovieProps | null> {
   try {
-    const movieDetails = await MovieDbAPI.getMovieDetails(id);
-    return movieDetails ? await MovieDbAPI.formatMovieData(movieDetails) : null;
+    const movie = await fetchMovieById(id);
+    if (!movie) return null;
+    return formatMovieResponse(movie);
   } catch (error) {
-    console.error("Lỗi khi lấy chi tiết phim:", error);
-    return null; // Trả về null nếu không tìm thấy phim
+    console.error(`Lỗi khi lấy thông tin phim id=${id}:`, error);
+    return null;
   }
 }
 
+// Helper function to get genres from the database
 export async function getMovieGenres(): Promise<{ [key: number]: string }> {
   try {
-    const genres = await MovieDbAPI.getGenres();
+    const genresResult = await fetch('/api/genres').then(res => res.json());
+    if (!genresResult.success) {
+      return {};
+    }
+
+    const genres: { [key: number]: string } = {};
+    genresResult.data.forEach((genre: { id_genre: number, genre_name: string }) => {
+      genres[genre.id_genre] = genre.genre_name;
+    });
+
     return genres;
   } catch (error) {
     console.error("Lỗi khi lấy thể loại phim:", error);
@@ -54,144 +112,33 @@ export async function getMovieGenres(): Promise<{ [key: number]: string }> {
   }
 }
 
-export async function getMovieCredits(id: number): Promise<any> {
+import { logger } from './logger';
+
+// Function to get credits (cast and crew) for a movie
+export async function getMovieCredits(id: number | string): Promise<any> {
   try {
-    const credits = await MovieDbAPI.getMovieCredits(id);
-    return credits;
+    if (!id) {
+      logger.error('Movie ID is required for getMovieCredits');
+      return { director: null, actors: [] };
+    }
+
+    // Get movie details which now includes director and actors
+    const movie = await getMovieById(id.toString());
+
+    if (!movie) {
+      logger.error(`Movie not found with ID ${id}`);
+      return { director: null, actors: [] };
+    }
+
+    // Normalize response data
+    return {
+      director: movie.director || null,
+      actors: movie.actors ? movie.actors.split(',').map(actor => actor.trim()) : []
+    };
   } catch (error) {
-    console.error("Lỗi khi lấy thông tin diễn viên:", error);
-    return null; // Trả về null nếu không tìm thấy thông tin
+    logger.error(`Failed to get credits for movie ${id}:`, error);
+    return { director: null, actors: [] };
   }
 }
-
-
-// Mock data for now showing movies
-//du lieu phim de phong
-export const fallbackNowShowingMovies: MovieProps[] = [
-  {
-    id: 'movie1',
-    title: 'ÂM DƯƠNG LỘ (T16)',
-    poster: '/images/movie1.jpeg',
-    rating: 'T16',
-    genre: 'Kinh Dị',
-    duration: 119,
-    country: 'Việt Nam',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=n-5oC3oyXKE',
-  },
-  {
-    id: 'movie2',
-    title: 'QUỶ NHẬP TRÀNG (T18)',
-    poster: '/images/movie2.jpeg',
-    rating: 'T18',
-    genre: 'Kinh Dị',
-    duration: 122,
-    country: 'Việt Nam',
-    language: 'VN',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=d_C534uicPw',
-  },
-  {
-    id: 'movie3',
-    title: 'SÁT THỦ VŨ CÔNG CỰC HÀI (T16)',
-    poster: '/images/movie3.jpeg',
-    rating: 'T16',
-    genre: 'Hài',
-    duration: 107,
-    country: 'Hàn Quốc',
-    language: 'Lồng Tiếng',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=DXNno1pNlyM',
-  },
-  {
-    id: 'movie4',
-    title: 'NGHI LỄ TRỤC QUỶ (T18)',
-    poster: '/images/movie4.jpeg',
-    rating: 'T18',
-    genre: 'Kinh Dị',
-    duration: 96,
-    country: 'Khác',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=O7aWzuYhYNk',
-  },
-  {
-    id: 'movie5',
-    title: 'NHÀ GIÀ MA CHÓ (T18)',
-    poster: '/images/movie5.jpeg',
-    rating: 'T18',
-    genre: 'Kinh Dị',
-    duration: 89,
-    country: 'Khác',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=aqdPkVflLWQ',
-  },
-];
-
-// Mock data for coming soon movies
-export const fallbackComingSoonMovies: MovieProps[] = [
-  {
-    id: 'movie-cs1',
-    title: 'THIẾU NỮ ÁNH TRĂNG',
-    poster: '/images/coming1.jpeg',
-    rating: 'T13',
-    genre: 'Tình Cảm, Tâm Lý',
-    duration: 109,
-    country: 'Khác',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://www.youtube.com/watch?v=VwkpOMJLoB8',
-  },
-  {
-    id: 'movie-cs2',
-    title: 'PHIM ĐIỆN ẢNH NINJA RANTARO: GIẢI CỨU QUÂN SƯ',
-    poster: '/images/coming2.jpeg',
-    rating: 'P',
-    genre: 'Hoạt hình',
-    duration: 99,
-    country: 'Nhật Bản',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=jvaVg6wf8R8',
-  },
-  {
-    id: 'movie-cs3',
-    title: 'CÔNG CHÚA BĂNG GIÁ VÀ XỨ SỞ TRONG GƯƠNG (P)',
-    poster: '/images/coming3.png',
-    rating: 'P',
-    genre: 'Hoạt hình',
-    duration: 76,
-    country: 'Khác',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=eUBbKAyJ7sY',
-  },
-  {
-    id: 'movie-cs4',
-    title: 'MỘT BỘ PHIM MINECRAFT',
-    poster: '/images/coming4.png',
-    rating: 'K',
-    genre: 'Gia đình, Phiêu Lưu, Hành động',
-    duration: 99,
-    country: 'Khác',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=_k0Xu0KqgnQ',
-  },
-  {
-    id: 'movie-cs5',
-    title: 'BÙA HỔN HÔN KINH HOÀNG',
-    poster: '/images/movie5.jpeg', // Reusing one of the existing images
-    rating: 'T16',
-    genre: 'Kinh Dị',
-    duration: 99,
-    country: 'Khác',
-    language: 'Phụ đề',
-    format: '2D',
-    trailerUrl: 'https://youtube.com/watch?v=UvbCVGP1WOQ',
-  },
-];
 
 

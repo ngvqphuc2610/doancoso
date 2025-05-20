@@ -8,8 +8,8 @@ export async function GET(
 ) {
     try {
         const id = await params.id;
-        const movie = await getMovieById(id);
-
+        const movie = await getMovieById(parseInt(id));
+        
         if (!movie) {
             return NextResponse.json(
                 { success: false, message: 'Không tìm thấy phim' },
@@ -34,15 +34,12 @@ export async function PUT(
 ) {
     try {
         const id = await params.id;
-        const movieId = parseInt(id);
         const body = await req.json();
-
-        // Sử dụng hàm updateMovie trực tiếp từ movieDb.ts
-        const result = await updateMovie(movieId, body);
-
+        const result = await updateMovie(parseInt(id), body);
+        
         if (result.success) {
-            return NextResponse.json({
-                success: true,
+            return NextResponse.json({ 
+                success: true, 
                 message: 'Cập nhật phim thành công',
                 data: result.movie
             });
@@ -68,15 +65,12 @@ export async function DELETE(
 ) {
     try {
         const id = await params.id;
-        const movieId = parseInt(id);
-
-        // Sử dụng hàm deleteMovie trực tiếp từ movieDb.ts
-        const result = await deleteMovie(movieId);
-
+        const result = await deleteMovie(parseInt(id));
+        
         if (result.success) {
-            return NextResponse.json({
-                success: true,
-                message: 'Xóa phim thành công'
+            return NextResponse.json({ 
+                success: true, 
+                message: 'Xóa phim thành công' 
             });
         } else {
             return NextResponse.json(

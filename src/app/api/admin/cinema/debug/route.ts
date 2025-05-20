@@ -12,7 +12,7 @@ export async function GET() {
 
         // Gọi trực tiếp đến API Express với timeout dài hơn
         const response = await axios.get(`${API_URL}/api/admin/cinema`, {
-            timeout: 15000,
+            timeout: 30000,
             headers: {
                 'Cache-Control': 'no-cache',
                 'Pragma': 'no-cache'

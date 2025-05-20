@@ -4,7 +4,7 @@ import { getAllMovies, createMovie } from '@/lib/movieDb';
 // Route để lấy danh sách phim từ database
 export async function GET(req: NextRequest) {
     try {
-        console.log('Fetching movies from database');
+        // Gọi trực tiếp hàm từ movieDb
         const movies = await getAllMovies();
         return NextResponse.json({
             success: true,
@@ -16,8 +16,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Không thể tải danh sách phim',
-                error: error.message
+                message: `Không thể tải danh sách phim: ${error.message}`
             },
             { status: 500 }
         );
@@ -30,37 +29,33 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         // Validate required fields
-        if (!body.title) {
+        if (!body.title || !body.release_date || !body.status) {
             return NextResponse.json(
-                { success: false, message: 'Tiêu đề phim là bắt buộc' },
+                { success: false, message: 'Tiêu đề phim, ngày chiếu và trạng thái là bắt buộc' },
                 { status: 400 }
             );
         }
 
-        // Sử dụng hàm createMovie từ movieDb.ts
+        // Tạo phim mới trực tiếp từ movieDb
         const result = await createMovie(body);
-
+        
         if (result.success) {
             return NextResponse.json({
                 success: true,
-                message: 'Thêm phim mới thành công',
+                message: 'Thêm phim thành công',
                 movieId: result.movieId
             });
         } else {
             return NextResponse.json(
-                { success: false, message: result.message || 'Không thể tạo phim mới' },
+                { success: false, message: result.message || 'Không thể thêm phim mới' },
                 { status: 400 }
             );
         }
     } catch (error: any) {
         console.error('Error creating movie:', error.message);
-
+        
         return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể tạo phim mới',
-                error: error.message
-            },
+            { success: false, message: `Không thể thêm phim mới: ${error.message}` },
             { status: 500 }
         );
     }

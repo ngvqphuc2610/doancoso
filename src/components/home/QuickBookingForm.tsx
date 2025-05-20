@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
-import { MovieDbAPI } from '@/services/MovieDbAPI';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { NavigationFilter, Select } from '@/components/ui/navigation-filter';
 import { useTranslation } from 'react-i18next';
-import { Cinema, cinemas } from '@/lib/cinema';
+import { Cinema, getAllCinemas } from '@/lib/cinema';
+import { getNowShowingMovies } from '@/lib/film';
 
 interface Movie {
   id: string;
@@ -53,26 +53,38 @@ export default function QuickBookingForm() {
   const [selectedDate, setSelectedDate] = useState(getDates()[0].value);
   const [selectedTime, setSelectedTime] = useState('');
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [cinemaList, setCinemaList] = useState<Cinema[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  // Fetch movies and cinemas from the database directly
   useEffect(() => {
-    const fetchMovies = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        // Lấy dữ liệu phim đang chiếu từ API
-        const nowPlayingMovies = await MovieDbAPI.getNowPlayingMovies();
-        setMovies(nowPlayingMovies);
+        // Fetch movies directly from our film.tsx functions
+        const moviesData = await getNowShowingMovies();
+
+        // Convert to the format needed by the component
+        const formattedMovies = moviesData.map(movie => ({
+          id: movie.id,
+          title: movie.title
+        }));
+        setMovies(formattedMovies);
+        // Fetch cinemas directly using our cinema.tsx function
+        const cinemas = await getAllCinemas();
+        setCinemaList(cinemas);
+
         setLoading(false);
-      } catch (err) {
-        console.error("Không thể lấy dữ liệu phim:", err);
-        setError("Đã xảy ra lỗi khi tải dữ liệu phim.");
+      } catch (err: any) {
+        console.error("Không thể lấy dữ liệu:", err);
+        setError(err.message || "Đã xảy ra lỗi khi tải dữ liệu.");
         setLoading(false);
       }
     };
 
-    fetchMovies();
-  }, []);
+    fetchData();
+  }, []);  // Set cinema list from data already fetched in main useEffect
+
 
   // Reset dependent values when parent value changes
   useEffect(() => {
@@ -99,7 +111,7 @@ export default function QuickBookingForm() {
     // Lấy thông tin phim được chọn
     const movie = movies.find(m => m.id === selectedMovie);
 
-    router.push(`/booking?cinema=${selectedCinema}&movie=${selectedMovie}&movieTitle=${encodeURIComponent(movie?.title || '')}&date=${selectedDate}&time=${selectedTime}`);
+    router.push(`/movie=${selectedMovie}&movieTitle=${encodeURIComponent(movie?.title || '')}&date=${selectedDate}&time=${selectedTime}`);
   };
 
   if (loading) {
@@ -120,9 +132,8 @@ export default function QuickBookingForm() {
             value={selectedCinema}
             onChange={(e) => setSelectedCinema(e.target.value)}
             variant={selectedCinema ? 'custom1' : 'default'}
-          >
-            <option value="">1.{t('select.theater')}</option>
-            {cinemas.map((cinema) => (
+          >            <option value="">1.{t('select.theater')}</option>
+            {cinemaList.map((cinema) => (
               <option key={cinema.id} value={cinema.id}>{cinema.name}</option>
             ))}
           </Select>

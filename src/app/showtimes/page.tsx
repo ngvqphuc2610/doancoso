@@ -5,9 +5,8 @@ import Layout from '@/components/layout/Layout';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MovieDbAPI } from '@/services/MovieDbAPI';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Cinema, Showtime, CinemaShowtimes, cinemas, standardShowtimes, deluxeShowtimes } from '@/lib/cinema';
+import { Cinema, Showtime, CinemaShowtimes, getAllCinemas, standardShowtimes, deluxeShowtimes } from '@/lib/cinema';
 
 interface MovieDBResponse {
   id: number;
@@ -25,21 +24,47 @@ export default function ShowtimesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMovies = async () => {
+    const fetchData = async () => {
       try {
-        const nowPlaying = await MovieDbAPI.getNowPlayingMovies();
-        const comingSoon = await MovieDbAPI.getUpcomingMovies();
+        // Lấy phim từ API của chúng ta
+        const nowPlayingRes = await fetch('/api/movies/now-showing');
+        const comingSoonRes = await fetch('/api/movies/coming-soon');
+
+        const nowPlayingData = await nowPlayingRes.json();
+        const comingSoonData = await comingSoonRes.json();
+
+        let nowPlaying = [];
+        let comingSoon = [];
+
+        if (nowPlayingData.success) {
+          nowPlaying = nowPlayingData.data.map((movie: any) => ({
+            id: movie.id_movie,
+            title: movie.title,
+            poster_path: movie.poster_url.replace('https://image.tmdb.org/t/p/w500', '')
+          }));
+        }
+
+        if (comingSoonData.success) {
+          comingSoon = comingSoonData.data.map((movie: any) => ({
+            id: movie.id_movie,
+            title: movie.title,
+            poster_path: movie.poster_url.replace('https://image.tmdb.org/t/p/w500', '')
+          }));
+        }
 
         setNowShowingMovies(nowPlaying);
         setComingSoonMovies(comingSoon);
 
+        // Lấy danh sách rạp từ database
+        const cinemasList = await getAllCinemas();
+
         // Tạo dữ liệu lịch chiếu mẫu cho mỗi rạp
-        const cinemaShowtimes = cinemas.map(cinema => {
-          const moviesInCinema = nowPlaying.slice(0, 5).map((movie: MovieDBResponse) => ({
+        const cinemaShowtimes = cinemasList.map((cinema: Cinema) => {
+          const moviesInCinema = nowPlaying.slice(0, 5).map((movie: any) => ({
             id: movie.id.toString(),
             title: movie.title,
             poster: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
-            genre: movie.genres?.join(', ') || 'Action, Drama',
+            genre: 'Action, Drama', // Thay bằng genre từ API nếu có
             duration: 120,
             format: '2D',
             showTimes: {
@@ -97,9 +122,9 @@ export default function ShowtimesPage() {
             onChange={(e) => setSelectedCinema(e.target.value)}
           >
             <option value="">Chọn rạp</option>
-            {cinemas.map(cinema => (
-              <option key={cinema.id} value={cinema.id}>
-                {cinema.name}
+            {showtimesData.map(data => (
+              <option key={data.cinema.id} value={data.cinema.id}>
+                {data.cinema.name}
               </option>
             ))}
           </select>
