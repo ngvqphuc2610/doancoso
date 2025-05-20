@@ -22,6 +22,7 @@ interface MovieCarouselProps {
   className?: string;
   showNavigation?: boolean;
   id?: string;
+
 }
 
 const MovieCarouselInner = ({ title, movies, className = '', showNavigation = true }: MovieCarouselProps) => {
@@ -36,9 +37,8 @@ const MovieCarouselInner = ({ title, movies, className = '', showNavigation = tr
     swiperRef.current = swiper;
     setTotalSlides(movies.length);
   };
-
-  // Kiểm tra xem có phải là phim sắp chiếu không
-  const isComingSoon = movies.length > 0 && movies[0].isComingSoon;
+  // Kiểm tra trạng thái của phim
+  const isComingSoon = movies.length > 0 && movies[0].status === 'coming soon';
   const viewAllLink = isComingSoon ? '/movie/upcoming' : '/movie/showing';
 
   return (

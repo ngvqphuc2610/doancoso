@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Layout2 from '@/components/layout/Layout2';
 import MovieGrid from '@/components/movies/MovieGrid';
 import { MovieProps } from '@/components/movies/MovieCard';
-import { getNowShowingMovies, fallbackNowShowingMovies } from '@/lib/film';
+import { getNowShowingMovies } from '@/lib/film';
 
 import { useTranslation } from 'react-i18next';
 export default function ShowingPage() {
@@ -21,9 +21,7 @@ export default function ShowingPage() {
                 setMovies(nowPlayingMovies.map(movie => ({ ...movie, isComingSoon: false })));
                 setLoading(false);
             } catch (err) {
-                console.error("Không thể lấy dữ liệu phim đang chiếu:", err);
-                setMovies(fallbackNowShowingMovies.map(movie => ({ ...movie, isComingSoon: false })));
-                setError("Đã xảy ra lỗi khi tải dữ liệu. Đang hiển thị dữ liệu dự phòng.");
+                
                 setLoading(false);
             }
         };

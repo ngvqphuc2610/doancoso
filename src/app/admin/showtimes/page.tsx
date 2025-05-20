@@ -13,10 +13,15 @@ interface Showtime {
     start_time: string;
     end_time: string;
     show_date: string;
+    price: number;
     format: string;
     language: string;
     subtitle: string;
     status: string;
+    // Joined fields
+    movie_title?: string;
+    screen_name?: string;
+    cinema_name?: string;
 }
 
 export default function AdminShowtimesPage() {
@@ -55,13 +60,11 @@ export default function AdminShowtimesPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    // Delete a showtime
+    };    // Delete a showtime
     const handleDeleteShowtime = async (id: number) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa lịch chiếu này?')) {
             try {
-                const response = await axios.delete(`/api/admin/showtime/${id}`);
+                const response = await axios.delete(`/api/admin/showtimes/${id}`);
                 if (response.data.success) {
                     setShowtimes(showtimes.filter(showtime => showtime.id_showtime !== id));
                     alert('Xóa lịch chiếu thành công!');
@@ -81,15 +84,14 @@ export default function AdminShowtimesPage() {
     }, []);
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-dark">Quản lý lịch chiếu</h1>
-                <Link href="/admin/showtime/add">
-                    <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
-                        Thêm lịch chiếu mới
-                    </button>
-                </Link>
-            </div>
+        <div className="container mx-auto px-4 py-8">            <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-dark">Quản lý lịch chiếu</h1>
+            <Link href="/admin/showtimes/add">
+                <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    Thêm lịch chiếu mới
+                </button>
+            </Link>
+        </div>
 
             {error && (
                 <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
@@ -117,40 +119,48 @@ export default function AdminShowtimesPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {showtimes.map((showtime) => (
-                                <tr key={showtime.id_showtime}>
-                                    <td className="py-3 px-4 border-b text-dark">{showtime.id_showtime}</td>
-                                    <td className="py-3 px-4 border-b text-dark">{showtime.id_movie || 'N/A'}</td>
-                                    <td className="py-3 px-4 border-b text-dark">{showtime.id_screen || 'N/A'}</td>
-                                    <td className="py-3 px-4 border-b text-dark">{showtime.show_date}</td>
-                                    <td className="py-3 px-4 border-b text-dark">{showtime.start_time}</td>
-                                    <td className="py-3 px-4 border-b text-dark">{showtime.end_time}</td>
-                                    <td className="py-3 px-4 border-b text-dark">
-                                        <span
-                                            className={`px-2 py-1 rounded ${showtime.status === 'available'
+                            {showtimes.map((showtime) => (<tr key={showtime.id_showtime}>
+                                <td className="py-3 px-4 border-b text-dark">{showtime.id_showtime}</td>
+                                <td className="py-3 px-4 border-b text-dark">{showtime.movie_title || 'N/A'}</td>
+                                <td className="py-3 px-4 border-b text-dark">
+                                    {showtime.screen_name ?
+                                        `${showtime.screen_name} (${showtime.cinema_name})` :
+                                        'N/A'}
+                                </td>
+                                <td className="py-3 px-4 border-b text-dark">
+                                    {new Date(showtime.show_date).toLocaleDateString('vi-VN')}
+                                </td>
+                                <td className="py-3 px-4 border-b text-dark">{showtime.start_time}</td>
+                                <td className="py-3 px-4 border-b text-dark">{showtime.end_time}</td>
+                                <td className="py-3 px-4 border-b text-dark">
+                                    <span
+                                        className={`px-2 py-1 rounded ${showtime.status === 'available'
                                                 ? 'bg-green-100 text-green-800'
-                                                : 'bg-red-100 text-red-800'
-                                                }`}
-                                        >
-                                            {showtime.status === 'available' ? 'Còn vé' : 'Hết vé'}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-4 border-b">
-                                        <div className="flex gap-2">
-                                            <Link href={`/admin/showtime/edit/${showtime.id_showtime}`}>
-                                                <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded text-sm">
-                                                    Sửa
-                                                </button>
-                                            </Link>
-                                            <button
-                                                onClick={() => handleDeleteShowtime(showtime.id_showtime)}
-                                                className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
-                                            >
-                                                Xóa
+                                                : showtime.status === 'cancelled'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
+                                            }`}
+                                    >
+                                        {showtime.status === 'available' ? 'Còn vé' :
+                                            showtime.status === 'cancelled' ? 'Đã hủy' : 'Hết vé'}
+                                    </span>
+                                </td>
+                                <td className="py-3 px-4 border-b">
+                                    <div className="flex gap-2">
+                                        <Link href={`/admin/showtimes/edit/${showtime.id_showtime}`}>
+                                            <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded text-sm">
+                                                Sửa
                                             </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </Link>
+                                        <button
+                                            onClick={() => handleDeleteShowtime(showtime.id_showtime)}
+                                            className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
+                                        >
+                                            Xóa
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                             ))}
                         </tbody>
                     </table>

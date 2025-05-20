@@ -1,0 +1,374 @@
+"use client";
+
+import { useState, useEffect, FormEvent } from 'react';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+interface ShowtimeData {
+    id_showtime: number;
+    id_movie: number;
+    id_screen: number;
+    start_time: string;
+    end_time: string;
+    show_date: string;
+    price: number;
+    format: string;
+    language: string;
+    subtitle: string;
+    status: string;
+    movie_title?: string;
+    screen_name?: string;
+    cinema_name?: string;
+}
+
+interface Movie {
+    id_movie: number;
+    title: string;
+}
+
+interface Screen {
+    id_screen: number;
+    screen_name: string;
+    cinema_name: string;
+    id_cinema: number;
+}
+
+export default function EditShowtimePage({ params }: { params: { id: string } }) {
+    const router = useRouter();
+    const { id } = params;
+    const [showtime, setShowtime] = useState<ShowtimeData | null>(null);
+    const [movies, setMovies] = useState<Movie[]>([]);
+    const [screens, setScreens] = useState<Screen[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [loadingData, setLoadingData] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const [formData, setFormData] = useState({
+        id_movie: '',
+        id_screen: '',
+        start_time: '',
+        end_time: '',
+        show_date: '',
+        price: '',
+        format: '2D',
+        language: '',
+        subtitle: '',
+        status: 'available'
+    });
+
+    // Fetch showtime data, movies and screens
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoadingData(true);
+            try {
+                // Fetch all required data in parallel
+                const [showtimeRes, moviesRes, screensRes] = await Promise.all([
+                    axios.get(`/api/admin/showtimes/${id}`),
+                    axios.get('/api/movies/all'),
+                    axios.get('/api/screens/all')
+                ]);
+
+                if (showtimeRes.data.success) {
+                    const showtimeData = showtimeRes.data.data;
+                    setShowtime(showtimeData);
+
+                    // Format the date and time for the form
+                    const formattedDate = new Date(showtimeData.show_date).toISOString().split('T')[0];
+
+                    setFormData({
+                        id_movie: showtimeData.id_movie.toString(),
+                        id_screen: showtimeData.id_screen.toString(),
+                        start_time: showtimeData.start_time,
+                        end_time: showtimeData.end_time,
+                        show_date: formattedDate,
+                        price: showtimeData.price.toString(),
+                        format: showtimeData.format || '2D',
+                        language: showtimeData.language || '',
+                        subtitle: showtimeData.subtitle || '',
+                        status: showtimeData.status || 'available'
+                    });
+                }
+
+                if (moviesRes.data.success) {
+                    setMovies(moviesRes.data.data || []);
+                }
+
+                if (screensRes.data.success) {
+                    setScreens(screensRes.data.data || []);
+                }
+            } catch (err: any) {
+                console.error('Error fetching data:', err);
+                setError(err.response?.data?.message || 'Không thể tải thông tin lịch chiếu');
+            } finally {
+                setLoadingData(false);
+            }
+        };
+
+        fetchData();
+    }, [id]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await axios.put(`/api/admin/showtimes/${id}`, {
+                id_movie: parseInt(formData.id_movie),
+                id_screen: parseInt(formData.id_screen),
+                start_time: formData.start_time,
+                end_time: formData.end_time,
+                show_date: formData.show_date,
+                price: parseFloat(formData.price),
+                format: formData.format,
+                language: formData.language,
+                subtitle: formData.subtitle,
+                status: formData.status
+            });
+
+            if (response.data.success) {
+                alert('Cập nhật lịch chiếu thành công!');
+                router.push('/admin/showtimes');
+            } else {
+                setError(response.data.message || 'Có lỗi xảy ra khi cập nhật lịch chiếu');
+            }
+        } catch (err: any) {
+            console.error('Error updating showtime:', err);
+            setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật lịch chiếu');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loadingData) {
+        return (
+            <div className="container mx-auto p-6 text-center">
+                <p className="text-lg">Đang tải thông tin lịch chiếu...</p>
+            </div>
+        );
+    }
+
+    if (error && !showtime) {
+        return (
+            <div className="container mx-auto p-6">
+                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+                    <p>{error}</p>
+                </div>
+                <Link href="/admin/showtimes">
+                    <button className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">
+                        Quay lại danh sách lịch chiếu
+                    </button>
+                </Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="container mx-auto p-6 bg-white">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Chỉnh sửa lịch chiếu</h1>
+                <Link href="/admin/showtimes">
+                    <button className="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded">
+                        Quay lại
+                    </button>
+                </Link>
+            </div>
+
+            {error && (
+                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+                    <p>{error}</p>
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="id_movie">
+                            Phim <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="id_movie"
+                            name="id_movie"
+                            value={formData.id_movie}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="">Chọn phim</option>
+                            {movies.map(movie => (
+                                <option key={movie.id_movie} value={movie.id_movie}>
+                                    {movie.title}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="id_screen">
+                            Phòng chiếu <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="id_screen"
+                            name="id_screen"
+                            value={formData.id_screen}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="">Chọn phòng chiếu</option>
+                            {screens.map(screen => (
+                                <option key={screen.id_screen} value={screen.id_screen}>
+                                    {screen.screen_name} - {screen.cinema_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="show_date">
+                            Ngày chiếu <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="date"
+                            id="show_date"
+                            name="show_date"
+                            value={formData.show_date}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="price">
+                            Giá vé (VND) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleChange}
+                            required
+                            min="0"
+                            step="1000"
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="start_time">
+                            Giờ bắt đầu <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="time"
+                            id="start_time"
+                            name="start_time"
+                            value={formData.start_time}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="end_time">
+                            Giờ kết thúc <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="time"
+                            id="end_time"
+                            name="end_time"
+                            value={formData.end_time}
+                            onChange={handleChange}
+                            required
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="format">
+                            Định dạng
+                        </label>
+                        <select
+                            id="format"
+                            name="format"
+                            value={formData.format}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="2D">2D</option>
+                            <option value="3D">3D</option>
+                            <option value="4DX">4DX</option>
+                            <option value="IMAX">IMAX</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="language">
+                            Ngôn ngữ
+                        </label>
+                        <input
+                            type="text"
+                            id="language"
+                            name="language"
+                            value={formData.language}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="subtitle">
+                            Phụ đề
+                        </label>
+                        <input
+                            type="text"
+                            id="subtitle"
+                            name="subtitle"
+                            value={formData.subtitle}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-semibold mb-2" htmlFor="status">
+                            Trạng thái
+                        </label>
+                        <select
+                            id="status"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="available">Còn vé</option>
+                            <option value="sold out">Hết vé</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        {loading ? 'Đang xử lý...' : 'Cập nhật lịch chiếu'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+}
