@@ -1,30 +1,37 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Grid } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
+import { useTranslation } from 'react-i18next';
+
+// Import styles
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/grid';
+
+// Import components and utils
 import ProductCard from './ProductCard';
-import type { Swiper as SwiperType } from 'swiper';
-import { ProductProps1, ProductProps2, ProductProps3,ProductProps4, comboProducts, softDrinks, beverages,foodProducts } from '@/lib/product';
 import { SwiperProvider, useSwiper } from '../swiper/SwiperContext';
 import SwiperNavigation from '../swiper/SwiperNavigation';
-import { useTranslation } from 'react-i18next';
 
-// Make BaseProductCarouselProps generic to accept any of the three ProductProps types
-interface BaseProductCarouselProps<T extends ProductProps1 | ProductProps2 | ProductProps3> {
-    slides: T[];
+// Import product types and functions
+import { getProductsByType } from '@/lib/productDb';
+import { Product } from '@/lib/types/database';
+
+interface BaseProductCarouselProps {
+    slides: Product[];
     className?: string;
     title: string;
+    image?: string;
 }
 
-const BaseProductCarousel = <T extends ProductProps1 | ProductProps2 | ProductProps3>({
+const BaseProductCarousel = ({
     slides,
     className = '',
     title
-}: BaseProductCarouselProps<T>) => {
+}: BaseProductCarouselProps) => {
     const swiperRef = useRef<SwiperType>();
     const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -52,59 +59,71 @@ const BaseProductCarousel = <T extends ProductProps1 | ProductProps2 | ProductPr
                     1024: { slidesPerView: 3, spaceBetween: 24 },
                 }}
             >
-                {slides.map((slide) => (
-                    <SwiperSlide key={slide.id}>
-                        <ProductCard {...slide} />
-                    </SwiperSlide>
+                {slides.map((slide) => (<SwiperSlide key={slide.id_product}>
+                    <ProductCard
+                        id={slide.id_product.toString()}
+                        title={slide.product_name}
+                        image={slide.image || '/images/product/default-product.png'}
+                        price={new Intl.NumberFormat('vi-VN', {
+                            style: 'currency',
+                            currency: 'VND',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(slide.price)}
+                        description={slide.description || ''}
+                        quantity={0}
+                    />
+                </SwiperSlide>
                 ))}
             </Swiper>
         </div>
     );
 };
 
-// Type the individual carousels with their specific ProductProps
-const ProductCarousel1 = ({ slides = comboProducts, className }: { slides?: ProductProps1[], className?: string }) => (
-    <BaseProductCarousel<ProductProps1> slides={slides} className={className} title="COMBO 2 NGĂN" />
-);
-
-const ProductCarousel2 = ({ slides = softDrinks, className }: { slides?: ProductProps2[], className?: string }) => (
-    <BaseProductCarousel<ProductProps2> slides={slides} className={className} title="NƯỚC NGỌT" />
-);
-
-const ProductCarousel3 = ({ slides = beverages, className }: { slides?: ProductProps3[], className?: string }) => (
-    <BaseProductCarousel<ProductProps3> slides={slides} className={className} title="NƯỚC SUỐI & NƯỚC ÉP" />
-);
-
-const ProductCarousel4 = ({ slides = foodProducts, className }: { slides?: ProductProps4[], className?: string }) => (
-    <BaseProductCarousel<ProductProps4> slides={slides} className={className} title="SNACKS - KẸO" />
-);
-
-
 interface ProductGridProps {
     title: string;
-    products: ProductProps1[] | ProductProps2[] | ProductProps3[] | ProductProps4[];
+    products: Product[];
     className?: string;
 }
 
 const ProductGridInner = ({ title, products, className = '' }: ProductGridProps) => {
     const { t } = useTranslation();
-    const { swiperRef } = useSwiper();
-    const [quantities, setQuantities] = useState<{ [key: string]: number }>(
-        Object.fromEntries(products.map(product => [product.id, product.quantity]))
+    const { swiperRef } = useSwiper(); const [quantities, setQuantities] = useState<{ [key: string]: number }>(
+        Object.fromEntries(products.map(product => [product.id_product.toString(), 0]))
     );
 
+    // Load saved quantities from localStorage on mount
+    useEffect(() => {
+        const savedQuantities = localStorage.getItem('cartQuantities');
+        if (savedQuantities) {
+            const parsed = JSON.parse(savedQuantities);
+            setQuantities(prev => ({
+                ...prev,
+                ...parsed
+            }));
+        }
+    }, []);
+
     const handleIncrease = (productId: string) => {
-        setQuantities(prev => ({
-            ...prev,
-            [productId]: (prev[productId] || 0) + 1
-        }));
+        setQuantities(prev => {
+            const newQuantities = {
+                ...prev,
+                [productId]: (prev[productId] || 0) + 1
+            };
+            localStorage.setItem('cartQuantities', JSON.stringify(newQuantities));
+            return newQuantities;
+        });
     };
 
     const handleDecrease = (productId: string) => {
-        setQuantities(prev => ({
-            ...prev,
-            [productId]: Math.max((prev[productId] || 0) - 1, 0)
-        }));
+        setQuantities(prev => {
+            const newQuantities = {
+                ...prev,
+                [productId]: Math.max((prev[productId] || 0) - 1, 0)
+            };
+            localStorage.setItem('cartQuantities', JSON.stringify(newQuantities));
+            return newQuantities;
+        });
     };
 
     const calculateRows = (totalProducts: number, slidesPerView: number) => {
@@ -144,17 +163,23 @@ const ProductGridInner = ({ title, products, className = '' }: ProductGridProps)
                 navigation={false}
                 className="product-swiper"
             >
-                {products.map((product) => (
-                    <SwiperSlide key={product.id}>
-                       
-                        <ProductCard
-                            {...product}
-                            quantity={quantities[product.id] || 0}
-                            onIncrease={() => handleIncrease(product.id)}
-                            onDecrease={() => handleDecrease(product.id)}
-                        />
-                        
-                    </SwiperSlide>
+                {products.map((product) => (<SwiperSlide key={product.id_product}>
+                    <ProductCard
+                        id={product.id_product.toString()}
+                        title={product.product_name}
+                        image={product.image || '/images/product/default-product.png'}
+                        price={new Intl.NumberFormat('vi-VN', {
+                            style: 'currency',
+                            currency: 'VND',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(product.price)}
+                        description={product.description || ''}
+                        quantity={quantities[product.id_product.toString()] || 0}
+                        onIncrease={() => handleIncrease(product.id_product.toString())}
+                        onDecrease={() => handleDecrease(product.id_product.toString())}
+                    />
+                </SwiperSlide>
                 ))}
             </Swiper>
 
@@ -172,37 +197,92 @@ const ProductGrid = (props: ProductGridProps) => {
     );
 };
 
-// Create specific components for each product category
-export const ComboGrid = ({ className }: { className?: string }) => (
-    <ProductGrid
-        title="COMBO 2 NGĂN"
-        products={comboProducts}
-        className={className}
-    />
-);
+// Create specific components for each product category with async data loading
+export const ComboGrid = ({ className }: { className?: string }) => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [title, setTitle] = useState('Combo');
 
-export const SoftDrinksGrid = ({ className }: { className?: string }) => (
-    <ProductGrid
-        title="NƯỚC NGỌT"
-        products={softDrinks}
-        className={className}
-    />
-);
+    useEffect(() => {
+        getProductsByType(1).then(products => {
+            setProducts(products);
+            // Get type_name from the first product or use default
+            if (products.length > 0 && products[0].type_name) {
+                setTitle(products[0].type_name);
+            }
+        });
+    }, []);
 
-export const BeveragesGrid = ({ className }: { className?: string }) => (
-    <ProductGrid
-        title="NƯỚC SUỐI & NƯỚC ÉP"
-        products={beverages}
-        className={className}
-    />
-);
+    return (
+        <ProductGrid
+            title={title}
+            products={products}
+            className={className}
+        />
+    );
+};
 
-export const FoodProductsGrid = ({ className }: { className?: string }) => (
-    <ProductGrid
-        title="SNACKS - KẸO"
-        products={foodProducts}
-        className={className}
-    />
-);
+export const SoftDrinksGrid = ({ className }: { className?: string }) => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [title, setTitle] = useState('Nước ngọt');
 
-export { ProductCarousel1, ProductCarousel2, ProductCarousel3, ProductCarousel4 };
+    useEffect(() => {
+        getProductsByType(2).then(products => {
+            setProducts(products);
+            if (products.length > 0 && products[0].type_name) {
+                setTitle(products[0].type_name);
+            }
+        });
+    }, []);
+
+    return (
+        <ProductGrid
+            title={title}
+            products={products}
+            className={className}
+        />
+    );
+};
+
+export const BeveragesGrid = ({ className }: { className?: string }) => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [title, setTitle] = useState('Nước suối & Nước ép');
+
+    useEffect(() => {
+        getProductsByType(3).then(products => {
+            setProducts(products);
+            if (products.length > 0 && products[0].type_name) {
+                setTitle(products[0].type_name);
+            }
+        });
+    }, []);
+
+    return (
+        <ProductGrid
+            title={title}
+            products={products}
+            className={className}
+        />
+    );
+};
+
+export const FoodProductsGrid = ({ className }: { className?: string }) => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [title, setTitle] = useState('Snacks - Kẹo');
+
+    useEffect(() => {
+        getProductsByType(4).then(products => {
+            setProducts(products);
+            if (products.length > 0 && products[0].type_name) {
+                setTitle(products[0].type_name);
+            }
+        });
+    }, []);
+
+    return (
+        <ProductGrid
+            title={title}
+            products={products}
+            className={className}
+        />
+    );
+};

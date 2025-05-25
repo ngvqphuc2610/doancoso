@@ -61,7 +61,7 @@ export default function AdminEntertainmentPage() {
     const handleToggleStatus = async (id: number, currentStatus: string) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
-            const response = await axios.patch(`/api/admin/entertainments/${id}`, {
+            const response = await axios.patch(`/api/admin/entertainment/${id}`, {
                 status: newStatus
             });
 
@@ -84,7 +84,7 @@ export default function AdminEntertainmentPage() {
     const handleDeleteEntertainment = async (id: number) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa hoạt động giải trí này?')) {
             try {
-                const response = await axios.delete(`/api/admin/entertainments/${id}`);
+                const response = await axios.delete(`/api/admin/entertainment/${id}`);
                 if (response.data.success) {
                     setEntertainments(entertainments.filter(entertainment => entertainment.id_entertainment !== id));
                     alert('Xóa hoạt động giải trí thành công!');
@@ -110,10 +110,10 @@ export default function AdminEntertainmentPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 text-dark">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Quản lý hoạt động giải trí</h1>
-                <Link href="/admin/entertainments/add">
+                <Link href="/admin/entertainment/add">
                     <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
                         Thêm hoạt động mới
                     </button>
@@ -158,7 +158,7 @@ export default function AdminEntertainmentPage() {
                                     <p><strong>Lượt xem:</strong> {entertainment.views_count}</p>
                                 </div>
                                 <div className="mt-4 flex gap-2">
-                                    <Link href={`/admin/entertainments/edit/${entertainment.id_entertainment}`}>
+                                    <Link href={`/admin/entertainment/edit/${entertainment.id_entertainment}`}>
                                         <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-3 py-1 rounded">
                                             Sửa
                                         </button>

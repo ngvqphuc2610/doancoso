@@ -1,4 +1,4 @@
-import pool from "../config/db.js";
+import pool from "../config/db.ts";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();

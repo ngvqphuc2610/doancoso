@@ -126,7 +126,7 @@ export default function AdminProductPage() {
                     <p className="text-xl">Đang tải danh sách sản phẩm...</p>
                 </div>
             ) : products.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-dark">
                     {products.map((product) => (
                         <div key={product.id_product} className="bg-white rounded-lg shadow-lg overflow-hidden border">
                             <div className="h-48 bg-gray-200 relative">

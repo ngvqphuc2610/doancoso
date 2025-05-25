@@ -29,6 +29,21 @@ const buttonVariants = cva(
         nav : "",
         custom7:  //button dat ve header
           "bg-[#EBDB40] font-bold  text-dark shadow hover:bg-primary/90 ",
+        custom8: //button lich chieu
+          " text-yellow font-bold shadow  flex border border-[#EBDB40]",
+          custom9: //button lich chieu khi chọn
+          "bg-[#EBDB40] text-dark font-bold shadow  flex border-[#EBDB40]",
+        custom10: //button danh sách rạp
+          "bg-[#ccc] text-white font-bold shadow  flex border-[#EBDB40]",
+        custom11: //button danh sách rạp khi chọn
+          "bg-[#7436A7] text-white font-bold shadow  flex border-[#EBDB40]",
+        custom12: //button danh sách xuất chiếu 
+          " text-white font-bold shadow  flex border border-white  ",
+        custom13: //button danh sách xuất chiếu khi chọn
+          "text-[#EBDB40] font-bold shadow  flex border border-[#EBDB40]",
+        custom14: //button danh sách chọn loại vé
+          " text-white font-bold shadow  flex border border-white  ",
+
 
 
       },
@@ -40,6 +55,8 @@ const buttonVariants = cva(
         custom5: "h-[50px] rounded-md px-8",
         swiper : "h-5 w-5",
         custom7 : "h-[40px] rounded-md ",
+        custom8 : "h-[95pxpx] rounded-md ",
+        custom12 : "h-[35px] rounded-md ",
       },
       width: {
 
@@ -50,7 +67,9 @@ const buttonVariants = cva(
         custom4: "w-[359px]",
         custom5: "w-[100px]",
         swiper : "w-5",
-        custom7 : "w-[270px]"
+        custom7 : "w-[270px]",
+        custom8 : "w-[100px]",
+        custom12 : "w-[65px]",
       },
       position: {
 

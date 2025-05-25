@@ -2,8 +2,8 @@
 import { MovieProps } from '@/components/movies/MovieCard';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import MovieShowtimes from './MovieShowtimes';
 import { FaEarthAsia } from "react-icons/fa6";
-import { FiUserCheck } from "react-icons/fi";
 import Layout from '@/components/layout/Layout';
 import '@/components/movies/MovieCard.scss';
 import {
@@ -13,7 +13,7 @@ import {
     DialogTitle
 } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { Description } from '@radix-ui/react-dialog';
+import { useState, useEffect } from 'react';
 
 interface Credits {
     director: string | null;
@@ -21,6 +21,7 @@ interface Credits {
 }
 
 export default function MovieDetail({ movie, credits }: { movie: MovieProps, credits: Credits }) {
+
     if (!movie) {
         return <div>Loading...</div>;
     }
@@ -110,43 +111,49 @@ export default function MovieDetail({ movie, credits }: { movie: MovieProps, cre
                                     </div>
                                 </div>
                             )}
-                        
+
                             {/* Trailer */}
                             {movie.trailerUrl && (
-                               <div className="mt-8">
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <span className="text-2xl py-2 px-3 bg-transparent border-white text-white cursor-pointer flex items-center gap-1 underline">
-                                                        <div className='border rounded-3xl border-white '><img src="/images/play-circle-red.svg" className='size-9 border-white ' alt="start icon" /></div>
-                                                        Xem trailer
-                                                    </span>
-                                                </DialogTrigger>
-        
-                                                <DialogContent className="sm:max-w-[800px] p-0 bg-black border-none">
-                                                    <DialogTitle>
-                                                        <VisuallyHidden>
-                                                            {movie.title
-                                                                ? `Xem trailer: ${movie.title}`
-                                                                : 'Xem trailer'}
-                                                        </VisuallyHidden>
-                                                    </DialogTitle>
-        
-                                                    <iframe
-                                                        width="100%"
-                                                        height="450"
-                                                        src={movie.trailerUrl.replace('watch?v=', 'embed/')}
-                                                        title={`${movie.title} trailer`}
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                        allowFullScreen
-                                                        className="border-0"
-                                                    ></iframe>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </div>
+                                <div className="mt-8">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <span className="text-2xl py-2 px-3 bg-transparent border-white text-white cursor-pointer flex items-center gap-1 underline">
+                                                <div className='border rounded-3xl border-white '><img src="/images/play-circle-red.svg" className='size-9 border-white ' alt="start icon" /></div>
+                                                Xem trailer
+                                            </span>
+                                        </DialogTrigger>
+
+                                        <DialogContent className="sm:max-w-[800px] p-0 bg-black border-none">
+                                            <DialogTitle>
+                                                <VisuallyHidden>
+                                                    {movie.title
+                                                        ? `Xem trailer: ${movie.title}`
+                                                        : 'Xem trailer'}
+                                                </VisuallyHidden>
+                                            </DialogTitle>
+
+                                            <iframe
+                                                width="100%"
+                                                height="450"
+                                                src={movie.trailerUrl.replace('watch?v=', 'embed/')}
+                                                title={`${movie.title} trailer`}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                                className="border-0"
+                                            ></iframe>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
+                                {/* Lịch chiếu phim */}
+                <MovieShowtimes
+                    movieId={movie.id}
+                    status={movie.status}
+                    releaseDate={movie.releaseDate}
+                />
             </main>
         </Layout>
     );

@@ -1,77 +1,62 @@
 "use server";
 
+import { Cinema as DBCinema } from './types/database';
 import { query } from './db';
 
-export interface Cinema {
+// Frontend interface - separate from database type
+interface FrontendCinema {
     id: string;
     name: string;
     address: string;
     city: string;
-    description?: string;
-    image?: string;
-    contact_number?: string;
-    email?: string;
-    status?: string;
-}
-
-export interface Screen {
-    id: string;
-    cinema_id: string;
-    screen_name: string;
-    capacity: number;
-    screen_type: string;
+    description: string;
+    image: string;
+    contact_number: string;
+    email: string;
     status: string;
 }
 
-export async function getCinemas(): Promise<Cinema[]> {
-    try {
-        const cinemas = await query<any[]>('SELECT * FROM cinemas WHERE status = "active" ORDER BY city, cinema_name');
+// Convert database cinema to frontend format
+function convertDbCinemaToFrontend(cinema: DBCinema): FrontendCinema {
+    return {
+        id: cinema.id_cinema.toString(),
+        name: cinema.cinema_name,
+        address: cinema.address,
+        city: cinema.address.split(',').pop()?.trim() || '',
+        description: '',
+        image: '',
+        contact_number: cinema.phone || '',
+        email: cinema.phone || '',
+        status: cinema.status
+    };
+}
 
-        // Format the response to match the expected Cinema interface
-        return cinemas.map(cinema => ({
-            id: cinema.id_cinema.toString(),
-            name: cinema.cinema_name,
-            address: cinema.address,
-            city: cinema.city,
-            description: cinema.description,
-            image: cinema.image,
-            contact_number: cinema.contact_number,
-            email: cinema.email,
-            status: cinema.status
-        }));
+export async function getCinemas(): Promise<FrontendCinema[]> {
+    try {
+        const cinemas = await query<DBCinema[]>('SELECT * FROM cinemas WHERE status = "active" ORDER BY city, cinema_name');
+        return cinemas.map(convertDbCinemaToFrontend);
     } catch (error) {
         console.error("Lỗi khi lấy danh sách rạp chiếu phim:", error);
-        return []; // Trả về mảng rỗng nếu có lỗi
+        return [];
     }
 }
 
-export async function getCinemaById(id: string): Promise<Cinema | null> {
+export async function getCinemaById(id: string): Promise<FrontendCinema | null> {
     try {
-        const cinemas = await query<any[]>('SELECT * FROM cinemas WHERE id_cinema = ?', [id]);
+        const cinemas = await query<DBCinema[]>('SELECT * FROM cinemas WHERE id_cinema = ?', [id]);
 
         if (cinemas.length === 0) {
             return null;
         }
 
-        const cinema = cinemas[0];
-        return {
-            id: cinema.id_cinema.toString(),
-            name: cinema.cinema_name,
-            address: cinema.address,
-            city: cinema.city,
-            description: cinema.description,
-            image: cinema.image,
-            contact_number: cinema.contact_number,
-            email: cinema.email,
-            status: cinema.status
-        };
+        return convertDbCinemaToFrontend(cinemas[0]);
     } catch (error) {
         console.error(`Lỗi khi lấy thông tin rạp chiếu phim ID ${id}:`, error);
         return null;
     }
 }
 
-export async function getScreensByCinema(cinemaId: string): Promise<Screen[]> {
+export async function getScreensByCinema(cinemaId: string) {
     try {
         const screens = await query<any[]>(
             'SELECT * FROM screen WHERE id_cinema = ? AND status = "active" ORDER BY screen_name',
@@ -92,7 +77,7 @@ export async function getScreensByCinema(cinemaId: string): Promise<Screen[]> {
     }
 }
 
-export async function getCinemaOperationHours(cinemaId: string): Promise<any[]> {
+export async function getCinemaOperationHours(cinemaId: string) {
     try {
         const hours = await query<any[]>(
             'SELECT * FROM operation_hours WHERE id_cinema = ? ORDER BY day_of_week',

@@ -25,6 +25,42 @@ const productCardVariants = cva(
   }
 );
 
+const ticketCardVariants = cva(
+  "rounded-lg  text-white p-6 shadow-sm flex flex-col",
+  {
+    variants: {
+      variant: {
+        default: "border border-white ",
+        outline: "border border-gray-700",
+      },
+      size: {
+        default: "w-full max-w-sm",
+        sm: "w-64",
+        lg: "w-96",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+
+// Interface cho ticket card riêng, không cần thuộc tính image
+interface TicketCardProps 
+  extends React.HTMLAttributes<HTMLDivElement>,
+  VariantProps<typeof ticketCardVariants> {
+  id: string;
+  title: string;
+  subtitle?: string; // Cho phần "ĐƠN" trong ảnh
+  price: string;
+  quantity?: number;
+  onIncrease?: () => void;
+  onDecrease?: () => void;
+}
+
+
+
 interface ProductCardProps
   extends React.HTMLAttributes<HTMLDivElement>,
   VariantProps<typeof productCardVariants> {
@@ -121,7 +157,71 @@ const CardProduct = React.forwardRef<HTMLDivElement, ProductCardProps>(
   )
 );
 
+const CardTicket = React.forwardRef<HTMLDivElement, TicketCardProps>(
+  (
+    {
+      id,
+      className,
+      title,
+      subtitle,
+      price,
+      quantity = 0,
+      onIncrease,
+      onDecrease,
+      variant,
+      size,
+      ...props
+    },
+    ref
+  ) => (
+    <div
+      ref={ref}
+      className={cn(ticketCardVariants({ variant, size, className }))}
+      {...props}
+    >
+      {/* Tiêu đề */}
+      <h3 className="text-xl font-bold text-white">{title}</h3>
+      
+      {/* Phụ đề (nếu có) */}
+      {subtitle && (
+        <span className="text-lg font-medium text-[#EBDB40] mt-1">{subtitle}</span>
+      )}
+      
+      {/* Giá */}
+      <p className="text-lg font-semibold my-3">{price}</p>
+      
+      {/* Quantity Controls */}
+      
+          <div className="flex items-center justify-start gap-4 mt-4">
+            <div className="flex items-center bg-[#94A3B8] rounded-md text-white text-xl font-bold px-2 py-1 hover:bg-[#EBDB40] hover:text-dark transition">
+              {/* Decrease */}
+              <div
+                role="button"
+                onClick={onDecrease}
+                className="w-8 h-8 flex items-center justify-center text-dark rounded-md text-xl font-bold cursor-pointer"
+              >
+                <FiMinus className="w-4 hover:bg-[#663399] rounded-full" />
+              </div>
+
+              {/* Quantity */}
+              <span className="w-12 text-center text-lg font-medium text-dark">{quantity}</span>
+
+              {/* Increase */}
+              <div
+                role="button"
+                onClick={onIncrease}
+                className="w-8 h-8 flex items-center justify-center text-dark rounded-md text-xl font-bold cursor-pointer"
+              >
+                <FiPlus className="w-4 hover:bg-[#663399] rounded-full" />
+              </div>
+            </div>
+          </div>
+    </div>
+  )
+);
+
 CardProduct.displayName = "CardProduct";
+CardTicket.displayName = "CardTicket";
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -195,12 +295,14 @@ const CardFooter = React.forwardRef<
 CardFooter.displayName = "CardFooter";
 
 export {
-  Card,
+Card,
   CardHeader,
   CardFooter,
   CardTitle,
   CardDescription,
   CardContent,
   CardProduct,
+  CardTicket,
   productCardVariants,
+  ticketCardVariants,
 };

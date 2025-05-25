@@ -1241,7 +1241,7 @@ app.get('/api/admin/products', asyncHandler(async (req: Request, res: Response) 
 app.get('/api/admin/products/:id', asyncHandler(async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const results = await query('SELECT * FROM products WHERE id_product = ?', [id]);
+        const results = await query('SELECT * FROM product WHERE id_product = ?', [id]);
 
         if (results.length === 0) {
             return res.status(404).json({
@@ -1274,10 +1274,8 @@ app.post('/api/admin/products', asyncHandler(async (req: Request, res: Response)
                 success: false,
                 message: 'Tên sản phẩm, loại và giá là bắt buộc'
             });
-        }
-
-        const result = await query(
-            'INSERT INTO products (product_name, category, price, image_url, description, stock, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        } const result = await query(
+            'INSERT INTO product (product_name, category, price, image_url, description, stock, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [product_name, category, price, image_url || null, description || null, stock || 0, status || 'available']
         );
 
@@ -1317,16 +1315,14 @@ app.put('/api/admin/products/:id', asyncHandler(async (req: Request, res: Respon
             });
         }
 
-        const checkExists = await query('SELECT * FROM products WHERE id_product = ?', [id]);
+        const checkExists = await query('SELECT * FROM product WHERE id_product = ?', [id]);
         if (checkExists.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy sản phẩm để cập nhật'
             });
-        }
-
-        await query(
-            'UPDATE products SET product_name = ?, category = ?, price = ?, image_url = ?, description = ?, stock = ?, status = ? WHERE id_product = ?',
+        } await query(
+            'UPDATE product SET product_name = ?, category = ?, price = ?, image_url = ?, description = ?, stock = ?, status = ? WHERE id_product = ?',
             [product_name, category, price, image_url, description, stock, status, id]
         );
 
@@ -1366,7 +1362,7 @@ app.patch('/api/admin/products/:id', asyncHandler(async (req: Request, res: Resp
             });
         }
 
-        const checkExists = await query('SELECT * FROM products WHERE id_product = ?', [id]);
+        const checkExists = await query('SELECT * FROM product WHERE id_product = ?', [id]);
         if (checkExists.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -1375,11 +1371,11 @@ app.patch('/api/admin/products/:id', asyncHandler(async (req: Request, res: Resp
         }
 
         if (status !== undefined && stock !== undefined) {
-            await query('UPDATE products SET status = ?, stock = ? WHERE id_product = ?', [status, stock, id]);
+            await query('UPDATE product SET status = ?, stock = ? WHERE id_product = ?', [status, stock, id]);
         } else if (status !== undefined) {
-            await query('UPDATE products SET status = ? WHERE id_product = ?', [status, id]);
+            await query('UPDATE product SET status = ? WHERE id_product = ?', [status, id]);
         } else if (stock !== undefined) {
-            await query('UPDATE products SET stock = ? WHERE id_product = ?', [stock, id]);
+            await query('UPDATE product SET stock = ? WHERE id_product = ?', [stock, id]);
         }
 
         res.json({
@@ -1405,7 +1401,7 @@ app.delete('/api/admin/products/:id', asyncHandler(async (req: Request, res: Res
     try {
         const { id } = req.params;
 
-        const checkExists = await query('SELECT * FROM products WHERE id_product = ?', [id]);
+        const checkExists = await query('SELECT * FROM product WHERE id_product = ?', [id]);
         if (checkExists.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -1413,7 +1409,7 @@ app.delete('/api/admin/products/:id', asyncHandler(async (req: Request, res: Res
             });
         }
 
-        await query('DELETE FROM products WHERE id_product = ?', [id]);
+        await query('DELETE FROM product WHERE id_product = ?', [id]);
 
         res.json({
             success: true,
