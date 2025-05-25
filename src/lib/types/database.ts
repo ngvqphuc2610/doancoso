@@ -4,6 +4,11 @@
 export type ID = number;
 export type Timestamp = string;
 
+// Status types
+export type OrderStatus = 'pending' | 'completed' | 'cancelled';
+export type PaymentStatus = 'unpaid' | 'paid' | 'refunded';
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
+
 // Movie related types
 export interface Movie {
     id_movie: ID;
@@ -60,16 +65,57 @@ export interface Member {
     updated_at?: Timestamp;
 }
 
+// Type Product related types
+export interface TypeProduct {
+    id_typeproduct: ID;
+    type_name: string;
+}
+
 // Product related types
 export interface Product {
     id_product: ID;
+    id_typeproduct?: ID;
     product_name: string;
-    category: string;
-    price: number;
-    image_url?: string;
     description?: string;
-    stock: number;
-    status: 'active' | 'inactive';
+    price: number;
+    image?: string;
+    quantity: number;
+    status: 'available' | 'unavailable';
+    created_at?: Timestamp;
+    updated_at?: Timestamp;
+    type_name?: string; // Join với bảng type_product
+}
+
+export interface OrderProduct {
+    id_order: ID;
+    id_users?: ID;
+    id_staff?: ID;
+    order_date: Timestamp;
+    total_amount: number;
+    order_status: OrderStatus;
+    payment_status: PaymentStatus;
+}
+
+// Payment related types
+export interface Payment {
+    id_payment: ID;
+    id_order: ID;
+    payment_method: string;
+    amount: number;
+    payment_status: PaymentStatus;
+    payment_date: Timestamp;
+    transaction_id?: string;
+}
+
+// Booking related types
+export interface Booking {
+    id_booking: ID;
+    id_users: ID;
+    booking_date: Timestamp;
+    number_of_people: number;
+    booking_time: string;
+    status: BookingStatus;
+    note?: string;
     created_at?: Timestamp;
     updated_at?: Timestamp;
 }
@@ -138,4 +184,54 @@ export interface QueryResultHeader {
     info?: string;
     serverStatus?: number;
     warningStatus?: number;
+}
+
+export interface User {
+    id_users: ID;
+    username: string;
+    fullname?: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    password: string;
+    role: 'admin' | 'user';
+    created_at?: Timestamp;
+    updated_at?: Timestamp;
+}
+
+export interface Staff {
+    id_staff: ID;
+    staff_name: string;
+    phone?: string;
+    email: string;
+    address?: string;
+    role: string;
+    created_at?: Timestamp;
+    updated_at?: Timestamp;
+}
+
+export interface OrderDetail {
+    id_order: ID;
+    id_product: ID;
+    quantity: number;
+    price: number;
+    subtotal: number;
+}
+
+export interface Feedback {
+    id_feedback: ID;
+    id_users?: ID;
+    id_product?: ID;
+    rating: number;
+    comment: string;
+    created_at: Timestamp;
+    updated_at?: Timestamp;
+}
+
+// Utility type for API responses
+export interface ApiResponse<T> {
+    success: boolean;
+    data?: T;
+    error?: string;
+    message?: string;
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import pool from '../config/db.js';
+import { db } from '../config/db.ts';
 import { QueryResultHeader } from './types/database';
 
 /**
@@ -20,7 +20,7 @@ export type QueryResult<T = any> = T;
  */
 export async function query<T = any>(sql: string, params?: any[], retries = 2): Promise<T> {
     try {
-        const [results] = await pool.execute(sql, params);
+        const [results] = await db.execute(sql, params);
         return results as T;
     } catch (error: any) {
         // Nếu lỗi là do mất kết nối và còn lần retry
@@ -50,7 +50,7 @@ export async function query<T = any>(sql: string, params?: any[], retries = 2): 
 export async function executeTransaction<T = any>(sql: string, retries = 2): Promise<T> {
     try {
         // Sử dụng query() thay vì execute() để tránh dùng prepared statements
-        const [results] = await pool.query(sql);
+        const [results] = await db.query(sql);
         return results as T;
     } catch (error: any) {
         // Nếu lỗi là do mất kết nối và còn lần retry
