@@ -22,7 +22,8 @@
     "dev": "next dev -H 0.0.0.0 --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",    "server": "node --loader ./scripts/tsconfig-paths-bootstrap.mjs --loader ts-node/esm src/server.ts",
+    "lint": "next lint",
+    "server": "node --loader ./scripts/tsconfig-paths-bootstrap.mjs --loader ts-node/esm src/server.ts",
     "server:ngrok": "node --loader ./scripts/tsconfig-paths-bootstrap.mjs --loader ts-node/esm scripts/start-with-ngrok.js",
     "dev:server": "nodemon --exec node --loader ./scripts/tsconfig-paths-bootstrap.mjs --loader ts-node/esm src/server.ts"
   },
@@ -45,7 +46,7 @@
     "i18next-resources-to-backend": "^1.2.1",
     "inngest": "^3.35.1",
     "lucide-react": "^0.475.0",
-    "mysql2": "^3.14.0",
+    "mysql2": "^3.14.1",
     "next": "^15.2.4",
     "nodemailer": "^6.10.1",
     "react": "^18.3.1",

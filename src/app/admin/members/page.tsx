@@ -14,6 +14,7 @@ interface Member {
     points: number;
     join_date: string;
     status: string;
+    
 }
 
 export default function AdminMemberPage() {

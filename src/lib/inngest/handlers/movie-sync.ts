@@ -1,6 +1,6 @@
-import { inngest } from '../client.js';
-import { syncMoviesFromTMDB } from '../../../services/movieSyncService.js';
-import { query } from '../../../lib/db.js';
+import { inngest } from '../client';
+import { syncMoviesFromTMDB } from '../../../services/movieSyncService';
+import { query } from '../../../lib/db';
 
 // Định nghĩa kiểu dữ liệu cho kết quả đồng bộ
 interface SyncResult {

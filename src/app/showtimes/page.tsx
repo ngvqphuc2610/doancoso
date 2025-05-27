@@ -87,7 +87,7 @@ export default function ShowtimesPage() {
       }
     };
 
-    fetchMovies();
+    
   }, []);
 
   // Lọc dữ liệu theo rạp và phim đã chọn

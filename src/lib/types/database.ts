@@ -54,15 +54,38 @@ export interface Cinema {
 // Member related types
 export interface Member {
     id_member: ID;
-    full_name: string;
-    email: string;
-    phone: string;
-    membership_level: 'normal' | 'silver' | 'gold' | 'platinum';
+    id_user: ID;
+    id_typemember: ID;
+    id_membership?: ID;
+    full_name?: string; // Từ bảng users
+    email?: string; // Từ bảng users
+    phone?: string; // Từ bảng users
+    type_name?: string; // Từ bảng type_member
+    membership_title?: string; // Từ bảng membership
     points: number;
     join_date: string;
     status: 'active' | 'inactive';
     created_at?: Timestamp;
     updated_at?: Timestamp;
+}
+
+export interface TypeMember {
+    id_typemember: ID;
+    type_name: string;
+    description?: string;
+    priority: number;
+}
+
+export interface Membership {
+    id_membership: ID;
+    code: string;
+    title: string;
+    image?: string;
+    link?: string;
+    description?: string;
+    benefits?: string;
+    criteria?: string;
+    status: 'active' | 'inactive';
 }
 
 // Type Product related types
