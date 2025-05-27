@@ -55,6 +55,7 @@ export default function Header() {
     { href: "/chuong-trinh-khuyen-mai", label: t('menu.promotion') },
     { href: "/to-chuc-su-kien", label: t('menu.events') },
     { href: "/cac-loai-hinh-giai-tri-khac", label: t('menu.entertainment') },
+    { href: "/booking-lookup", label: "Tra cứu đặt vé" },
     { href: "/about-us", label: t('menu.about') },
   ];
 

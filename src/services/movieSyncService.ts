@@ -1,7 +1,7 @@
 "use server";
 
-import { query, executeTransaction } from '../lib/db.js';
-import pool from '../config/db.js';
+import { query, executeTransaction } from '../lib/db';
+import pool from '../config/db';
 import axios from "axios";
 
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
@@ -446,8 +446,8 @@ async function saveMovieToDatabase(movie: any) {
 
             try {
                 await query(
-                    `UPDATE MOVIES SET 
-                    original_title = ?, director = ?, actors = ?, 
+                    `UPDATE MOVIES SET
+                    original_title = ?, director = ?, actors = ?,
                     duration = ?, release_date = ?, end_date = ?,
                     language = ?, country = ?, description = ?,
                     poster_image = ?, trailer_url = ?,
@@ -480,11 +480,11 @@ async function saveMovieToDatabase(movie: any) {
             // 2b. Thêm phim mới
             try {
                 const result = await query(
-                    `INSERT INTO MOVIES 
-                    (title, original_title, director, actors, 
+                    `INSERT INTO MOVIES
+                    (title, original_title, director, actors,
                     duration, release_date, end_date, language,
-                    country, description, poster_image, 
-                    trailer_url, age_restriction, status) 
+                    country, description, poster_image,
+                    trailer_url, age_restriction, status)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         movie.title,

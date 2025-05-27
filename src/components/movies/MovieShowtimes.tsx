@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import SeatSelection from './SeatSelection';
 import TicketSelector from './TicketSelector';
+import ProductCard from '@/components/product/ProductCard';
+import { getProductsByType } from '@/lib/productDb';
 
 interface ShowTime {
     id: number;
@@ -45,10 +47,21 @@ interface MovieShowtimesProps {
     movieId: string | number;
     status?: string;
     releaseDate?: string;
+    movieTitle?: string; // Thêm tên phim
+    moviePoster?: string; // Thêm poster phim
 }
 
+// Thêm interface Product
+interface Product {
+    id_product: number;
+    product_name: string;
+    price: number;
+    description?: string;
+    image?: string;
+    type_name?: string;
+}
 
-export default function MovieShowtimes({ movieId, status, releaseDate }: MovieShowtimesProps) {
+export default function MovieShowtimes({ movieId, status, releaseDate, movieTitle }: MovieShowtimesProps) {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedCinema, setSelectedCinema] = useState<number | null>(null);
     const [selectedTime, setSelectedTime] = useState<number | null>(null);
@@ -63,14 +76,143 @@ export default function MovieShowtimes({ movieId, status, releaseDate }: MovieSh
     const [totalTicketPrice, setTotalTicketPrice] = useState<number>(0);
     const [showTicketSelector, setShowTicketSelector] = useState<boolean>(false);
 
-    // Effect to track ticket selection changes
+    // Thêm state cho sản phẩm
+    const [products, setProducts] = useState<Product[]>([]);
+    const [productSelection, setProductSelection] = useState<{ [key: string]: number }>({});
+    const [totalProductPrice, setTotalProductPrice] = useState<number>(0);
+    const [showProducts, setShowProducts] = useState<boolean>(false);
+
+    // Thêm state cho timer
+    const [timeLeft, setTimeLeft] = useState<number>(300); // 5 phút = 300 giây
+    const [timerActive, setTimerActive] = useState<boolean>(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Thêm state cho thông tin đặt vé
+    const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+    const [showBookingBar, setShowBookingBar] = useState<boolean>(false);
+
+    // Effect để theo dõi thay đổi lựa chọn vé
     useEffect(() => {
         if (Object.keys(ticketSelection).length > 0) {
-            // Check if at least one ticket is selected
+            // Kiểm tra nếu có ít nhất một vé được chọn
             const totalTickets = Object.values(ticketSelection).reduce((sum, qty) => sum + qty, 0);
             setShowTicketSelector(totalTickets > 0);
+
+            // Hiển thị sản phẩm khi có vé được chọn
+            if (totalTickets > 0 && !showProducts) {
+                setShowProducts(true);
+                // Tải sản phẩm khi có vé được chọn
+                loadProducts();
+            }
         }
     }, [ticketSelection]);
+
+    // Effect để tính tổng giá sản phẩm
+    useEffect(() => {
+        const total = Object.entries(productSelection).reduce((sum, [productId, quantity]) => {
+            const product = products.find(p => p.id_product.toString() === productId);
+            return sum + (product ? product.price * quantity : 0);
+        }, 0);
+        setTotalProductPrice(total);
+    }, [productSelection, products]);
+
+    // Effect để quản lý timer
+    useEffect(() => {
+        if (timerActive && timeLeft > 0) {
+            timerRef.current = setInterval(() => {
+                setTimeLeft(prev => prev - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            // Hết thời gian, reset lựa chọn
+            resetSelections();
+        }
+
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, [timerActive, timeLeft]);
+
+    // Effect để hiển thị thanh booking khi có ghế được chọn
+    useEffect(() => {
+        if (selectedSeats.length > 0) {
+            setShowBookingBar(true);
+            // Bắt đầu đếm ngược khi chọn ghế
+            if (!timerActive) {
+                setTimerActive(true);
+                setTimeLeft(300); // Reset về 5 phút
+            }
+        } else {
+            setShowBookingBar(false);
+            setTimerActive(false);
+        }
+    }, [selectedSeats]);
+
+    // Hàm tải sản phẩm
+    const loadProducts = async () => {
+        try {
+            // Tải combo (type_id = 1)
+            const combos = await getProductsByType(1);
+            // Tải đồ ăn (type_id = 4)
+            const foods = await getProductsByType(4);
+            // Tải nước uống (type_id = 3)
+            const drinks = await getProductsByType(3);
+
+            setProducts([...combos, ...foods, ...drinks]);
+        } catch (error) {
+            console.error('Error loading products:', error);
+        }
+    };
+
+    // Hàm reset lựa chọn khi hết thời gian
+    const resetSelections = () => {
+        setSelectedSeats([]);
+        setTimerActive(false);
+        setShowBookingBar(false);
+        // Có thể thêm thông báo cho người dùng
+        alert('Đã hết thời gian giữ ghế. Vui lòng chọn lại.');
+    };
+
+    // Hàm xử lý tăng số lượng sản phẩm
+    const handleIncreaseProduct = (productId: string) => {
+        setProductSelection(prev => ({
+            ...prev,
+            [productId]: (prev[productId] || 0) + 1
+        }));
+    };
+
+    // Hàm xử lý giảm số lượng sản phẩm
+    const handleDecreaseProduct = (productId: string) => {
+        setProductSelection(prev => {
+            const newQuantity = Math.max((prev[productId] || 0) - 1, 0);
+            const newSelection = { ...prev, [productId]: newQuantity };
+
+            // Nếu số lượng = 0, xóa khỏi object
+            if (newQuantity === 0) {
+                delete newSelection[productId];
+            }
+
+            return newSelection;
+        });
+    };
+
+    // Hàm xử lý khi chọn ghế
+    const handleSeatSelection = (seats: string[]) => {
+        setSelectedSeats(seats);
+    };
+
+    // Format thời gian còn lại
+    const formatTimeLeft = () => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    // Tính tổng tiền (vé + sản phẩm)
+    const calculateTotalPrice = () => {
+        return totalTicketPrice + totalProductPrice;
+    };
 
     // Fetch thành phố từ API cinemas
     useEffect(() => {
@@ -413,11 +555,102 @@ export default function MovieShowtimes({ movieId, status, releaseDate }: MovieSh
                                             screenName={showtimes.find(st => st.date === selectedDate)
                                                 ?.cinemas.find(c => c.id === selectedCinema)
                                                 ?.showTimes.find(t => t.id === selectedTime)?.room || ''}
-                                            onConfirm={() => { }}
+                                            onConfirm={handleSeatSelection}
                                             totalTickets={Object.values(ticketSelection).reduce((sum, qty) => sum + qty, 0)}
                                         />
                                     </div>
-                                )}                                {/* Nút đặt vé */}
+                                )}
+                                {/* Thêm phần chọn sản phẩm */}
+                                {showProducts && selectedTime && showTicketSelector && (
+                                    <div className="mt-10">
+                                        <h3 className="text-2xl font-bold text-white mb-4">Chọn Sản Phẩm</h3>
+
+                                        {/* Hiển thị sản phẩm theo loại */}
+                                        <div className="space-y-8">
+                                            {/* Combo */}
+                                            <div>
+                                                <h4 className="text-xl font-semibold text-yellow-400 mb-4">Combo</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {products
+                                                        .filter(product => product.type_name?.toLowerCase().includes('combo'))
+                                                        .map(product => (
+                                                            <ProductCard
+                                                                key={product.id_product}
+                                                                id={product.id_product.toString()}
+                                                                title={product.product_name}
+                                                                image={product.image || '/images/product/default-product.png'}
+                                                                price={new Intl.NumberFormat('vi-VN', {
+                                                                    style: 'currency',
+                                                                    currency: 'VND',
+                                                                    minimumFractionDigits: 0,
+                                                                    maximumFractionDigits: 0
+                                                                }).format(product.price)}
+                                                                description={product.description || ''}
+                                                                quantity={productSelection[product.id_product.toString()] || 0}
+                                                                onIncrease={() => handleIncreaseProduct(product.id_product.toString())}
+                                                                onDecrease={() => handleDecreaseProduct(product.id_product.toString())}
+                                                            />
+                                                        ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Đồ ăn */}
+                                            <div>
+                                                <h4 className="text-xl font-semibold text-yellow-400 mb-4">Đồ Ăn</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {products
+                                                        .filter(product => product.type_name?.toLowerCase().includes('food') || product.type_name?.toLowerCase().includes('snack'))
+                                                        .map(product => (
+                                                            <ProductCard
+                                                                key={product.id_product}
+                                                                id={product.id_product.toString()}
+                                                                title={product.product_name}
+                                                                image={product.image || '/images/product/default-product.png'}
+                                                                price={new Intl.NumberFormat('vi-VN', {
+                                                                    style: 'currency',
+                                                                    currency: 'VND',
+                                                                    minimumFractionDigits: 0,
+                                                                    maximumFractionDigits: 0
+                                                                }).format(product.price)}
+                                                                description={product.description || ''}
+                                                                quantity={productSelection[product.id_product.toString()] || 0}
+                                                                onIncrease={() => handleIncreaseProduct(product.id_product.toString())}
+                                                                onDecrease={() => handleDecreaseProduct(product.id_product.toString())}
+                                                            />
+                                                        ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Đồ uống */}
+                                            <div>
+                                                <h4 className="text-xl font-semibold text-yellow-400 mb-4">Đồ Uống</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {products
+                                                        .filter(product => product.type_name?.toLowerCase().includes('drink') || product.type_name?.toLowerCase().includes('beverage'))
+                                                        .map(product => (
+                                                            <ProductCard
+                                                                key={product.id_product}
+                                                                id={product.id_product.toString()}
+                                                                title={product.product_name}
+                                                                image={product.image || '/images/product/default-product.png'}
+                                                                price={new Intl.NumberFormat('vi-VN', {
+                                                                    style: 'currency',
+                                                                    currency: 'VND',
+                                                                    minimumFractionDigits: 0,
+                                                                    maximumFractionDigits: 0
+                                                                }).format(product.price)}
+                                                                description={product.description || ''}
+                                                                quantity={productSelection[product.id_product.toString()] || 0}
+                                                                onIncrease={() => handleIncreaseProduct(product.id_product.toString())}
+                                                                onDecrease={() => handleDecreaseProduct(product.id_product.toString())}
+                                                            />
+                                                        ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Nút đặt vé */}
                                 {selectedTime && (
                                     <div className="mt-6">
                                         <Button
@@ -435,11 +668,11 @@ export default function MovieShowtimes({ movieId, status, releaseDate }: MovieSh
                                                     .map(([typeId, qty]) => `ticket${typeId}=${qty}`)
                                                     .join('&');
 
-                                                window.location.href = `/book-tickets?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
+                                                window.location.href = `/checkout?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
                                                     selectedCinemaData?.name || ''
                                                 )}&screenName=${encodeURIComponent(
                                                     selectedTimeData?.room || ''
-                                                )}&totalPrice=${totalTicketPrice}&${ticketParams}`;
+                                                )}&totalPrice=${totalTicketPrice}&${ticketParams}&movieTitle=${encodeURIComponent(movieTitle || '')}`;
                                             }}
                                         >
                                             {showTicketSelector
@@ -454,6 +687,93 @@ export default function MovieShowtimes({ movieId, status, releaseDate }: MovieSh
                     </>
                 )}
             </div>
+
+            {/* Thanh thông tin đặt vé cố định ở dưới cùng */}
+            {showBookingBar && (
+                <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4 z-50">
+                    <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
+                        <div className="flex items-center space-x-4 mb-4 md:mb-0">
+                            {/* Thông tin phim */}
+                            <div className="text-left">
+                                <h3 className="text-xl font-bold text-white">
+                                    {movieTitle || 'Phim đang chọn'}
+                                </h3>
+                                <p className="text-gray-300">
+                                    {showtimes.find(st => st.date === selectedDate)
+                                        ?.cinemas.find(c => c.id === selectedCinema)?.name || ''} |
+                                    {showtimes.find(st => st.date === selectedDate)
+                                        ?.cinemas.find(c => c.id === selectedCinema)
+                                        ?.showTimes.find(t => t.id === selectedTime)?.room || ''}
+                                </p>
+                                <p className="text-gray-300">
+                                    {selectedDate} | {showtimes.find(st => st.date === selectedDate)
+                                        ?.cinemas.find(c => c.id === selectedCinema)
+                                        ?.showTimes.find(t => t.id === selectedTime)?.time || ''}
+                                </p>
+                                <p className="text-gray-300">
+                                    Ghế: {selectedSeats.join(', ')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center space-x-4">
+                            {/* Thời gian còn lại */}
+                            <div className="bg-yellow-500 text-black font-bold px-4 py-2 rounded">
+                                <p className="text-sm">Thời gian giữ vé</p>
+                                <p className="text-xl">{formatTimeLeft()}</p>
+                            </div>
+
+                            {/* Tổng tiền */}
+                            <div className="text-right">
+                                <p className="text-sm text-gray-300">Tạm tính</p>
+                                <p className="text-xl font-bold text-white">
+                                    {new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND',
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0
+                                    }).format(calculateTotalPrice())}
+                                </p>
+                            </div>
+
+                            {/* Nút đặt vé */}
+                            <Button
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 text-lg"
+                                onClick={() => {
+                                    // Lấy thông tin cần thiết
+                                    const selectedShowtime = showtimes.find(st => st.date === selectedDate);
+                                    const selectedCinemaData = selectedShowtime?.cinemas.find(c => c.id === selectedCinema);
+                                    const selectedTimeData = selectedCinemaData?.showTimes.find(t => t.id === selectedTime);
+
+                                    // Tạo chuỗi thông tin vé
+                                    const ticketParams = Object.entries(ticketSelection)
+                                        .filter(([_, qty]) => qty > 0)
+                                        .map(([typeId, qty]) => `ticket${typeId}=${qty}`)
+                                        .join('&');
+
+                                    // Tạo chuỗi thông tin sản phẩm
+                                    const productParams = Object.entries(productSelection)
+                                        .filter(([_, qty]) => qty > 0)
+                                        .map(([productId, qty]) => `product${productId}=${qty}`)
+                                        .join('&');
+
+                                    // Tạo chuỗi thông tin ghế
+                                    const seatParams = `seats=${selectedSeats.join(',')}`;
+
+                                    // Chuyển đến trang thanh toán
+                                    window.location.href = `/checkout?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
+                                        selectedCinemaData?.name || ''
+                                    )}&screenName=${encodeURIComponent(
+                                        selectedTimeData?.room || ''
+                                    )}&totalPrice=${calculateTotalPrice()}&${ticketParams}&${productParams}&${seatParams}&movieTitle=${encodeURIComponent(movieTitle || '')}`;
+                                }}
+                            >
+                                Đặt Vé Ngay
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

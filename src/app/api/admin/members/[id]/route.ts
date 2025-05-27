@@ -1,25 +1,41 @@
-import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Get API URL from environment variables with fallback
-const API_URL = process.env.NGROK_URL || process.env.API_URL || 'http://localhost:5000';
+import { getMemberById, updateMember, deleteMember } from '@/lib/memberDb';
 
 // Route để lấy chi tiết một thành viên
 export async function GET(
-    req: NextRequest,
+    _request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
-        const response = await axios.get(`${API_URL}/api/admin/members/${id}`, {
-            timeout: 5000
+        const id = parseInt(params.id);
+        if (isNaN(id)) {
+            return NextResponse.json(
+                { success: false, message: 'ID không hợp lệ' },
+                { status: 400 }
+            );
+        }
+
+        const member = await getMemberById(id);
+        if (!member) {
+            return NextResponse.json(
+                { success: false, message: 'Không tìm thấy thành viên' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: member
         });
-        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error(`Error fetching member ${params.id}:`, error.message);
         return NextResponse.json(
-            { success: false, message: 'Không thể tải thông tin thành viên' },
-            { status: error.response?.status || 500 }
+            {
+                success: false,
+                message: 'Không thể tải thông tin thành viên',
+                error: error.message
+            },
+            { status: 500 }
         );
     }
 }
@@ -30,58 +46,79 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
+        const id = parseInt(params.id);
+        if (isNaN(id)) {
+            return NextResponse.json(
+                { success: false, message: 'ID không hợp lệ' },
+                { status: 400 }
+            );
+        }
+
         const body = await req.json();
-        const response = await axios.put(`${API_URL}/api/admin/members/${id}`, body, {
-            timeout: 5000
+        const result = await updateMember(id, body);
+
+        if (!result.success) {
+            return NextResponse.json(
+                { success: false, message: result.message },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: result.message
         });
-        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error(`Error updating member ${params.id}:`, error.message);
         return NextResponse.json(
-            { success: false, message: 'Không thể cập nhật thông tin thành viên' },
-            { status: error.response?.status || 500 }
+            {
+                success: false,
+                message: 'Không thể cập nhật thông tin thành viên',
+                error: error.message
+            },
+            { status: 500 }
         );
     }
 }
 
 // Route để xóa thành viên
 export async function DELETE(
-    req: NextRequest,
+    _req: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
-        const response = await axios.delete(`${API_URL}/api/admin/members/${id}`, {
-            timeout: 5000
+        const id = parseInt(params.id);
+        if (isNaN(id)) {
+            return NextResponse.json(
+                { success: false, message: 'ID không hợp lệ' },
+                { status: 400 }
+            );
+        }
+
+        const result = await deleteMember(id);
+
+        if (!result.success) {
+            return NextResponse.json(
+                { success: false, message: result.message },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: result.message
         });
-        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error(`Error deleting member ${params.id}:`, error.message);
         return NextResponse.json(
-            { success: false, message: 'Không thể xóa thành viên' },
-            { status: error.response?.status || 500 }
+            {
+                success: false,
+                message: 'Không thể xóa thành viên',
+                error: error.message
+            },
+            { status: 500 }
         );
     }
 }
 
-// Route để cập nhật trạng thái thành viên (PATCH)
-export async function PATCH(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const { id } = params;
-        const body = await req.json();
-        const response = await axios.patch(`${API_URL}/api/admin/members/${id}`, body, {
-            timeout: 5000
-        });
-        return NextResponse.json(response.data);
-    } catch (error: any) {
-        console.error(`Error updating member status ${params.id}:`, error.message);
-        return NextResponse.json(
-            { success: false, message: 'Không thể cập nhật trạng thái thành viên' },
-            { status: error.response?.status || 500 }
-        );
-    }
-}
+

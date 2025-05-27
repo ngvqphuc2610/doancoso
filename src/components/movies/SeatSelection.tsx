@@ -17,7 +17,7 @@ interface SeatMapProps {
     totalTickets: number; // Total number of tickets that should be selected
 }
 
-const Seat = ({ id, row, number, type, status, price, onSelect }: SeatProps) => {
+const Seat = ({ id, number, type, status, price, onSelect }: SeatProps) => {
     const getBackgroundColor = () => {
         switch (status) {
             case 'booked':
@@ -47,11 +47,10 @@ const Seat = ({ id, row, number, type, status, price, onSelect }: SeatProps) => 
     );
 };
 
-export default function SeatMap({ showtimeId, cinemaName, screenName, onConfirm, totalTickets }: SeatMapProps) {
+export default function SeatMap({ showtimeId, screenName, onConfirm, totalTickets }: SeatMapProps) {
     const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
     const [seats, setSeats] = useState<Seat[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [totalPrice, setTotalPrice] = useState(0);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Effect to check if selected seats match required number of tickets
@@ -196,15 +195,29 @@ export default function SeatMap({ showtimeId, cinemaName, screenName, onConfirm,
             const seat = seats.find(s => s.id === seatId);
             return sum + (seat?.price || 0);
         }, 0);
-        setTotalPrice(total);
+        // Total price calculation (can be used for display if needed)
+        console.log('Total price:', total);
     }, [selectedSeats, seats]);
 
+    // Effect để thông báo cho component cha khi selectedSeats thay đổi
+    useEffect(() => {
+        onConfirm(selectedSeats);
+    }, [selectedSeats, onConfirm]);
+
+    // Cập nhật phần xử lý chọn ghế
     const handleSeatSelect = (seatId: string) => {
         setSelectedSeats(prev => {
-            if (prev.includes(seatId)) {
-                return prev.filter(id => id !== seatId);
+            // Nếu đã đạt đến số lượng vé tối đa và đang thêm ghế mới
+            if (prev.length >= totalTickets && !prev.includes(seatId)) {
+                setErrorMessage(`Bạn chỉ được chọn ${totalTickets} ghế theo số vé đã chọn`);
+                return prev;
             }
-            return [...prev, seatId];
+
+            const newSelection = prev.includes(seatId)
+                ? prev.filter(id => id !== seatId)
+                : [...prev, seatId];
+
+            return newSelection;
         });
     };
 
