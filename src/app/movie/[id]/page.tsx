@@ -2,8 +2,8 @@ import { getMovieById } from '@/lib/film';
 import MovieDetail from '@/components/movies/MovieDetail';
 import { notFound } from 'next/navigation';
 
-export default async function MovieDetailsPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+export default async function MovieDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
 
     if (!id) {
         console.error('Movie ID is missing from params');

@@ -1,56 +1,51 @@
-import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// Hardcode API URL để đảm bảo luôn hoạt động đúng
-const API_URL = 'http://localhost:5000';
-
-// Route để lấy danh sách phòng chiếu từ database
+// Route để lấy danh sách sản phẩm từ database
 export async function GET(req: NextRequest) {
     try {
-        console.log(`[products API] Connecting to Express API at: ${API_URL}/api/admin/products`);
+        console.log('[PRODUCTS API] Fetching products from database');
 
-        const response = await axios.get(`${API_URL}/api/admin/products`, {
-            timeout: 10000,
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache',
-                'If-Modified-Since': new Date(0).toUTCString()
-            }
-        });
+        const result = await query(`
+            SELECT
+                p.*,
+                tp.type_name as product_type_name
+            FROM product p
+            LEFT JOIN type_product tp ON p.id_typeproduct = tp.id_typeproduct
+            ORDER BY p.id_product ASC
+        `);
 
-        const originalData = response.data;
-        const raw = originalData.data;
+        // Đảm bảo products luôn là mảng
+        let products;
+        if (Array.isArray(result)) {
+            products = result;
+        } else if (Array.isArray(result[0])) {
+            products = result[0];
+        } else {
+            products = result && typeof result === 'object' ?
+                (Object.keys(result).length > 0 ? [result] : []) :
+                (result ? [result] : []);
+        }
 
-        const normalizedData = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        console.log('Kết quả truy vấn danh sách sản phẩm:', products);
+        console.log('Số lượng sản phẩm:', Array.isArray(products) ? products.length : 0);
 
         return NextResponse.json({
-            ...originalData,
-            data: normalizedData
+            success: true,
+            data: products
         });
     } catch (error: any) {
         console.error('Error fetching products:', error.message);
-        console.error('API URL being used:', API_URL);
 
-        if (error.code === 'ECONNREFUSED' || error.code === 'ECONNABORTED') {
-            return NextResponse.json(
-                { success: false, message: `Không thể kết nối đến máy chủ API (${API_URL}). Vui lòng kiểm tra server đã được khởi động chưa.` },
-                { status: 503 }
-            );
-        }
-
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể tải sản phẩm',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể lấy danh sách sản phẩm',
+            error: error.message
+        }, { status: 500 });
     }
 }
 
-// Route để thêm phòng chiếu mới vào database
+// Route để thêm sản phẩm mới vào database
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
@@ -63,20 +58,36 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const response = await axios.post(`${API_URL}/api/admin/products`, body, {
-            timeout: 5000
-        });
-        return NextResponse.json(response.data);
-    } catch (error: any) {
-        console.error('Error creating products:', error.message);
-
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể thêm sản phẩm mới',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
+        // Thêm sản phẩm mới vào database
+        const result = await query(
+            `INSERT INTO PRODUCT 
+             (title, description, price, image_url, type_id, status)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                body.title,
+                body.description || '',
+                body.price || 0,
+                body.image_url || '',
+                body.type_id || 1,
+                body.status || 'active'
+            ]
         );
+
+        const resultHeader = Array.isArray(result) ? result[0] : result;
+        const productId = (resultHeader as any).insertId;
+
+        return NextResponse.json({
+            success: true,
+            message: 'Sản phẩm đã được thêm thành công',
+            data: { id_product: productId }
+        });
+    } catch (error: any) {
+        console.error('Error creating product:', error.message);
+
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể thêm sản phẩm mới',
+            error: error.message
+        }, { status: 500 });
     }
 }

@@ -1,685 +1,221 @@
-import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
 import SeatSelection from './SeatSelection';
 import TicketSelector from './TicketSelector';
-import ProductCard from '@/components/product/ProductCard';
-import { getProductsByType } from '@/lib/productDb';
+import { ComboGrid, SoftDrinksGrid, BeveragesGrid, FoodProductsGrid } from '@/components/product/ProductGrid';
 
-interface ShowTime {
-    id: number;
-    time: string;
-    endTime: string;
-    date: string;
-    room: string;
-    roomType: string;
-    format: string;
-    price: number;
-    available_seats: number;
-    total_seats: number;
-}
+// Import các component nhỏ
+import DateSelector from './DateSelector';
+import CitySelector from './CitySelector';
+import CinemaList from './CinemaList';
+import BookingBar from './BookingBar';
+import { LoadingState, ErrorState, EmptyState } from './ShowtimeStates';
 
-interface Cinema {
-    id: number;
-    name: string;
-    address: string;
-    showTimes: ShowTime[];
-}
+// Import custom hooks
+import { useShowtimes, useCities } from '@/hooks/useShowtimes';
+import { useProductSelection } from '@/hooks/useProductSelection';
+import { useSelectionState } from '@/hooks/useSelectionState';
+import { useGlobalTimer } from '@/contexts/GlobalTimerContext';
 
-// Interface cho cinema từ API
-interface CinemaData {
-    id_cinema: number;
-    cinema_name: string;
-    address: string;
-    city: string;
-    description?: string;
-    image?: string;
-    contact_number?: string;
-    email?: string;
-    status: string;
-}
 
-interface ShowtimeData {
-    date: string;
-    cinemas: Cinema[];
-}
-
-interface MovieShowtimesProps {
-    movieId: string | number;
-    status?: string;
-    releaseDate?: string;
-    movieTitle?: string; // Thêm tên phim
-    moviePoster?: string; // Thêm poster phim
-}
-
-// Thêm interface Product
-interface Product {
-    id_product: number;
-    product_name: string;
-    price: number;
-    description?: string;
-    image?: string;
-    type_name?: string;
-}
+// Import types
+import { MovieShowtimesProps } from '@/types/showtime';
 
 export default function MovieShowtimes({ movieId, status, releaseDate, movieTitle }: MovieShowtimesProps) {
-    const [selectedDate, setSelectedDate] = useState<string>('');
-    const [selectedCinema, setSelectedCinema] = useState<number | null>(null);
-    const [selectedTime, setSelectedTime] = useState<number | null>(null);
-    const [showtimes, setShowtimes] = useState<ShowtimeData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [cities, setCities] = useState<string[]>([]);
-    const [selectedCity, setSelectedCity] = useState('Hồ Chí Minh');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [cinemaToCity, setCinemaToCity] = useState<{ [key: string]: string }>({});
-    const [ticketSelection, setTicketSelection] = useState<{ [key: number]: number }>({});
-    const [totalTicketPrice, setTotalTicketPrice] = useState<number>(0);
-    const [showTicketSelector, setShowTicketSelector] = useState<boolean>(false);
+    // Sử dụng custom hooks
+    const { showtimes, isLoading, error } = useShowtimes(movieId);
+    const { cities, cinemaToCity } = useCities();
+    const { timeLeft, isActive: timerActive, startTimer, stopTimer, formatTime } = useGlobalTimer();
+    const { productSelection, totalProductPrice, shouldResetProducts, handleProductQuantityChange, resetProducts } = useProductSelection();
 
-    // Thêm state cho sản phẩm
-    const [products, setProducts] = useState<Product[]>([]);
-    const [productSelection, setProductSelection] = useState<{ [key: string]: number }>({});
-    const [totalProductPrice, setTotalProductPrice] = useState<number>(0);
+    const {
+        selectedDate,
+        selectedCinema,
+        selectedTime,
+        selectedCity,
+        isDropdownOpen,
+        ticketSelection,
+        totalTicketPrice,
+        showTicketSelector,
+        selectedSeats,
+        showBookingBar,
+        handleDateSelection,
+        handleCinemaSelection,
+        handleTimeSelection,
+        handleCitySelection,
+        handleTicketSelection,
+        handleSeatSelection,
+        setIsDropdownOpen
+    } = useSelectionState();
+
+    // State cho sản phẩm
     const [showProducts, setShowProducts] = useState<boolean>(false);
 
-    // Thêm state cho timer
-    const [timeLeft, setTimeLeft] = useState<number>(300); // 5 phút = 300 giây
-    const [timerActive, setTimerActive] = useState<boolean>(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Thêm state cho thông tin đặt vé
-    const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-    const [showBookingBar, setShowBookingBar] = useState<boolean>(false);
-
-    // Effect để theo dõi thay đổi lựa chọn vé
+    // Effect để hiển thị sản phẩm khi có vé được chọn
     useEffect(() => {
         if (Object.keys(ticketSelection).length > 0) {
-            // Kiểm tra nếu có ít nhất một vé được chọn
             const totalTickets = Object.values(ticketSelection).reduce((sum, qty) => sum + qty, 0);
-            setShowTicketSelector(totalTickets > 0);
-
-            // Hiển thị sản phẩm khi có vé được chọn
             if (totalTickets > 0 && !showProducts) {
                 setShowProducts(true);
-                // Tải sản phẩm khi có vé được chọn
-                loadProducts();
             }
         }
-    }, [ticketSelection]);
+    }, [ticketSelection, showProducts]);
 
-    // Effect để tính tổng giá sản phẩm
+    // Effect để bắt đầu timer khi chọn ghế
     useEffect(() => {
-        const total = Object.entries(productSelection).reduce((sum, [productId, quantity]) => {
-            const product = products.find(p => p.id_product.toString() === productId);
-            return sum + (product ? product.price * quantity : 0);
-        }, 0);
-        setTotalProductPrice(total);
-    }, [productSelection, products]);
+        if (selectedSeats.length > 0 && !timerActive) {
+            startTimer();
+        }
+    }, [selectedSeats, timerActive, startTimer]);
 
-    // Effect để quản lý timer
+    // Effect để reset products khi thay đổi phim hoặc bắt đầu booking mới
     useEffect(() => {
-        if (timerActive && timeLeft > 0) {
-            timerRef.current = setInterval(() => {
-                setTimeLeft(prev => prev - 1);
-            }, 1000);
-        } else if (timeLeft === 0) {
-            // Hết thời gian, reset lựa chọn
-            resetSelections();
-        }
-
-        return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
-        };
-    }, [timerActive, timeLeft]);
-
-    // Effect để hiển thị thanh booking khi có ghế được chọn
-    useEffect(() => {
-        if (selectedSeats.length > 0) {
-            setShowBookingBar(true);
-            // Bắt đầu đếm ngược khi chọn ghế
-            if (!timerActive) {
-                setTimerActive(true);
-                setTimeLeft(300); // Reset về 5 phút
-            }
-        } else {
-            setShowBookingBar(false);
-            setTimerActive(false);
-        }
-    }, [selectedSeats]);
-
-    // Hàm tải sản phẩm
-    const loadProducts = async () => {
-        try {
-            // Tải combo (type_id = 1)
-            const combos = await getProductsByType(1);
-            // Tải đồ ăn (type_id = 4)
-            const foods = await getProductsByType(4);
-            // Tải nước uống (type_id = 3)
-            const drinks = await getProductsByType(3);
-
-            setProducts([...combos, ...foods, ...drinks]);
-        } catch (error) {
-            console.error('Error loading products:', error);
-        }
-    };
-
-    // Hàm reset lựa chọn khi hết thời gian
-    const resetSelections = () => {
-        setSelectedSeats([]);
-        setTimerActive(false);
-        setShowBookingBar(false);
-        // Có thể thêm thông báo cho người dùng
-        alert('Đã hết thời gian giữ ghế. Vui lòng chọn lại.');
-    };
-
-    // Hàm xử lý tăng số lượng sản phẩm
-    const handleIncreaseProduct = (productId: string) => {
-        setProductSelection(prev => ({
-            ...prev,
-            [productId]: (prev[productId] || 0) + 1
-        }));
-    };
-
-    // Hàm xử lý giảm số lượng sản phẩm
-    const handleDecreaseProduct = (productId: string) => {
-        setProductSelection(prev => {
-            const newQuantity = Math.max((prev[productId] || 0) - 1, 0);
-            const newSelection = { ...prev, [productId]: newQuantity };
-
-            // Nếu số lượng = 0, xóa khỏi object
-            if (newQuantity === 0) {
-                delete newSelection[productId];
-            }
-
-            return newSelection;
-        });
-    };
-
-    // Hàm xử lý khi chọn ghế
-    const handleSeatSelection = (seats: string[]) => {
-        setSelectedSeats(seats);
-    };
-
-    // Format thời gian còn lại
-    const formatTimeLeft = () => {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    };
+        // Reset products khi movieId thay đổi (người dùng chọn phim khác)
+        resetProducts();
+    }, [movieId, resetProducts]);
 
     // Tính tổng tiền (vé + sản phẩm)
     const calculateTotalPrice = () => {
         return totalTicketPrice + totalProductPrice;
     };
 
-    // Fetch thành phố từ API cinemas
-    useEffect(() => {
-        const fetchCities = async () => {
-            try {
-                const response = await fetch('/api/cinemas');
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
 
-                const data = await response.json();
+    // Lấy thông tin showtime được chọn
+    const getSelectedShowtimeInfo = () => {
+        const selectedShowtime = showtimes.find(st => st.date === selectedDate);
+        const selectedCinemaData = selectedShowtime?.cinemas.find(c => c.id === selectedCinema);
+        const selectedTimeData = selectedCinemaData?.showTimes.find(t => t.id === selectedTime);
 
-                if (data.success) {
-                    // Lọc các thành phố duy nhất từ dữ liệu cinema
-                    const cinemas: CinemaData[] = data.data;
-                    const uniqueCities = [...new Set(cinemas.map(cinema => cinema.city))].filter(Boolean);
-                    setCities(uniqueCities);
-
-                    // Create mapping of cinema names to their cities
-                    const mapping: { [key: string]: string } = {};
-                    cinemas.forEach(cinema => {
-                        if (cinema.cinema_name && cinema.city) {
-                            mapping[cinema.cinema_name] = cinema.city;
-                        }
-                    });
-                    setCinemaToCity(mapping);
-
-                    // Nếu có thành phố, chọn thành phố đầu tiên làm mặc định
-                    if (uniqueCities.length > 0) {
-                        setSelectedCity(uniqueCities[0]);
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching cities:', error);
-            }
+        return {
+            selectedShowtime,
+            selectedCinemaData,
+            selectedTimeData
         };
-
-        fetchCities();
-    }, []);    // Fetch showtimes data when movie ID changes
-    useEffect(() => {
-        const fetchShowtimes = async () => {
-            try {
-                // Ensure movieId is handled as string in the query
-                const response = await fetch(`/api/showtimes?movieId=${String(movieId)}`);
-
-                // Check if response is ok and is JSON
-                const contentType = response.headers.get("content-type");
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("API did not return JSON");
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    setShowtimes(data.data);
-
-                    // If there are showtimes, select the first date by default
-                    if (data.data && data.data.length > 0) {
-                        setSelectedDate(data.data[0].date);
-                    }
-                } else {
-                    setError(data.error || 'Không thể tải lịch chiếu');
-                }
-            } catch (err) {
-                console.error("Fetch error:", err);
-                setError('Đã có lỗi xảy ra khi tải lịch chiếu');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (movieId) {
-            fetchShowtimes();
-        }
-    }, [movieId]); const handleDateSelection = (date: string) => {
-        setSelectedDate(date);
-        setSelectedCinema(null);
-        setSelectedTime(null);
-        setTicketSelection({});
-        setTotalTicketPrice(0);
-        setShowTicketSelector(false);
     };
 
+    const { selectedCinemaData, selectedTimeData } = getSelectedShowtimeInfo();
 
-    const handleCinemaSelection = (cinemaId: number) => {
-        //  nếu nhấn vào đã chọn, đóng nó lại
-        if (selectedCinema === cinemaId) {
-            setSelectedCinema(null); // Đặt về null để đóng đang mở
-        } else {
-            setSelectedCinema(cinemaId); // Mở cinema mới được chọn
-            setSelectedTime(null); // Reset selected time when changing cinema
-            setTicketSelection({});
-            setTotalTicketPrice(0);
-            setShowTicketSelector(false);
-        }
-    }; const handleTimeSelection = (timeId: number) => {
-        // Chỉ cập nhật state khi có ID hợp lệ
-        if (timeId && typeof timeId === 'number') {
-            setSelectedTime(timeId);
-            // Reset ticket selection when choosing a new showtime
-            setTicketSelection({});
-            setTotalTicketPrice(0);
-            setShowTicketSelector(false);
-        } else {
-            console.error('Invalid showtime ID:', timeId);
-            setError('Lỗi khi chọn suất chiếu');
-        }
+    // Xử lý đặt vé
+    const handleBooking = () => {
+        const ticketParams = Object.entries(ticketSelection)
+            .filter(([_, qty]) => qty > 0)
+            .map(([typeId, qty]) => `ticket${typeId}=${qty}`)
+            .join('&');
+
+        const productParams = Object.entries(productSelection)
+            .filter(([_, qty]) => qty > 0)
+            .map(([productId, qty]) => `product${productId}=${qty}`)
+            .join('&');
+
+        const seatParams = `seats=${selectedSeats.join(',')}`;
+
+        window.location.href = `/checkout?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
+            selectedCinemaData?.name || ''
+        )}&screenName=${encodeURIComponent(
+            selectedTimeData?.room || ''
+        )}&totalPrice=${calculateTotalPrice()}&${ticketParams}&${productParams}&${seatParams}&movieTitle=${encodeURIComponent(movieTitle || '')}`;
     };
 
     return (
         <div className="container mx-auto px-0 mt-8 text-center">
-            <div className=" rounded-lg p-6">
-
-
+            <div className="rounded-lg p-6">
                 <h2 className="text-2xl font-bold text-white mb-6 text-center">Lịch Chiếu</h2>
 
                 {isLoading ? (
-                    <div className="text-center text-white py-8">
-                        <div className="animate-pulse">
-                            <p>Đang tải lịch chiếu...</p>
-                        </div>
-                    </div>
+                    <LoadingState />
                 ) : error ? (
-                    <div className="text-center text-red-500 py-8">
-                        <p>{error}</p>
-                    </div>
+                    <ErrorState error={error} />
                 ) : showtimes.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 px-4">
-                        <img
-                            src="/images/icon-infofilm-clock.svg"
-                            alt="No showtimes"
-                            className="w-16 h-16 mb-4 opacity-50"
-                        />
-                        <h3 className="text-xl font-semibold text-white mb-2">
-                            Hiện chưa có lịch chiếu
-                        </h3>
-                        <p className="text-gray-400 text-center max-w-md">
-                            {status === 'coming soon' && releaseDate
-                                ? `Phim sẽ khởi chiếu từ ngày ${new Date(releaseDate).toLocaleDateString('vi-VN')}`
-                                : 'Vui lòng quay lại sau để xem lịch chiếu của phim này.'}
-                        </p>
-                        {status === 'coming soon' && releaseDate && (
-                            <div className="mt-6 flex items-center gap-2">
-                                <span className="px-4 py-2 bg-red-600 text-white rounded-full text-sm">
-                                    Sắp chiếu
-                                </span>
-                                <span className="text-gray-400">
-                                    ⌛ {Math.ceil((new Date(releaseDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} ngày nữa
-                                </span>
-                            </div>
-                        )}
-                    </div>
+                    <EmptyState status={status} releaseDate={releaseDate} />
                 ) : (
                     <>
                         {/* Chọn ngày */}
-                        <div className="mb-6 flex justify-center">
-                            <div className="flex gap-4 overflow-x-auto pb-2">
-                                {showtimes.map(showtime => (
-                                    <Button
-                                        key={showtime.date}
-                                        onClick={() => handleDateSelection(showtime.date)}
-                                        variant={selectedDate === showtime.date ? "custom9" : "custom8"}
-                                        size="custom8"
-                                        width="custom8"
-                                        className={`py-8 rounded whitespace-nowrap ${selectedDate === showtime.date ? '' : ''}`}
-                                    >
-                                        {(() => {
-                                            const date = new Date(showtime.date);
-                                            const day = date.getDate();
-                                            const month = date.getMonth() + 1;
-                                            const weekday = date.toLocaleDateString('vi-VN', { weekday: 'long' });
-                                            return (
-                                                <>
-                                                    {`${day}/${month}`}
-                                                    <br />
-                                                    {weekday.toUpperCase()}
-                                                </>
-                                            );
-                                        })()}
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
+                        <DateSelector
+                            showtimes={showtimes}
+                            selectedDate={selectedDate}
+                            onDateSelect={handleDateSelection}
+                        />
 
                         {/* Danh sách rạp */}
                         {selectedDate && (
-                            <div className="mb-6 ">
-                                {/* đầu của danh sách rạp */}
-                                <div className="flex flex-col mb-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="text-4xl font-semibold text-white">Danh Sách Rạp</h3>
-                                        <div className="relative">
-                                            {/* Dropdown cho thành phố */}
-                                            <button
-                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                                className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded text-white hover:bg-gray-700"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                                </svg>
-                                                {selectedCity}
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                </svg>
-                                            </button>
-                                            {/* Dropdown Menu */}
-                                            {isDropdownOpen && (
-                                                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                                                    <div className="py-1" role="menu" aria-orientation="vertical">
-                                                        {cities.map((city) => (
-                                                            <button
-                                                                key={city}
-                                                                onClick={() => {
-                                                                    setSelectedCity(city);
-                                                                    setIsDropdownOpen(false);
-                                                                }}
-                                                                className={`block px-4 py-2 text-sm w-full text-left ${selectedCity === city
-                                                                    ? 'bg-gray-100 text-gray-900'
-                                                                    : 'text-gray-700 hover:bg-gray-50'
-                                                                    }`}
-                                                                role="menuitem"
-                                                            >
-                                                                {city}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-4xl font-semibold text-white">Danh Sách Rạp</h3>
+                                    <CitySelector
+                                        cities={cities}
+                                        selectedCity={selectedCity}
+                                        isDropdownOpen={isDropdownOpen}
+                                        onCitySelect={handleCitySelection}
+                                        onToggleDropdown={() => setIsDropdownOpen(!isDropdownOpen)}
+                                    />
                                 </div>
-                                {/* Danh sách rạp */}
-                                <div>
-                                    <div className="space-y-6">
-                                        {showtimes
-                                            .find(st => st.date === selectedDate)
-                                            ?.cinemas.filter(cinema => {
-                                                // Filter cinemas based on the selected city using our mapping
-                                                const cinemaCity = cinemaToCity[cinema.name];
-                                                return !selectedCity || cinemaCity === selectedCity;
-                                            })
-                                            .map(cinema => (
-                                                <div key={cinema.id} className="bg-purple-800 rounded-lg overflow-hidden">
-                                                    {/* Header phần rạp phim */}
-                                                    <div
-                                                        className="p-4 cursor-pointer"
-                                                        onClick={() => handleCinemaSelection(cinema.id)}
-                                                    >
-                                                        <div className="flex justify-between items-center">
-                                                            <div>
-                                                                <h4 className="text-yellow-400 font-semibold text-xl">{cinema.name}</h4>
-                                                                <p className="text-white text-sm">{cinema.address}</p>
-                                                            </div>
-                                                            <div>
-                                                                <svg
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    className={`h-6 w-6 text-white transition-transform ${selectedCinema === cinema.id ? 'rotate-180' : ''}`}
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                >
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {/* Phần suất chiếu chỉ hiển thị khi rạp được chọn */}
-                                                    {selectedCinema === cinema.id && (
-                                                        <div className="p-4 pt-0">
-                                                            {/* Group showtimes by screenType */}
-                                                            {(() => {
-                                                                // Get unique screen types
-                                                                const screenTypes = [...new Set(cinema.showTimes.map(time => time.roomType))];
 
-                                                                return screenTypes.map((screenType, index) => (
-                                                                    <div key={screenType || `screentype-${index}`} className="mb-6">
-                                                                        {/* Loại phòng chiếu - Hiển thị screenType từ API */}
-                                                                        <div className="mb-3">
-                                                                            <h5 className="text-white font-medium text-lg">{screenType || 'Standard'}</h5>
-                                                                        </div>
+                                <CinemaList
+                                    cinemas={showtimes
+                                        .find(st => st.date === selectedDate)
+                                        ?.cinemas.filter(cinema => {
+                                            const cinemaCity = cinemaToCity[cinema.name];
+                                            return !selectedCity || cinemaCity === selectedCity;
+                                        }) || []}
+                                    selectedCinema={selectedCinema}
+                                    selectedTime={selectedTime}
+                                    onCinemaSelect={handleCinemaSelection}
+                                    onTimeSelect={handleTimeSelection}
+                                />
 
-                                                                        {/* Danh sách các suất chiếu cho loại phòng này */}
-                                                                        <div className="flex flex-wrap gap-2">                                                                            {cinema.showTimes
-                                                                            .filter(time => time.roomType === screenType)
-                                                                            .map(time => (<Button
-                                                                                key={time.id}
-                                                                                onClick={() => handleTimeSelection(time.id)}
-                                                                                variant={selectedTime === time.id ? "custom13" : "custom12"}
-                                                                                size="custom12"
-                                                                                disabled={time.available_seats === 0}
-                                                                                title={time.available_seats === 0 ? 'Hết ghế' : `Còn ${time.available_seats} ghế trống`}
-                                                                            >
-                                                                                {time.time}
-                                                                            </Button>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                ))
-                                                            })()}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                    </div>
-                                </div>
-                                {/* chọn loại vé  */}
+                                {/* Chọn loại vé */}
                                 {selectedTime && (
                                     <div className="mt-6">
                                         <h3 className="text-2xl font-bold text-white mb-4">Chọn Loại Vé</h3>
-
-                                        {/* Get the base price from the selected showtime */}
-                                        {(() => {
-                                            const selectedShowtime = showtimes.find(st => st.date === selectedDate);
-                                            const selectedCinemaData = selectedShowtime?.cinemas.find(c => c.id === selectedCinema);
-                                            const selectedTimeData = selectedCinemaData?.showTimes.find(t => t.id === selectedTime);
-
-                                            return (<TicketSelector
-                                                basePrice={selectedTimeData?.price || 0}
-                                                onTicketSelectionChange={(selection, totalPrice) => {
-                                                    setTicketSelection(selection);
-                                                    setTotalTicketPrice(totalPrice);
-                                                }}
-                                            />
-                                            );
-                                        })()}
+                                        <TicketSelector
+                                            basePrice={selectedTimeData?.price || 0}
+                                            onTicketSelectionChange={handleTicketSelection}
+                                        />
                                     </div>
                                 )}
 
                                 {/* Chọn ghế */}
                                 {selectedTime && showTicketSelector && (
                                     <div className="mt-6">
-                                        <h3 className="text-lg font-semibold text-white mb-3">Chọn Ghế</h3>                                        <SeatSelection
+                                        <SeatSelection
                                             showtimeId={selectedTime}
-                                            cinemaName={showtimes.find(st => st.date === selectedDate)
-                                                ?.cinemas.find(c => c.id === selectedCinema)?.name || ''}
-                                            screenName={showtimes.find(st => st.date === selectedDate)
-                                                ?.cinemas.find(c => c.id === selectedCinema)
-                                                ?.showTimes.find(t => t.id === selectedTime)?.room || ''}
+                                            cinemaName={selectedCinemaData?.name || ''}
+                                            screenName={selectedTimeData?.room || ''}
                                             onConfirm={handleSeatSelection}
                                             totalTickets={Object.values(ticketSelection).reduce((sum, qty) => sum + qty, 0)}
                                         />
                                     </div>
                                 )}
-                                {/* Thêm phần chọn sản phẩm */}
+
+                                {/* Chọn sản phẩm */}
                                 {showProducts && selectedTime && showTicketSelector && (
-                                    <div className="mt-10">
-                                        <h3 className="text-2xl font-bold text-white mb-4">Chọn Sản Phẩm</h3>
-
-                                        {/* Hiển thị sản phẩm theo loại */}
-                                        <div className="space-y-8">
-                                            {/* Combo */}
-                                            <div>
-                                                <h4 className="text-xl font-semibold text-yellow-400 mb-4">Combo</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {products
-                                                        .filter(product => product.type_name?.toLowerCase().includes('combo'))
-                                                        .map(product => (
-                                                            <ProductCard
-                                                                key={product.id_product}
-                                                                id={product.id_product.toString()}
-                                                                title={product.product_name}
-                                                                image={product.image || '/images/product/default-product.png'}
-                                                                price={new Intl.NumberFormat('vi-VN', {
-                                                                    style: 'currency',
-                                                                    currency: 'VND',
-                                                                    minimumFractionDigits: 0,
-                                                                    maximumFractionDigits: 0
-                                                                }).format(product.price)}
-                                                                description={product.description || ''}
-                                                                quantity={productSelection[product.id_product.toString()] || 0}
-                                                                onIncrease={() => handleIncreaseProduct(product.id_product.toString())}
-                                                                onDecrease={() => handleDecreaseProduct(product.id_product.toString())}
-                                                            />
-                                                        ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Đồ ăn */}
-                                            <div>
-                                                <h4 className="text-xl font-semibold text-yellow-400 mb-4">Đồ Ăn</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {products
-                                                        .filter(product => product.type_name?.toLowerCase().includes('food') || product.type_name?.toLowerCase().includes('snack'))
-                                                        .map(product => (
-                                                            <ProductCard
-                                                                key={product.id_product}
-                                                                id={product.id_product.toString()}
-                                                                title={product.product_name}
-                                                                image={product.image || '/images/product/default-product.png'}
-                                                                price={new Intl.NumberFormat('vi-VN', {
-                                                                    style: 'currency',
-                                                                    currency: 'VND',
-                                                                    minimumFractionDigits: 0,
-                                                                    maximumFractionDigits: 0
-                                                                }).format(product.price)}
-                                                                description={product.description || ''}
-                                                                quantity={productSelection[product.id_product.toString()] || 0}
-                                                                onIncrease={() => handleIncreaseProduct(product.id_product.toString())}
-                                                                onDecrease={() => handleDecreaseProduct(product.id_product.toString())}
-                                                            />
-                                                        ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Đồ uống */}
-                                            <div>
-                                                <h4 className="text-xl font-semibold text-yellow-400 mb-4">Đồ Uống</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {products
-                                                        .filter(product => product.type_name?.toLowerCase().includes('drink') || product.type_name?.toLowerCase().includes('beverage'))
-                                                        .map(product => (
-                                                            <ProductCard
-                                                                key={product.id_product}
-                                                                id={product.id_product.toString()}
-                                                                title={product.product_name}
-                                                                image={product.image || '/images/product/default-product.png'}
-                                                                price={new Intl.NumberFormat('vi-VN', {
-                                                                    style: 'currency',
-                                                                    currency: 'VND',
-                                                                    minimumFractionDigits: 0,
-                                                                    maximumFractionDigits: 0
-                                                                }).format(product.price)}
-                                                                description={product.description || ''}
-                                                                quantity={productSelection[product.id_product.toString()] || 0}
-                                                                onIncrease={() => handleIncreaseProduct(product.id_product.toString())}
-                                                                onDecrease={() => handleDecreaseProduct(product.id_product.toString())}
-                                                            />
-                                                        ))}
-                                                </div>
-                                            </div>
+                                    <div className="space-y-16">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="text-2xl font-bold text-white">Chọn Sản Phẩm</h3>
+                                            <button
+                                                onClick={resetProducts}
+                                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+                                            >
+                                                Xóa tất cả sản phẩm
+                                            </button>
                                         </div>
-                                    </div>
-                                )}
-                                {/* Nút đặt vé */}
-                                {selectedTime && (
-                                    <div className="mt-6">
-                                        <Button
-                                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 text-lg"
-                                            disabled={!showTicketSelector} // Disable if no tickets selected
-                                            onClick={() => {
-                                                // Để tối ưu, lưu các giá trị tìm thấy vào biến
-                                                const selectedShowtime = showtimes.find(st => st.date === selectedDate);
-                                                const selectedCinemaData = selectedShowtime?.cinemas.find(c => c.id === selectedCinema);
-                                                const selectedTimeData = selectedCinemaData?.showTimes.find(t => t.id === selectedTime);
 
-                                                // Create a string with the ticket selection for the URL
-                                                const ticketParams = Object.entries(ticketSelection)
-                                                    .filter(([_, qty]) => qty > 0)
-                                                    .map(([typeId, qty]) => `ticket${typeId}=${qty}`)
-                                                    .join('&');
-
-                                                window.location.href = `/checkout?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
-                                                    selectedCinemaData?.name || ''
-                                                )}&screenName=${encodeURIComponent(
-                                                    selectedTimeData?.room || ''
-                                                )}&totalPrice=${totalTicketPrice}&${ticketParams}&movieTitle=${encodeURIComponent(movieTitle || '')}`;
-                                            }}
-                                        >
-                                            {showTicketSelector
-                                                ? `Đặt Vé Ngay - ${totalTicketPrice.toLocaleString('vi-VN')}₫`
-                                                : 'Vui lòng chọn loại vé'
-                                            }
-                                        </Button>
+                                        <ComboGrid
+                                            onQuantityChange={handleProductQuantityChange}
+                                            resetQuantities={shouldResetProducts}
+                                        />
+                                        <SoftDrinksGrid
+                                            onQuantityChange={handleProductQuantityChange}
+                                            resetQuantities={shouldResetProducts}
+                                        />
+                                        <BeveragesGrid
+                                            onQuantityChange={handleProductQuantityChange}
+                                            resetQuantities={shouldResetProducts}
+                                        />
+                                        <FoodProductsGrid
+                                            onQuantityChange={handleProductQuantityChange}
+                                            resetQuantities={shouldResetProducts}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -688,91 +224,19 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
                 )}
             </div>
 
-            {/* Thanh thông tin đặt vé cố định ở dưới cùng */}
+            {/* Thanh booking */}
             {showBookingBar && (
-                <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4 z-50">
-                    <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
-                        <div className="flex items-center space-x-4 mb-4 md:mb-0">
-                            {/* Thông tin phim */}
-                            <div className="text-left">
-                                <h3 className="text-xl font-bold text-white">
-                                    {movieTitle || 'Phim đang chọn'}
-                                </h3>
-                                <p className="text-gray-300">
-                                    {showtimes.find(st => st.date === selectedDate)
-                                        ?.cinemas.find(c => c.id === selectedCinema)?.name || ''} |
-                                    {showtimes.find(st => st.date === selectedDate)
-                                        ?.cinemas.find(c => c.id === selectedCinema)
-                                        ?.showTimes.find(t => t.id === selectedTime)?.room || ''}
-                                </p>
-                                <p className="text-gray-300">
-                                    {selectedDate} | {showtimes.find(st => st.date === selectedDate)
-                                        ?.cinemas.find(c => c.id === selectedCinema)
-                                        ?.showTimes.find(t => t.id === selectedTime)?.time || ''}
-                                </p>
-                                <p className="text-gray-300">
-                                    Ghế: {selectedSeats.join(', ')}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center space-x-4">
-                            {/* Thời gian còn lại */}
-                            <div className="bg-yellow-500 text-black font-bold px-4 py-2 rounded">
-                                <p className="text-sm">Thời gian giữ vé</p>
-                                <p className="text-xl">{formatTimeLeft()}</p>
-                            </div>
-
-                            {/* Tổng tiền */}
-                            <div className="text-right">
-                                <p className="text-sm text-gray-300">Tạm tính</p>
-                                <p className="text-xl font-bold text-white">
-                                    {new Intl.NumberFormat('vi-VN', {
-                                        style: 'currency',
-                                        currency: 'VND',
-                                        minimumFractionDigits: 0,
-                                        maximumFractionDigits: 0
-                                    }).format(calculateTotalPrice())}
-                                </p>
-                            </div>
-
-                            {/* Nút đặt vé */}
-                            <Button
-                                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 text-lg"
-                                onClick={() => {
-                                    // Lấy thông tin cần thiết
-                                    const selectedShowtime = showtimes.find(st => st.date === selectedDate);
-                                    const selectedCinemaData = selectedShowtime?.cinemas.find(c => c.id === selectedCinema);
-                                    const selectedTimeData = selectedCinemaData?.showTimes.find(t => t.id === selectedTime);
-
-                                    // Tạo chuỗi thông tin vé
-                                    const ticketParams = Object.entries(ticketSelection)
-                                        .filter(([_, qty]) => qty > 0)
-                                        .map(([typeId, qty]) => `ticket${typeId}=${qty}`)
-                                        .join('&');
-
-                                    // Tạo chuỗi thông tin sản phẩm
-                                    const productParams = Object.entries(productSelection)
-                                        .filter(([_, qty]) => qty > 0)
-                                        .map(([productId, qty]) => `product${productId}=${qty}`)
-                                        .join('&');
-
-                                    // Tạo chuỗi thông tin ghế
-                                    const seatParams = `seats=${selectedSeats.join(',')}`;
-
-                                    // Chuyển đến trang thanh toán
-                                    window.location.href = `/checkout?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
-                                        selectedCinemaData?.name || ''
-                                    )}&screenName=${encodeURIComponent(
-                                        selectedTimeData?.room || ''
-                                    )}&totalPrice=${calculateTotalPrice()}&${ticketParams}&${productParams}&${seatParams}&movieTitle=${encodeURIComponent(movieTitle || '')}`;
-                                }}
-                            >
-                                Đặt Vé Ngay
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <BookingBar
+                    movieTitle={movieTitle || 'Phim đang chọn'}
+                    cinemaName={selectedCinemaData?.name || ''}
+                    screenName={selectedTimeData?.room || ''}
+                    selectedDate={selectedDate}
+                    showTime={selectedTimeData?.time || ''}
+                    selectedSeats={selectedSeats}
+                    totalPrice={calculateTotalPrice()}
+                    productSelection={productSelection}
+                    onBookingClick={handleBooking}
+                />
             )}
         </div>
     );

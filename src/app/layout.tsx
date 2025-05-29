@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import I18nProvider from "./i18n/Provider";
 import Providers from "./i18n/Provider";
 import LanguageProvider from "@/components/providers/LanguageProvider";
+import { GlobalTimerProvider } from "@/contexts/GlobalTimerContext";
 
 export const metadata: Metadata = {
   icons: {
@@ -21,15 +22,17 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body>
-    
+
         <I18nProvider>
           <Providers>
             <LanguageProvider>
-              {children}
+              <GlobalTimerProvider>
+                {children}
+              </GlobalTimerProvider>
             </LanguageProvider>
           </Providers>
         </I18nProvider>
-      
+
       </body>
     </html>
   );

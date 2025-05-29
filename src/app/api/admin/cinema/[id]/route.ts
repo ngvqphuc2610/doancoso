@@ -1,8 +1,5 @@
-import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Get API URL from environment variables with fallback
-const API_URL = 'http://localhost:5000';
+import { query } from '@/lib/db';
 
 // Route để lấy chi tiết một rạp
 export async function GET(
@@ -11,15 +8,26 @@ export async function GET(
 ) {
     try {
         const { id } = params;
-        const response = await axios.get(`${API_URL}/api/admin/cinema/${id}`, {
-            timeout: 5000
+
+        const cinemas = await query('SELECT * FROM CINEMAS WHERE id_cinema = ?', [id]);
+        const cinema = Array.isArray(cinemas) && cinemas.length > 0 ? cinemas[0] : null;
+
+        if (!cinema) {
+            return NextResponse.json(
+                { success: false, message: 'Không tìm thấy rạp chiếu' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: cinema
         });
-        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error(`Error fetching cinema ${params.id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể tải thông tin rạp chiếu' },
-            { status: error.response?.status || 500 }
+            { status: 500 }
         );
     }
 }

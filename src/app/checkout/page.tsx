@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
+import { useGlobalTimer } from '@/contexts/GlobalTimerContext';
 
 interface CheckoutPageProps {
     params: {};
@@ -38,7 +39,7 @@ export default function CheckoutPage({ searchParams }: CheckoutPageProps) {
         agreeToPromotions: false
     });
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
-    const [timeLeft, setTimeLeft] = useState(300); // 5 phút
+    const { timeLeft, isActive: timerActive, startTimer, stopTimer, formatTime } = useGlobalTimer(); // Thêm stopTimer
     const [bookingResult, setBookingResult] = useState<any>(null);
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
 
@@ -73,27 +74,21 @@ export default function CheckoutPage({ searchParams }: CheckoutPageProps) {
             return acc;
         }, {} as { [key: string]: number });
 
-    // Timer countdown
+    // ✅ SỬA LỖI: Timer countdown - không start timer nếu đã có timer đang chạy
     useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    // Redirect back when time expires
-                    window.location.href = '/';
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+        // Chỉ log để debug, không start timer mới vì timer đã được start từ MovieShowtimes
+        console.log('Checkout page loaded, timer active:', timerActive, 'time left:', timeLeft);
+    }, [timerActive, timeLeft]);
 
-        return () => clearInterval(timer);
-    }, []);
+    // ✅ THÊM: Effect để handle khi timer hết thời gian
+    useEffect(() => {
+        if (timeLeft === 0) {
+            // Redirect về trang chủ khi hết thời gian
+            window.location.href = '/';
+        }
+    }, [timeLeft]);
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
+
 
     const handleCustomerInfoChange = (field: keyof CustomerInfo, value: string | boolean) => {
         setCustomerInfo(prev => ({
@@ -136,6 +131,9 @@ export default function CheckoutPage({ searchParams }: CheckoutPageProps) {
                 const result = await response.json();
 
                 if (result.success) {
+                    // ✅ THÊM: Dừng timer khi thanh toán thành công
+                    stopTimer();
+
                     // Store booking info for display in step 3
                     setBookingResult(result.booking);
                     localStorage.setItem('bookingResult', JSON.stringify(result.booking));
@@ -149,8 +147,6 @@ export default function CheckoutPage({ searchParams }: CheckoutPageProps) {
             }
         }
     };
-
-
 
     // Fetch payment methods from API
     useEffect(() => {
@@ -480,7 +476,7 @@ export default function CheckoutPage({ searchParams }: CheckoutPageProps) {
                                 <div className="bg-blue-500 rounded-lg p-4 mb-6 text-center">
                                     <h3 className="text-lg font-bold mb-2">THỜI GIAN GIỮ VÉ</h3>
                                     <div className="text-3xl font-bold text-yellow-300">
-                                        {formatTime(timeLeft)}
+                                        {formatTime()}
                                     </div>
                                 </div>
 

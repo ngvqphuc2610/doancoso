@@ -1,59 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
-
-// Get API URL from environment variables with fallback
-const API_URL = 'http://localhost:5000';
+import { syncMoviesFromTMDB } from '@/services/movieSyncService';
 
 // Route để đồng bộ phim từ TMDB API vào database
 export async function POST(req: NextRequest) {
-    try {        // Xác định đúng endpoint cho API
-        const apiEndpoint = `${API_URL}/api/admin/movies/sync`;
+    try {
+        console.log('Đang bắt đầu đồng bộ phim từ TMDB API...');
 
-        console.log(`Connecting to API at: ${apiEndpoint}`);
+        // Sử dụng hàm syncMoviesFromTMDB trực tiếp
+        const result = await syncMoviesFromTMDB();
 
-        // Gọi đến backend endpoint chính xác để đồng bộ phim
-        const response = await axios.post(apiEndpoint, {
-            forceUpdate: true // Thêm tham số để yêu cầu cập nhật
-        }, {
-            timeout: 60000 // Tăng timeout lên 60 giây vì quá trình đồng bộ có thể mất thời gian
+        console.log('Kết quả đồng bộ phim:', result);
+
+        return NextResponse.json({
+            success: true,
+            message: 'Đồng bộ phim thành công',
+            data: result
         });
+    } catch (error) {
+        console.error('Error syncing movies from TMDB:', error);
 
-        return NextResponse.json(response.data);
-    } catch (error: any) {
-        console.error('Error syncing movies:', error);
-        console.error('API URL being used:', API_URL);
-
-        // Handle timeout errors
-        if (error.code === 'ECONNABORTED') {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: 'Hết thời gian chờ đồng bộ phim. Máy chủ có thể đang bận, hãy thử lại sau.'
-                },
-                { status: 504 }
-            );
-        }
-
-        // Handle connection errors
-        if (!error.response) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: `Không thể kết nối đến máy chủ API (${API_URL}). Vui lòng kiểm tra server đã được khởi động chưa.`,
-                    error: error.message
-                },
-                { status: 503 }
-            );
-        }
-
-        // Handle other errors
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể đồng bộ phim từ TMDB',
-                error: error.response?.data?.message || error.message || 'Unknown error'
-            },
-            { status: error.response?.status || 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            message: 'Đã xảy ra lỗi khi đồng bộ phim từ TMDB',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 });
     }
 }
