@@ -1,7 +1,6 @@
 "use server";
 
-import { query, executeTransaction } from '../lib/db';
-import pool from '../config/db';
+import { query } from '@/lib/db';
 import axios from "axios";
 
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;

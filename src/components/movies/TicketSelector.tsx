@@ -142,20 +142,7 @@ export default function TicketSelector({ basePrice, onTicketSelectionChange }: T
                 ))}
             </div>
 
-            {totalTickets > 0 && (
-                <div className="bg-purple-900 p-4 rounded-md mt-6">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <p className="text-white">Tổng số vé: <span className="font-bold">{totalTickets}</span></p>
-                        </div>
-                        <div>
-                            <p className="text-white text-xl font-bold">
-                                Tổng tiền: {totalPrice.toLocaleString('vi-VN')} ₫
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
+          
         </div>
     );
 }

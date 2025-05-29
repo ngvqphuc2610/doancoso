@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from '../config/db.ts';
-import { QueryResultHeader } from './types/database';
+import { QueryResultHeader } from './types/database.ts';
 
 /**
  * Generic type for database query results

@@ -17,3 +17,10 @@ EMAIL=
 EMAIL_APP_PASSWORD= //này lấy của App gg
 
 NEXT_PUBLIC_NUMBER_PHONE= //sđt của m
+
+Viết theo cấu trúc NextJS, API Router 
+Sử dụng Tailwind, Radix ui 
+I18n để translate trang
+Sử dụng qrcode để xuất ra qr form thanh toán
+
+Sử dụng websocket để update trạng thái ghế ngồi

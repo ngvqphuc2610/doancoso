@@ -1,37 +1,40 @@
-import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Get API URL from environment variables with fallback
-const API_URL = process.env.NGROK_URL || process.env.API_URL || 'http://localhost:5000';
+import { query } from '@/lib/db';
 
 // Route để lấy danh sách khuyến mãi từ database
 export async function GET(req: NextRequest) {
     try {
-        console.log(`Connecting to API at: ${API_URL}/api/admin/promotions`);
-        const response = await axios.get(`${API_URL}/api/admin/promotions`, {
-            timeout: 5000 // 5 second timeout
-        });
-        return NextResponse.json(response.data);
-    } catch (error: any) {
-        console.error('Error fetching promotions:', error.message);
-        console.error('API URL being used:', API_URL);
+        console.log('[PROMOTIONS API] Fetching promotions from database');
 
-        // Provide more specific error messages based on error type
-        if (error.code === 'ECONNREFUSED' || error.code === 'ECONNABORTED') {
-            return NextResponse.json(
-                { success: false, message: `Không thể kết nối đến máy chủ API (${API_URL}). Vui lòng kiểm tra server đã được khởi động chưa.` },
-                { status: 503 }
-            );
+        const result = await query('SELECT * FROM promotions ORDER BY id_promotions ASC');
+
+        // Đảm bảo promotions luôn là mảng
+        let promotions;
+        if (Array.isArray(result)) {
+            promotions = result;
+        } else if (Array.isArray(result[0])) {
+            promotions = result[0];
+        } else {
+            promotions = result && typeof result === 'object' ?
+                (Object.keys(result).length > 0 ? [result] : []) :
+                (result ? [result] : []);
         }
 
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể tải danh sách khuyến mãi',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        console.log('Kết quả truy vấn danh sách khuyến mãi:', promotions);
+        console.log('Số lượng khuyến mãi:', Array.isArray(promotions) ? promotions.length : 0);
+
+        return NextResponse.json({
+            success: true,
+            data: promotions
+        });
+    } catch (error: any) {
+        console.error('Error fetching promotions:', error.message);
+
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể lấy danh sách khuyến mãi',
+            error: error.message
+        }, { status: 500 });
     }
 }
 
@@ -41,27 +44,43 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         // Validate required fields
-        if (!body.promotion_name || !body.promotion_type || body.discount_amount === undefined || !body.code) {
+        if (!body.title) {
             return NextResponse.json(
-                { success: false, message: 'Tên khuyến mãi, loại, mã và giá trị giảm là bắt buộc' },
+                { success: false, message: 'Tiêu đề khuyến mãi là bắt buộc' },
                 { status: 400 }
             );
         }
 
-        const response = await axios.post(`${API_URL}/api/admin/promotions`, body, {
-            timeout: 5000
+        // Thêm khuyến mãi mới vào database
+        const result = await query(
+            `INSERT INTO PROMOTIONS
+             (title, description, discount_percent, start_date, end_date, status)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                body.title,
+                body.description || '',
+                body.discount_percent || 0,
+                body.start_date || new Date(),
+                body.end_date || new Date(),
+                body.status || 'active'
+            ]
+        );
+
+        const resultHeader = Array.isArray(result) ? result[0] : result;
+        const promotionId = (resultHeader as any).insertId;
+
+        return NextResponse.json({
+            success: true,
+            message: 'Khuyến mãi đã được thêm thành công',
+            data: { id_promotion: promotionId }
         });
-        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('Error creating promotion:', error.message);
 
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể thêm khuyến mãi mới',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể thêm khuyến mãi mới',
+            error: error.message
+        }, { status: 500 });
     }
 }

@@ -84,44 +84,95 @@ interface ProductGridProps {
     title: string;
     products: Product[];
     className?: string;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
+    resetQuantities?: boolean;
 }
 
-const ProductGridInner = ({ title, products, className = '' }: ProductGridProps) => {
-    const { t } = useTranslation();
-    const { swiperRef } = useSwiper(); const [quantities, setQuantities] = useState<{ [key: string]: number }>(
+const ProductGridInner = ({ title, products, className = '', onQuantityChange, resetQuantities }: ProductGridProps) => {
+    const [quantities, setQuantities] = useState<{ [key: string]: number }>(
         Object.fromEntries(products.map(product => [product.id_product.toString(), 0]))
     );
+    const [pendingCallbacks, setPendingCallbacks] = useState<Array<{ productId: string, quantity: number, price: number, productName?: string }>>([]);
+
+    // Use ref to store the latest callback to avoid dependency issues
+    const onQuantityChangeRef = useRef(onQuantityChange);
+    onQuantityChangeRef.current = onQuantityChange;
 
     // Load saved quantities from localStorage on mount
     useEffect(() => {
-        const savedQuantities = localStorage.getItem('cartQuantities');
-        if (savedQuantities) {
-            const parsed = JSON.parse(savedQuantities);
-            setQuantities(prev => ({
-                ...prev,
-                ...parsed
-            }));
+        if (resetQuantities) {
+            // Clear localStorage and reset quantities
+            localStorage.removeItem('cartQuantities');
+            setQuantities(Object.fromEntries(products.map(product => [product.id_product.toString(), 0])));
+        } else {
+            const savedQuantities = localStorage.getItem('cartQuantities');
+            if (savedQuantities) {
+                const parsed = JSON.parse(savedQuantities);
+                setQuantities(prev => ({
+                    ...prev,
+                    ...parsed
+                }));
+            }
         }
-    }, []);
+    }, [resetQuantities, products]);
+
+    // Handle pending callbacks after render
+    useEffect(() => {
+        if (pendingCallbacks.length > 0 && onQuantityChangeRef.current) {
+            pendingCallbacks.forEach(({ productId, quantity, price, productName }) => {
+                onQuantityChangeRef.current?.(productId, quantity, price, productName);
+            });
+            setPendingCallbacks([]);
+        }
+    }, [pendingCallbacks]);
+
+    // Don't auto-sync from localStorage to avoid render conflicts
+    // Let the parent component manage its own state initialization
 
     const handleIncrease = (productId: string) => {
         setQuantities(prev => {
+            const newQuantity = (prev[productId] || 0) + 1;
             const newQuantities = {
                 ...prev,
-                [productId]: (prev[productId] || 0) + 1
+                [productId]: newQuantity
             };
             localStorage.setItem('cartQuantities', JSON.stringify(newQuantities));
+
+            // Queue callback to be executed after render
+            const product = products.find(p => p.id_product.toString() === productId);
+            if (product) {
+                setPendingCallbacks(current => [...current, {
+                    productId,
+                    quantity: newQuantity,
+                    price: product.price,
+                    productName: product.product_name
+                }]);
+            }
+
             return newQuantities;
         });
     };
 
     const handleDecrease = (productId: string) => {
         setQuantities(prev => {
+            const newQuantity = Math.max((prev[productId] || 0) - 1, 0);
             const newQuantities = {
                 ...prev,
-                [productId]: Math.max((prev[productId] || 0) - 1, 0)
+                [productId]: newQuantity
             };
             localStorage.setItem('cartQuantities', JSON.stringify(newQuantities));
+
+            // Queue callback to be executed after render
+            const product = products.find(p => p.id_product.toString() === productId);
+            if (product) {
+                setPendingCallbacks(current => [...current, {
+                    productId,
+                    quantity: newQuantity,
+                    price: product.price,
+                    productName: product.product_name
+                }]);
+            }
+
             return newQuantities;
         });
     };
@@ -198,7 +249,11 @@ const ProductGrid = (props: ProductGridProps) => {
 };
 
 // Create specific components for each product category with async data loading
-export const ComboGrid = ({ className }: { className?: string }) => {
+export const ComboGrid = ({ className, onQuantityChange, resetQuantities }: {
+    className?: string;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
+    resetQuantities?: boolean;
+}) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [title, setTitle] = useState('Combo');
 
@@ -217,11 +272,17 @@ export const ComboGrid = ({ className }: { className?: string }) => {
             title={title}
             products={products}
             className={className}
+            onQuantityChange={onQuantityChange}
+            resetQuantities={resetQuantities}
         />
     );
 };
 
-export const SoftDrinksGrid = ({ className }: { className?: string }) => {
+export const SoftDrinksGrid = ({ className, onQuantityChange, resetQuantities }: {
+    className?: string;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
+    resetQuantities?: boolean;
+}) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [title, setTitle] = useState('Nước ngọt');
 
@@ -239,11 +300,17 @@ export const SoftDrinksGrid = ({ className }: { className?: string }) => {
             title={title}
             products={products}
             className={className}
+            onQuantityChange={onQuantityChange}
+            resetQuantities={resetQuantities}
         />
     );
 };
 
-export const BeveragesGrid = ({ className }: { className?: string }) => {
+export const BeveragesGrid = ({ className, onQuantityChange, resetQuantities }: {
+    className?: string;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
+    resetQuantities?: boolean;
+}) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [title, setTitle] = useState('Nước suối & Nước ép');
 
@@ -261,11 +328,17 @@ export const BeveragesGrid = ({ className }: { className?: string }) => {
             title={title}
             products={products}
             className={className}
+            onQuantityChange={onQuantityChange}
+            resetQuantities={resetQuantities}
         />
     );
 };
 
-export const FoodProductsGrid = ({ className }: { className?: string }) => {
+export const FoodProductsGrid = ({ className, onQuantityChange, resetQuantities }: {
+    className?: string;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
+    resetQuantities?: boolean;
+}) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [title, setTitle] = useState('Snacks - Kẹo');
 
@@ -283,6 +356,8 @@ export const FoodProductsGrid = ({ className }: { className?: string }) => {
             title={title}
             products={products}
             className={className}
+            onQuantityChange={onQuantityChange}
+            resetQuantities={resetQuantities}
         />
     );
 };

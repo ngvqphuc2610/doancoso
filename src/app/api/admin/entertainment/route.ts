@@ -1,56 +1,53 @@
-import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// Hardcode API URL để đảm bảo luôn hoạt động đúng
-const API_URL = 'http://localhost:5000';
-
-// Route để lấy danh sách phòng chiếu từ database
+// Route để lấy danh sách giải trí từ database
 export async function GET(req: NextRequest) {
     try {
-        console.log(`[entertainment API] Connecting to Express API at: ${API_URL}/api/admin/entertainment`);
+        console.log('[ENTERTAINMENT API] Fetching entertainment from database');
 
-        const response = await axios.get(`${API_URL}/api/admin/entertainment`, {
-            timeout: 10000,
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache',
-                'If-Modified-Since': new Date(0).toUTCString()
-            }
-        });
+        const result = await query(`
+            SELECT
+                e.*,
+                c.cinema_name,
+                s.staff_name
+            FROM entertainment e
+            LEFT JOIN cinemas c ON e.id_cinema = c.id_cinema
+            LEFT JOIN staff s ON e.id_staff = s.id_staff
+            ORDER BY e.id_entertainment ASC
+        `);
 
-        const originalData = response.data;
-        const raw = originalData.data;
+        // Đảm bảo entertainment luôn là mảng
+        let entertainment;
+        if (Array.isArray(result)) {
+            entertainment = result;
+        } else if (Array.isArray(result[0])) {
+            entertainment = result[0];
+        } else {
+            entertainment = result && typeof result === 'object' ?
+                (Object.keys(result).length > 0 ? [result] : []) :
+                (result ? [result] : []);
+        }
 
-        const normalizedData = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        console.log('Kết quả truy vấn danh sách giải trí:', entertainment);
+        console.log('Số lượng giải trí:', Array.isArray(entertainment) ? entertainment.length : 0);
 
         return NextResponse.json({
-            ...originalData,
-            data: normalizedData
+            success: true,
+            data: entertainment
         });
     } catch (error: any) {
         console.error('Error fetching entertainment:', error.message);
-        console.error('API URL being used:', API_URL);
 
-        if (error.code === 'ECONNREFUSED' || error.code === 'ECONNABORTED') {
-            return NextResponse.json(
-                { success: false, message: `Không thể kết nối đến máy chủ API (${API_URL}). Vui lòng kiểm tra server đã được khởi động chưa.` },
-                { status: 503 }
-            );
-        }
-
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể tải dịch vụ giải trí',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể lấy danh sách giải trí',
+            error: error.message
+        }, { status: 500 });
     }
 }
 
-// Route để thêm phòng chiếu mới vào database
+// Route để thêm giải trí mới vào database
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
@@ -58,25 +55,40 @@ export async function POST(req: NextRequest) {
         // Validate required fields
         if (!body.title) {
             return NextResponse.json(
-                { success: false, message: 'Tên dịch vụ giải trí là bắt buộc' },
+                { success: false, message: 'Tiêu đề giải trí là bắt buộc' },
                 { status: 400 }
             );
         }
 
-        const response = await axios.post(`${API_URL}/api/admin/entertainment`, body, {
-            timeout: 5000
+        // Thêm giải trí mới vào database
+        const result = await query(
+            `INSERT INTO ENTERTAINMENT
+             (title, description, image_url, type, status)
+             VALUES (?, ?, ?, ?, ?)`,
+            [
+                body.title,
+                body.description || '',
+                body.image_url || '',
+                body.type || 'game',
+                body.status || 'active'
+            ]
+        );
+
+        const resultHeader = Array.isArray(result) ? result[0] : result;
+        const entertainmentId = (resultHeader as any).insertId;
+
+        return NextResponse.json({
+            success: true,
+            message: 'Giải trí đã được thêm thành công',
+            data: { id_entertainment: entertainmentId }
         });
-        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('Error creating entertainment:', error.message);
 
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể thêm dịch vu giải trí mới',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể thêm giải trí mới',
+            error: error.message
+        }, { status: 500 });
     }
 }

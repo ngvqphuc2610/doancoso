@@ -1,82 +1,97 @@
-import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
-// Hardcode API URL để đảm bảo luôn hoạt động đúng
-const API_URL = 'http://localhost:5000';
-
-// Route để lấy danh sách rạp từ database
+// Route để lấy danh sách ghế từ database
 export async function GET(req: NextRequest) {
     try {
-        console.log(`[seats API] Connecting to Express API at: ${API_URL}/api/admin/seats`);
+        console.log('[SEATS API] Fetching seats from database');
 
-        const response = await axios.get(`${API_URL}/api/admin/seats`, {
-            timeout: 10000,
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache',
-                'If-Modified-Since': new Date(0).toUTCString()
-            }
-        });
+        const result = await query(`
+            SELECT
+                s.*,
+                sc.screen_name,
+                c.cinema_name,
+                st.type_name as seat_type_name
+            FROM seat s
+            LEFT JOIN screen sc ON s.id_screen = sc.id_screen
+            LEFT JOIN cinemas c ON sc.id_cinema = c.id_cinema
+            LEFT JOIN seat_type st ON s.id_seattype = st.id_seattype
+            ORDER BY s.id_seats ASC
+        `);
 
-        const originalData = response.data;
-        const raw = originalData.data;
+        // Đảm bảo seats luôn là mảng
+        let seats;
+        if (Array.isArray(result)) {
+            seats = result;
+        } else if (Array.isArray(result[0])) {
+            seats = result[0];
+        } else {
+            seats = result && typeof result === 'object' ?
+                (Object.keys(result).length > 0 ? [result] : []) :
+                (result ? [result] : []);
+        }
 
-        const normalizedData = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        console.log('Kết quả truy vấn danh sách ghế:', seats);
+        console.log('Số lượng ghế:', Array.isArray(seats) ? seats.length : 0);
 
         return NextResponse.json({
-            ...originalData,
-            data: normalizedData
+            success: true,
+            data: seats
         });
     } catch (error: any) {
         console.error('Error fetching seats:', error.message);
-        console.error('API URL being used:', API_URL);
 
-        if (error.code === 'ECONNREFUSED' || error.code === 'ECONNABORTED') {
-            return NextResponse.json(
-                { success: false, message: `Không thể kết nối đến máy chủ API (${API_URL}). Vui lòng kiểm tra server đã được khởi động chưa.` },
-                { status: 503 }
-            );
-        }
-
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể tải danh sách rạp',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể lấy danh sách ghế',
+            error: error.message
+        }, { status: 500 });
     }
 }
 
-// Route để thêm rạp mới vào database
+// Route để thêm ghế mới vào database
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
         // Validate required fields
-        if (!body.start_time) {
+        if (!body.seat_number || !body.id_screen) {
             return NextResponse.json(
-                { success: false, message: 'vị trí ghế là bắt buộc' },
+                { success: false, message: 'Số ghế và phòng chiếu là bắt buộc' },
                 { status: 400 }
             );
         }
 
-        const response = await axios.post(`${API_URL}/api/admin/seats`, body, {
-            timeout: 5000
-        });
-        return NextResponse.json(response.data);
-    } catch (error: any) {
-        console.error('Error creating seats:', error.message);
-
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể thêm ghế mới',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
+        // Thêm ghế mới vào database
+        const result = await query(
+            `INSERT INTO SEATS
+             (seat_number, seat_row, seat_column, id_screen, seat_type, status)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                body.seat_number,
+                body.seat_row || 'A',
+                body.seat_column || 1,
+                body.id_screen,
+                body.seat_type || 'Standard',
+                body.status || 'available'
+            ]
         );
+
+        const resultHeader = Array.isArray(result) ? result[0] : result;
+        const seatId = (resultHeader as any).insertId;
+
+        return NextResponse.json({
+            success: true,
+            message: 'Ghế đã được thêm thành công',
+            data: { id_seat: seatId }
+        });
+    } catch (error: any) {
+        console.error('Error creating seat:', error.message);
+
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể thêm ghế mới',
+            error: error.message
+        }, { status: 500 });
     }
 }

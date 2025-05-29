@@ -1,9 +1,6 @@
 import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Get API URL from environment variables with fallback
-const API_URL = 'http://localhost:5000';
-
+import { getApiUrl } from '@/lib/apiUtils';
 // Route để lấy chi tiết một rạp
 export async function GET(
     req: NextRequest,
@@ -11,7 +8,7 @@ export async function GET(
 ) {
     try {
         const { id } = params;
-        const response = await axios.get(`${API_URL}/api/admin/cinema/${id}`, {
+        const response = await axios.get(getApiUrl(`/api/admin/cinema/${id}`), {
             timeout: 5000
         });
         return NextResponse.json(response.data);
@@ -32,7 +29,7 @@ export async function PUT(
     try {
         const { id } = params;
         const body = await req.json();
-        const response = await axios.put(`${API_URL}/api/admin/cinema/${id}`, body, {
+        const response = await axios.put(getApiUrl(`/api/admin/cinema/${id}`), body, {
             timeout: 5000
         });
         return NextResponse.json(response.data);
@@ -52,7 +49,7 @@ export async function DELETE(
 ) {
     try {
         const { id } = params;
-        const response = await axios.delete(`${API_URL}/api/admin/cinema/${id}`, {
+        const response = await axios.delete(getApiUrl(`/api/admin/cinema/${id}`), {
             timeout: 5000
         });
         return NextResponse.json(response.data);
@@ -73,7 +70,7 @@ export async function PATCH(
     try {
         const { id } = params;
         const body = await req.json();
-        const response = await axios.patch(`${API_URL}/api/admin/cinema/${id}`, body, {
+        const response = await axios.patch(getApiUrl(`/api/admin/cinema/${id}`), body, {
             timeout: 5000
         });
         return NextResponse.json(response.data);

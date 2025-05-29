@@ -1,52 +1,62 @@
-import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Hardcode API URL để đảm bảo luôn hoạt động đúng
-const API_URL = 'http://localhost:5000';
+import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 // Route để lấy danh sách rạp từ database
 export async function GET(req: NextRequest) {
-    try {
-        console.log(`[CINEMA API] Connecting to Express API at: ${API_URL}/api/admin/cinema`);
-
-        const response = await axios.get(`${API_URL}/api/admin/cinema`, {
-            timeout: 10000,
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache',
-                'If-Modified-Since': new Date(0).toUTCString()
-            }
-        });
-
-        const originalData = response.data;
-        const raw = originalData.data;
-
-        const normalizedData = Array.isArray(raw) ? raw : raw ? [raw] : [];
-
+    // Check authentication and admin role
+    const authResult = await requireAuth(req, 'admin');
+    if (!authResult.success) {
         return NextResponse.json({
-            ...originalData,
-            data: normalizedData
-        });
-    } catch (error: any) {
-        console.error('Error fetching cinemas:', error.message);
-        console.error('API URL being used:', API_URL);
+            success: false,
+            message: authResult.message
+        }, { status: authResult.status });
+    }
+    try {
+        console.log('[CINEMA API] Fetching cinemas from database');
 
-        if (error.code === 'ECONNREFUSED' || error.code === 'ECONNABORTED') {
-            return NextResponse.json(
-                { success: false, message: `Không thể kết nối đến máy chủ API (${API_URL}). Vui lòng kiểm tra server đã được khởi động chưa.` },
-                { status: 503 }
-            );
+        const result = await query('SELECT * FROM CINEMAS ORDER BY id_cinema ASC');
+
+        // Đảm bảo cinemas luôn là mảng
+        let cinemas;
+        if (Array.isArray(result)) {
+            // Nếu result là mảng (kết quả thông thường của MySQL)
+            cinemas = result;
+        } else if (Array.isArray(result[0])) {
+            // Nếu result[0] là mảng (kết quả của mysql2)
+            cinemas = result[0];
+        } else {
+            // Trường hợp còn lại, đảm bảo luôn là mảng
+            cinemas = result && typeof result === 'object' ?
+                (Object.keys(result).length > 0 ? [result] : []) :
+                (result ? [result] : []);
         }
 
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể tải danh sách rạp',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        console.log('Kết quả truy vấn danh sách rạp:', cinemas);
+        console.log('Số lượng rạp:', Array.isArray(cinemas) ? cinemas.length : 0);
+
+        // Trả về kết quả thành công
+        return NextResponse.json({
+            success: true,
+            data: cinemas // Đảm bảo trả về mảng
+        });
+    } catch (error: any) {
+        // In ra chi tiết lỗi để debug
+        console.error('Lỗi khi truy vấn danh sách rạp chiếu:', error);
+        console.error('Chi tiết lỗi:', error.message);
+        console.error('Stack trace:', error.stack);
+
+        // Trả về thông tin lỗi chi tiết
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể lấy danh sách rạp chiếu',
+            errorDetails: {
+                message: error.message,
+                code: error.code,
+                sqlMessage: error.sqlMessage,
+                sqlState: error.sqlState
+            }
+        }, { status: 500 });
     }
 }
 
@@ -63,20 +73,38 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const response = await axios.post(`${API_URL}/api/admin/cinema`, body, {
-            timeout: 5000
+        // Thêm rạp mới vào database
+        const result = await query(
+            `INSERT INTO CINEMAS
+             (cinema_name, address, city, description, image, contact_number, email, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                body.cinema_name,
+                body.address || '',
+                body.city || '',
+                body.description || '',
+                body.image || '',
+                body.contact_number || '',
+                body.email || '',
+                body.status || 'active'
+            ]
+        );
+
+        const resultHeader = Array.isArray(result) ? result[0] : result;
+        const cinemaId = (resultHeader as any).insertId;
+
+        return NextResponse.json({
+            success: true,
+            message: 'Rạp chiếu đã được thêm thành công',
+            data: { id_cinema: cinemaId }
         });
-        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('Error creating cinema:', error.message);
 
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Không thể thêm rạp chiếu mới',
-                error: error.response?.data || error.message
-            },
-            { status: error.response?.status || 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            message: 'Không thể thêm rạp chiếu mới',
+            error: error.message
+        }, { status: 500 });
     }
 }
