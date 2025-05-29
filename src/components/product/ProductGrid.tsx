@@ -84,7 +84,7 @@ interface ProductGridProps {
     title: string;
     products: Product[];
     className?: string;
-    onQuantityChange?: (productId: string, quantity: number, price: number) => void;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
     resetQuantities?: boolean;
 }
 
@@ -92,7 +92,7 @@ const ProductGridInner = ({ title, products, className = '', onQuantityChange, r
     const [quantities, setQuantities] = useState<{ [key: string]: number }>(
         Object.fromEntries(products.map(product => [product.id_product.toString(), 0]))
     );
-    const [pendingCallbacks, setPendingCallbacks] = useState<Array<{ productId: string, quantity: number, price: number }>>([]);
+    const [pendingCallbacks, setPendingCallbacks] = useState<Array<{ productId: string, quantity: number, price: number, productName?: string }>>([]);
 
     // Use ref to store the latest callback to avoid dependency issues
     const onQuantityChangeRef = useRef(onQuantityChange);
@@ -119,8 +119,8 @@ const ProductGridInner = ({ title, products, className = '', onQuantityChange, r
     // Handle pending callbacks after render
     useEffect(() => {
         if (pendingCallbacks.length > 0 && onQuantityChangeRef.current) {
-            pendingCallbacks.forEach(({ productId, quantity, price }) => {
-                onQuantityChangeRef.current?.(productId, quantity, price);
+            pendingCallbacks.forEach(({ productId, quantity, price, productName }) => {
+                onQuantityChangeRef.current?.(productId, quantity, price, productName);
             });
             setPendingCallbacks([]);
         }
@@ -144,7 +144,8 @@ const ProductGridInner = ({ title, products, className = '', onQuantityChange, r
                 setPendingCallbacks(current => [...current, {
                     productId,
                     quantity: newQuantity,
-                    price: product.price
+                    price: product.price,
+                    productName: product.product_name
                 }]);
             }
 
@@ -167,7 +168,8 @@ const ProductGridInner = ({ title, products, className = '', onQuantityChange, r
                 setPendingCallbacks(current => [...current, {
                     productId,
                     quantity: newQuantity,
-                    price: product.price
+                    price: product.price,
+                    productName: product.product_name
                 }]);
             }
 
@@ -249,7 +251,7 @@ const ProductGrid = (props: ProductGridProps) => {
 // Create specific components for each product category with async data loading
 export const ComboGrid = ({ className, onQuantityChange, resetQuantities }: {
     className?: string;
-    onQuantityChange?: (productId: string, quantity: number, price: number) => void;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
     resetQuantities?: boolean;
 }) => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -278,7 +280,7 @@ export const ComboGrid = ({ className, onQuantityChange, resetQuantities }: {
 
 export const SoftDrinksGrid = ({ className, onQuantityChange, resetQuantities }: {
     className?: string;
-    onQuantityChange?: (productId: string, quantity: number, price: number) => void;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
     resetQuantities?: boolean;
 }) => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -306,7 +308,7 @@ export const SoftDrinksGrid = ({ className, onQuantityChange, resetQuantities }:
 
 export const BeveragesGrid = ({ className, onQuantityChange, resetQuantities }: {
     className?: string;
-    onQuantityChange?: (productId: string, quantity: number, price: number) => void;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
     resetQuantities?: boolean;
 }) => {
     const [products, setProducts] = useState<Product[]>([]);
@@ -334,7 +336,7 @@ export const BeveragesGrid = ({ className, onQuantityChange, resetQuantities }: 
 
 export const FoodProductsGrid = ({ className, onQuantityChange, resetQuantities }: {
     className?: string;
-    onQuantityChange?: (productId: string, quantity: number, price: number) => void;
+    onQuantityChange?: (productId: string, quantity: number, price: number, productName?: string) => void;
     resetQuantities?: boolean;
 }) => {
     const [products, setProducts] = useState<Product[]>([]);

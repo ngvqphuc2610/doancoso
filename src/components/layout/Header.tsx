@@ -19,10 +19,12 @@ import { FaLocationDot } from "react-icons/fa6";
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../language/LanguageSwitcher';
 import { Cinema, getAllCinemas } from '@/lib/cinema';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const { t, i18n } = useTranslation();
   const [cinemaList, setCinemaList] = useState<Cinema[]>([]);
+  const { user, logout, isAuthenticated } = useAuth();
 
   // Fetch cinemas on component mount
   useEffect(() => {
@@ -40,6 +42,10 @@ export default function Header() {
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   const menuItems = [
@@ -139,10 +145,57 @@ export default function Header() {
             <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-gray-500" />
           </div>
           <div className="flex items-center gap-4 ">
-            <Link href="/login" className="flex items-center gap-1 pl-7">
-              <User size={16} />
-              {t('header.login')}
-            </Link>
+            {isAuthenticated() ? (
+              <div className="flex items-center gap-2 pl-7">
+                <div className="relative group">
+                  <div className="flex items-center gap-1 cursor-pointer">
+                    <User size={16} />
+                    <span className="text-sm font-medium">{user?.fullName || user?.username}</span>
+                  </div>
+                  {/* Dropdown menu */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white text-black rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-2 border-b border-gray-200">
+                        <p className="text-sm text-gray-600">Xin chào,</p>
+                        <p className="font-medium text-gray-800">{user?.fullName || user?.username}</p>
+                        <p className="text-xs text-gray-500">{user?.email}</p>
+                      </div>
+                      {user?.role === 'admin' && (
+                        <Link
+                          href="/admin"
+                          className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                        >
+                          Quản trị
+                        </Link>
+                      )}
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                      >
+                        Thông tin cá nhân
+                      </Link>
+                      <Link
+                        href="/booking-history"
+                        className="block px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
+                      >
+                        Lịch sử đặt vé
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors"
+                      >
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Link href="/login" className="flex items-center gap-1 pl-7">
+                <User size={16} />
+                {t('header.login')}
+              </Link>
+            )}
             <LanguageSwitcher className="pl-7" />
           </div>
         </div>

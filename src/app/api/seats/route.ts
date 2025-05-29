@@ -21,32 +21,36 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // Lấy thông tin ghế từ database
+        // Lấy thông tin ghế từ database với DISTINCT để tránh duplicate
         const sql = `
-            SELECT 
+            SELECT DISTINCT
                 s.id_seats,
                 s.seat_row,
                 s.seat_number,
                 st.type_name as seat_type,
                 ROUND(st.price_multiplier * (
-                    SELECT price 
-                    FROM SHOWTIMES 
+                    SELECT price
+                    FROM showtimes
                     WHERE id_showtime = ?
-                )) as price,                CASE 
-                    WHEN db.id_seats IS NOT NULL THEN 'booked'
+                )) as price,
+                CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM detail_booking db2
+                        INNER JOIN bookings b2 ON db2.id_booking = b2.id_booking
+                        WHERE db2.id_seats = s.id_seats
+                        AND b2.id_showtime = ?
+                        AND b2.booking_status != 'cancelled'
+                    ) THEN 'booked'
                     WHEN s.status = 'maintenance' THEN 'maintenance'
                     WHEN s.status = 'inactive' THEN 'inactive'
                     ELSE 'available'
                 END as status
-            FROM SEAT s
-            INNER JOIN SEAT_TYPE st ON s.id_seattype = st.id_seattype
-            LEFT JOIN DETAIL_BOOKING db ON s.id_seats = db.id_seats
-            LEFT JOIN BOOKINGS b ON db.id_booking = b.id_booking 
-                AND b.id_showtime = ?
-                AND b.booking_status != 'cancelled'
+            FROM seat s
+            INNER JOIN seat_type st ON s.id_seattype = st.id_seattype
             WHERE s.id_screen = (
-                SELECT id_screen 
-                FROM SHOWTIMES 
+                SELECT id_screen
+                FROM showtimes
                 WHERE id_showtime = ?
             )
             ORDER BY s.seat_row, s.seat_number
@@ -54,10 +58,29 @@ export async function GET(request: NextRequest) {
 
         const rows = await query(sql, [showtimeId, showtimeId, showtimeId]);
 
+        // Transform data to normalize seat_type to lowercase
+        const transformedRows = rows.map((row: any) => ({
+            ...row,
+            seat_type: row.seat_type.toLowerCase() // Convert 'Regular' -> 'regular', 'Couple' -> 'couple', etc.
+        }));
+
+        // Check for duplicates in API response
+        const seatIds = transformedRows.map((row: any) => `${row.seat_row}${row.seat_number.toString().padStart(2, '0')}`);
+        const duplicateIds = seatIds.filter((id: string, index: number) => seatIds.indexOf(id) !== index);
+
+        if (duplicateIds.length > 0) {
+            console.error('🚨 API returning duplicate seat IDs:', duplicateIds);
+            console.error('🚨 Full seat data:', transformedRows);
+        }
+
+        console.log(`🪑 Returning ${transformedRows.length} seats for showtime ${showtimeId}`);
+        console.log('Sample seat data:', transformedRows.slice(0, 3));
+        console.log('Unique seat IDs:', new Set(seatIds).size, 'vs Total:', seatIds.length);
+
         return new NextResponse(
             JSON.stringify({
                 success: true,
-                data: rows
+                data: transformedRows
             }),
             {
                 status: 200,

@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 // Route để lấy danh sách rạp từ database
 export async function GET(req: NextRequest) {
+    // Check authentication and admin role
+    const authResult = await requireAuth(req, 'admin');
+    if (!authResult.success) {
+        return NextResponse.json({
+            success: false,
+            message: authResult.message
+        }, { status: authResult.status });
+    }
     try {
         console.log('[CINEMA API] Fetching cinemas from database');
 

@@ -1,6 +1,6 @@
+import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-
+import { getApiUrl } from '@/lib/apiUtils';
 // Route để lấy chi tiết một rạp
 export async function GET(
     req: NextRequest,
@@ -8,26 +8,15 @@ export async function GET(
 ) {
     try {
         const { id } = params;
-
-        const cinemas = await query('SELECT * FROM CINEMAS WHERE id_cinema = ?', [id]);
-        const cinema = Array.isArray(cinemas) && cinemas.length > 0 ? cinemas[0] : null;
-
-        if (!cinema) {
-            return NextResponse.json(
-                { success: false, message: 'Không tìm thấy rạp chiếu' },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json({
-            success: true,
-            data: cinema
+        const response = await axios.get(getApiUrl(`/api/admin/cinema/${id}`), {
+            timeout: 5000
         });
+        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error(`Error fetching cinema ${params.id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể tải thông tin rạp chiếu' },
-            { status: 500 }
+            { status: error.response?.status || 500 }
         );
     }
 }
@@ -40,7 +29,7 @@ export async function PUT(
     try {
         const { id } = params;
         const body = await req.json();
-        const response = await axios.put(`${API_URL}/api/admin/cinema/${id}`, body, {
+        const response = await axios.put(getApiUrl(`/api/admin/cinema/${id}`), body, {
             timeout: 5000
         });
         return NextResponse.json(response.data);
@@ -60,7 +49,7 @@ export async function DELETE(
 ) {
     try {
         const { id } = params;
-        const response = await axios.delete(`${API_URL}/api/admin/cinema/${id}`, {
+        const response = await axios.delete(getApiUrl(`/api/admin/cinema/${id}`), {
             timeout: 5000
         });
         return NextResponse.json(response.data);
@@ -81,7 +70,7 @@ export async function PATCH(
     try {
         const { id } = params;
         const body = await req.json();
-        const response = await axios.patch(`${API_URL}/api/admin/cinema/${id}`, body, {
+        const response = await axios.patch(getApiUrl(`/api/admin/cinema/${id}`), body, {
             timeout: 5000
         });
         return NextResponse.json(response.data);

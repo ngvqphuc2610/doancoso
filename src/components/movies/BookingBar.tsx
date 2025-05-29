@@ -5,6 +5,7 @@ interface BookingBarProps {
     movieTitle: string;
     cinemaName: string;
     screenName: string;
+    productName: string;
     selectedDate: string;
     showTime: string;
     selectedSeats: string[];
@@ -17,6 +18,7 @@ export default function BookingBar({
     movieTitle,
     cinemaName,
     screenName,
+    productName,
     selectedDate,
     showTime,
     selectedSeats,
@@ -44,6 +46,11 @@ export default function BookingBar({
                         <p className="text-gray-300">
                             Ghế: {selectedSeats.join(', ')}
                         </p>
+                        {productName && productName !== 'Không có sản phẩm' && (
+                            <p className="text-gray-300 text-sm">
+                                Sản phẩm: {productName}
+                            </p>
+                        )}
                     </div>
                 </div>
 

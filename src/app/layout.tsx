@@ -5,6 +5,7 @@ import I18nProvider from "./i18n/Provider";
 import Providers from "./i18n/Provider";
 import LanguageProvider from "@/components/providers/LanguageProvider";
 import { GlobalTimerProvider } from "@/contexts/GlobalTimerContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   icons: {
@@ -27,7 +28,9 @@ export default function RootLayout({
           <Providers>
             <LanguageProvider>
               <GlobalTimerProvider>
-                {children}
+                <AuthProvider>
+                  {children}
+                </AuthProvider>
               </GlobalTimerProvider>
             </LanguageProvider>
           </Providers>

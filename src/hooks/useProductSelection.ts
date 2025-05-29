@@ -4,6 +4,7 @@ import { ProductSelection, ProductPrices } from '@/types/showtime';
 export function useProductSelection() {
     const [productSelection, setProductSelection] = useState<ProductSelection>({});
     const [productPrices, setProductPrices] = useState<ProductPrices>({});
+    const [productNames, setProductNames] = useState<{ [key: string]: string }>({});
     const [totalProductPrice, setTotalProductPrice] = useState<number>(0);
     const [isProductStateInitialized, setIsProductStateInitialized] = useState<boolean>(false);
     const [shouldResetProducts, setShouldResetProducts] = useState<boolean>(false);
@@ -37,7 +38,7 @@ export function useProductSelection() {
     }, [productSelection, productPrices]);
 
     // Hàm xử lý thay đổi số lượng sản phẩm từ ProductGrid
-    const handleProductQuantityChange = useCallback((productId: string, quantity: number, price: number) => {
+    const handleProductQuantityChange = useCallback((productId: string, quantity: number, price: number, productName?: string) => {
         setProductSelection(prev => ({
             ...prev,
             [productId]: quantity
@@ -47,12 +48,20 @@ export function useProductSelection() {
             ...prev,
             [productId]: price
         }));
+
+        if (productName) {
+            setProductNames(prev => ({
+                ...prev,
+                [productId]: productName
+            }));
+        }
     }, []);
 
     // Hàm reset tất cả sản phẩm
     const resetProducts = useCallback(() => {
         setProductSelection({});
         setProductPrices({});
+        setProductNames({});
         setTotalProductPrice(0);
         setShouldResetProducts(true);
         localStorage.removeItem('cartQuantities');
@@ -66,6 +75,7 @@ export function useProductSelection() {
     return {
         productSelection,
         productPrices,
+        productNames,
         totalProductPrice,
         shouldResetProducts,
         handleProductQuantityChange,

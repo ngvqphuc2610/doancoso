@@ -21,11 +21,13 @@ import { useGlobalTimer } from '@/contexts/GlobalTimerContext';
 import { MovieShowtimesProps } from '@/types/showtime';
 
 export default function MovieShowtimes({ movieId, status, releaseDate, movieTitle }: MovieShowtimesProps) {
+
+
     // Sử dụng custom hooks
     const { showtimes, isLoading, error } = useShowtimes(movieId);
     const { cities, cinemaToCity } = useCities();
     const { timeLeft, isActive: timerActive, startTimer, stopTimer, formatTime } = useGlobalTimer();
-    const { productSelection, totalProductPrice, shouldResetProducts, handleProductQuantityChange, resetProducts } = useProductSelection();
+    const { productSelection, productNames, totalProductPrice, shouldResetProducts, handleProductQuantityChange, resetProducts } = useProductSelection();
 
     const {
         selectedDate,
@@ -78,6 +80,17 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
         return totalTicketPrice + totalProductPrice;
     };
 
+    // Lấy tên sản phẩm đã chọn
+    const getSelectedProductNames = () => {
+        return Object.entries(productSelection)
+            .filter(([_, quantity]) => quantity > 0)
+            .map(([productId, quantity]) => {
+                const productName = productNames[productId] || `Sản phẩm ${productId}`;
+                return `${productName} (${quantity})`;
+            })
+            .join(', ') || 'Không có sản phẩm';
+    };
+
 
 
     // Lấy thông tin showtime được chọn
@@ -109,11 +122,15 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
 
         const seatParams = `seats=${selectedSeats.join(',')}`;
 
-        window.location.href = `/checkout?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
+        const checkoutUrl = `/checkout?showtime=${selectedTime}&cinemaName=${encodeURIComponent(
             selectedCinemaData?.name || ''
         )}&screenName=${encodeURIComponent(
             selectedTimeData?.room || ''
         )}&totalPrice=${calculateTotalPrice()}&${ticketParams}&${productParams}&${seatParams}&movieTitle=${encodeURIComponent(movieTitle || '')}`;
+
+
+
+        window.location.href = checkoutUrl;
     };
 
     return (
@@ -183,6 +200,7 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
                                             screenName={selectedTimeData?.room || ''}
                                             onConfirm={handleSeatSelection}
                                             totalTickets={Object.values(ticketSelection).reduce((sum, qty) => sum + qty, 0)}
+                                            ticketSelection={ticketSelection}
                                         />
                                     </div>
                                 )}
@@ -230,6 +248,7 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
                     movieTitle={movieTitle || 'Phim đang chọn'}
                     cinemaName={selectedCinemaData?.name || ''}
                     screenName={selectedTimeData?.room || ''}
+                    productName={getSelectedProductNames()}
                     selectedDate={selectedDate}
                     showTime={selectedTimeData?.time || ''}
                     selectedSeats={selectedSeats}

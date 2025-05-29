@@ -148,11 +148,12 @@ export default function MovieDetail({ movie, credits }: { movie: MovieProps, cre
                         </div>
                     </div>
                 </div>
-                                {/* Lịch chiếu phim */}
+                {/* Lịch chiếu phim */}
                 <MovieShowtimes
                     movieId={movie.id}
                     status={movie.status}
                     releaseDate={movie.releaseDate}
+                    movieTitle={movie.title}
                 />
             </main>
         </Layout>

@@ -1,86 +1,182 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query } from '@/config/db';
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
+        console.log('📝 Received booking request:', JSON.stringify(body, null, 2));
+
+        // Extract data from the actual structure
         const {
-            customer_name,
-            customer_email,
-            customer_phone,
-            id_showtime,
-            selected_seats,
-            ticket_types,
-            products,
-            total_amount,
-            payment_method
+            customerInfo,
+            showtimeId,
+            selectedSeats,
+            ticketInfo,
+            productInfo,
+            totalPrice,
+            paymentMethod,
+            transactionId,
+            bookingCode,
+            status
         } = body;
+
+        // Extract customer details
+        const customer_name = customerInfo?.name;
+        const customer_email = customerInfo?.email;
+        const customer_phone = customerInfo?.phone;
+        const id_showtime = showtimeId;
+        const selected_seats = selectedSeats;
+        const total_amount = totalPrice;
+        const payment_method = paymentMethod;
+        const transaction_id = transactionId;
+        const booking_code = bookingCode;
+
+        console.log('🔍 Field validation:', {
+            customer_name: !!customer_name,
+            customer_email: !!customer_email,
+            customer_phone: !!customer_phone,
+            id_showtime: !!id_showtime,
+            selected_seats: !!selected_seats && Array.isArray(selected_seats) && selected_seats.length > 0,
+            total_amount: !!total_amount
+        });
 
         // Validate required fields
         if (!customer_name || !customer_email || !customer_phone || !id_showtime || !selected_seats || selected_seats.length === 0) {
+            console.log('❌ Validation failed - missing required fields');
             return NextResponse.json({
                 success: false,
-                error: 'Missing required booking information'
+                error: 'Missing required booking information',
+                received_fields: {
+                    customer_name: !!customer_name,
+                    customer_email: !!customer_email,
+                    customer_phone: !!customer_phone,
+                    id_showtime: !!id_showtime,
+                    selected_seats: !!selected_seats && Array.isArray(selected_seats) && selected_seats.length > 0,
+                    total_amount: !!total_amount
+                },
+                raw_data: body
             }, { status: 400 });
         }
 
-        // Start transaction
-        await query('START TRANSACTION');
+        // Start transaction - use connection.beginTransaction() instead of query
+        const { db } = await import('@/config/db');
+        const connection = await db.getConnection();
 
         try {
+            await connection.beginTransaction();
+
+            console.log('💾 Creating booking with data:', {
+                id_showtime,
+                total_amount,
+                booking_code,
+                customer_name,
+                customer_email,
+                customer_phone
+            });
+
             // 1. Create booking record
-            const bookingResult = await query(
-                `INSERT INTO BOOKINGS 
-                 (customer_name, customer_email, customer_phone, id_showtime, 
-                  total_amount, payment_method, booking_status, booking_date) 
-                 VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())`,
-                [customer_name, customer_email, customer_phone, id_showtime, 
-                 total_amount, payment_method || 'cash']
+            // Note: Database schema doesn't have customer fields directly in bookings table
+            // For now, we'll create booking without user reference (guest booking)
+            const [bookingResult] = await connection.execute(
+                `INSERT INTO bookings
+                 (id_showtime, total_amount, payment_status, booking_status, booking_code)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [id_showtime, total_amount, 'unpaid', status || 'pending', booking_code || null]
             );
 
             const bookingId = (bookingResult as any).insertId;
 
             // 2. Create booking details for seats
-            for (const seatId of selected_seats) {
-                await query(
-                    `INSERT INTO DETAIL_BOOKING (id_booking, id_seat, ticket_type, price) 
-                     VALUES (?, ?, ?, ?)`,
-                    [bookingId, seatId, 'standard', 0] // You may want to calculate individual seat prices
+            // Convert seat names (like "B12") to actual seat IDs from database
+            for (let i = 0; i < selected_seats.length; i++) {
+                const seatName = selected_seats[i];
+                console.log(`🪑 Processing seat: ${seatName}`);
+
+                // Extract row and number from seat name (e.g., "B12" -> row="B", number=12)
+                const seatRow = seatName.charAt(0);
+                const seatNumber = parseInt(seatName.slice(1));
+
+                // Get actual seat ID from database
+                const [seatResult] = await connection.execute(
+                    `SELECT s.id_seats, st.type_name as seat_type
+                     FROM seat s
+                     JOIN seat_type st ON s.id_seattype = st.id_seattype
+                     WHERE s.seat_row = ? AND s.seat_number = ?
+                     AND s.id_screen = (SELECT id_screen FROM showtimes WHERE id_showtime = ?)`,
+                    [seatRow, seatNumber, id_showtime]
                 );
+
+                if (!seatResult || (seatResult as any[]).length === 0) {
+                    throw new Error(`Seat ${seatName} not found`);
+                }
+
+                const seatData = (seatResult as any[])[0];
+                const actualSeatId = seatData.id_seats;
+                const seatType = seatData.seat_type;
+
+                console.log(`✅ Found seat ${seatName}: ID=${actualSeatId}, Type=${seatType}`);
+
+                // Get ticket type ID from ticketInfo (use the first ticket type for now)
+                const ticketTypeIds = Object.keys(ticketInfo).filter(typeId => ticketInfo[parseInt(typeId)] > 0);
+                const ticketTypeId = ticketTypeIds.length > 0 ? parseInt(ticketTypeIds[0]) : 2; // Default to "Người Lớn"
+
+                console.log(`🎫 Using ticket type ID: ${ticketTypeId}`);
+
+                // Check compatibility before inserting
+                const [compatibilityCheck] = await connection.execute(
+                    `SELECT COUNT(*) as count
+                     FROM ticket_seat_constraint tsc
+                     JOIN seat s ON s.id_seats = ?
+                     WHERE tsc.id_tickettype = ? AND tsc.id_seattype = s.id_seattype`,
+                    [actualSeatId, ticketTypeId]
+                );
+
+                const isCompatible = (compatibilityCheck as any[])[0]?.count > 0;
+                console.log(`🔍 Compatibility check: Ticket ${ticketTypeId} + Seat ${actualSeatId} (${seatType}) = ${isCompatible ? 'COMPATIBLE' : 'NOT COMPATIBLE'}`);
+
+                if (!isCompatible) {
+                    throw new Error(`Ticket type ${ticketTypeId} cannot use seat type ${seatType} for seat ${seatName}`);
+                }
+
+                await connection.execute(
+                    `INSERT INTO detail_booking (id_booking, id_seats, price, id_tickettype)
+                     VALUES (?, ?, ?, ?)`,
+                    [bookingId, actualSeatId, Math.floor(total_amount / selected_seats.length), ticketTypeId]
+                );
+
+                console.log(`✅ Created booking detail for seat ${seatName}`);
             }
 
             // 3. Create booking details for products (if any)
-            if (products && products.length > 0) {
-                for (const product of products) {
-                    await query(
-                        `INSERT INTO BOOKING_PRODUCTS (id_booking, id_product, quantity, price) 
-                         VALUES (?, ?, ?, ?)`,
-                        [bookingId, product.id, product.quantity, product.price]
+            if (productInfo && Object.keys(productInfo).length > 0) {
+                for (const [productId, quantity] of Object.entries(productInfo)) {
+                    await connection.execute(
+                        `INSERT INTO order_product (id_booking, id_product, quantity, price, order_status)
+                         VALUES (?, ?, ?, ?, ?)`,
+                        [bookingId, parseInt(productId), quantity, 0, 'pending'] // TODO: Get actual product price
                     );
                 }
             }
 
             // 4. Update seat availability (mark as temporarily reserved)
-            for (const seatId of selected_seats) {
-                await query(
-                    `UPDATE SEATS SET status = 'reserved' WHERE id_seat = ?`,
-                    [seatId]
-                );
-            }
+            // TODO: Update seats based on actual seat IDs from database
+            console.log('✅ Booking created successfully, seat update skipped for now');
 
-            await query('COMMIT');
+            await connection.commit();
+            connection.release();
 
             return NextResponse.json({
                 success: true,
                 message: 'Booking created successfully',
                 data: {
                     booking_id: bookingId,
-                    booking_status: 'pending'
+                    booking_status: status || 'pending'
                 }
             }, { status: 201 });
 
         } catch (error) {
-            await query('ROLLBACK');
+            await connection.rollback();
+            connection.release();
             throw error;
         }
 
@@ -100,7 +196,7 @@ export async function GET(request: NextRequest) {
         const customerEmail = searchParams.get('customerEmail');
 
         let sql = `
-            SELECT 
+            SELECT
                 b.*,
                 s.start_time,
                 s.show_date,
