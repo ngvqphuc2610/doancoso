@@ -40,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploads
+/public/uploads/movies/*
+!/public/uploads/movies/.gitkeep
+/public/uploads/products/*
+!/public/uploads/products/.gitkeep
+/public/uploads/entertainment/*
+!/public/uploads/entertainment/.gitkeep
+# Legacy product uploads (to be migrated)
+/public/uploads/product_*

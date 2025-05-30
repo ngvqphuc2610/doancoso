@@ -91,7 +91,10 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
             formData.append('file', file);
 
             try {
-                const response = await fetch('/api/admin/upload', {
+                // Add type parameter for entertainment uploads
+                formData.append('type', 'entertainment');
+
+                const response = await fetch('/api/upload/image', {
                     method: 'POST',
                     body: formData,
                 });
@@ -102,12 +105,12 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
 
                 const data = await response.json();
 
-                if (data.url) {
+                if (data.success && data.url) {
                     const imageUrl = data.url;
                     form.setValue('image_url', imageUrl);
                     setImagePreview(imageUrl);
                 } else {
-                    throw new Error('No URL returned from server');
+                    throw new Error(data.message || 'No URL returned from server');
                 }
             } catch (err) {
                 console.error('Upload error:', err);
