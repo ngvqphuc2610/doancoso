@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/config/db';
 
+// Helper function to get movie and showtime info
+async function getShowtimeInfo(connection: any, showtimeId: number) {
+    const [result] = await connection.execute(`
+        SELECT
+            s.id_showtime,
+            s.start_time,
+            s.show_date,
+            m.title as movie_title,
+            m.id_movie,
+            c.cinema_name,
+            c.id_cinema,
+            sc.screen_name,
+            sc.id_screen
+        FROM showtimes s
+        JOIN movies m ON s.id_movie = m.id_movie
+        JOIN screen sc ON s.id_screen = sc.id_screen
+        JOIN cinemas c ON sc.id_cinema = c.id_cinema
+        WHERE s.id_showtime = ?
+    `, [showtimeId]);
+
+    return (result as any[])[0] || null;
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
@@ -24,6 +47,7 @@ export async function POST(request: NextRequest) {
         const customer_name = customerInfo?.name;
         const customer_email = customerInfo?.email;
         const customer_phone = customerInfo?.phone;
+        const id_users = customerInfo?.id_users;
         const id_showtime = showtimeId;
         const selected_seats = selectedSeats;
         const total_amount = totalPrice;
@@ -66,6 +90,7 @@ export async function POST(request: NextRequest) {
             await connection.beginTransaction();
 
             console.log('💾 Creating booking with data:', {
+                id_users,
                 id_showtime,
                 total_amount,
                 booking_code,
@@ -79,9 +104,9 @@ export async function POST(request: NextRequest) {
             // For now, we'll create booking without user reference (guest booking)
             const [bookingResult] = await connection.execute(
                 `INSERT INTO bookings
-                 (id_showtime, total_amount, payment_status, booking_status, booking_code)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [id_showtime, total_amount, 'unpaid', status || 'pending', booking_code || null]
+                 (id_users,id_showtime, total_amount, payment_status, booking_status, booking_code)
+                 VALUES (?,?, ?, ?, ?, ?)`,
+                [id_users, id_showtime, total_amount, 'unpaid', status || 'pending', booking_code || null]
             );
 
             const bookingId = (bookingResult as any).insertId;
@@ -144,33 +169,66 @@ export async function POST(request: NextRequest) {
                     [bookingId, actualSeatId, Math.floor(total_amount / selected_seats.length), ticketTypeId]
                 );
 
-                console.log(`✅ Created booking detail for seat ${seatName}`);
+                // Sau khi tạo booking chi tiết thành công, xóa seat lock để ngăn đặt trùng ghế
+                await connection.execute(
+                    `DELETE FROM seat_locks WHERE id_showtime = ? AND id_seats = ?`,
+                    [id_showtime, actualSeatId]
+                );
+
+                console.log(`✅ Created booking detail for seat ${seatName} and removed seat lock`);
             }
 
             // 3. Create booking details for products (if any)
             if (productInfo && Object.keys(productInfo).length > 0) {
                 for (const [productId, quantity] of Object.entries(productInfo)) {
+                    const parsedQuantity = parseInt(quantity as string);
+                    if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+                        console.warn(`⚠️ Invalid quantity for product ${productId}: ${quantity}`);
+                        continue; // Skip this product
+                    }
+
+                    // Trước tiên lấy giá sản phẩm từ database
+                    const [productPriceResult] = await connection.execute(
+                        'SELECT price FROM product WHERE id_product = ?',
+                        [parseInt(productId)]
+                    );
+                    const productPrice = (productPriceResult as any[])[0]?.price || 0;
+                    const totalProductPrice = productPrice * parsedQuantity;
+
+                    // Sau đó thêm vào bảng order_product với giá đúng
                     await connection.execute(
                         `INSERT INTO order_product (id_booking, id_product, quantity, price, order_status)
-                         VALUES (?, ?, ?, ?, ?)`,
-                        [bookingId, parseInt(productId), quantity, 0, 'pending'] // TODO: Get actual product price
+             VALUES (?, ?, ?, ?, ?)`,
+                        [bookingId, parseInt(productId), parsedQuantity, totalProductPrice, 'pending']
                     );
+
+                    console.log(`✅ Added product ${productId} (${parsedQuantity} x ${productPrice}) to order`);
                 }
             }
 
-            // 4. Update seat availability (mark as temporarily reserved)
-            // TODO: Update seats based on actual seat IDs from database
-            console.log('✅ Booking created successfully, seat update skipped for now');
+            // 4. Get showtime info for response
+            const showtimeInfo = await getShowtimeInfo(connection, id_showtime);
+            console.log('✅ Booking created successfully');
 
             await connection.commit();
             connection.release();
 
+            // Thêm vào response
             return NextResponse.json({
                 success: true,
                 message: 'Booking created successfully',
                 data: {
                     booking_id: bookingId,
-                    booking_status: status || 'pending'
+                    booking_status: status || 'pending',
+                    seats: selected_seats,
+                    showtime_info: {
+                        id: id_showtime,
+                        movie_title: showtimeInfo?.movie_title || 'Unknown Movie',
+                        cinema_name: showtimeInfo?.cinema_name || 'Unknown Cinema',
+                        screen_name: showtimeInfo?.screen_name || 'Unknown Screen',
+                        start_time: showtimeInfo?.start_time,
+                        show_date: showtimeInfo?.show_date
+                    }
                 }
             }, { status: 201 });
 
@@ -196,20 +254,24 @@ export async function GET(request: NextRequest) {
         const customerEmail = searchParams.get('customerEmail');
 
         let sql = `
-            SELECT
-                b.*,
-                s.start_time,
-                s.show_date,
-                m.title as movie_title,
-                c.cinema_name,
-                sc.screen_name
-            FROM BOOKINGS b
-            JOIN SHOWTIMES s ON b.id_showtime = s.id_showtime
-            JOIN MOVIES m ON s.id_movie = m.id_movie
-            JOIN SCREEN sc ON s.id_screen = sc.id_screen
-            JOIN CINEMAS c ON sc.id_cinema = c.id_cinema
-            WHERE 1=1
-        `;
+    SELECT
+        b.*,
+        s.start_time,
+        s.show_date,
+        m.title as movie_title,
+        c.cinema_name,
+        sc.screen_name,
+        u.email as customer_email,
+        u.full_name as customer_name,
+        u.phone_number as customer_phone
+    FROM BOOKINGS b
+    JOIN SHOWTIMES s ON b.id_showtime = s.id_showtime
+    JOIN MOVIES m ON s.id_movie = m.id_movie
+    JOIN SCREEN sc ON s.id_screen = sc.id_screen
+    JOIN CINEMAS c ON sc.id_cinema = c.id_cinema
+    LEFT JOIN USERS u ON b.id_users = u.id_users
+    WHERE 1=1
+`;
 
         const queryParams: any[] = [];
 
@@ -219,7 +281,7 @@ export async function GET(request: NextRequest) {
         }
 
         if (customerEmail) {
-            sql += ' AND b.customer_email = ?';
+            sql += ' AND u.email = ?';
             queryParams.push(customerEmail);
         }
 

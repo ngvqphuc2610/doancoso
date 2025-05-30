@@ -4,21 +4,24 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-interface Movie {
-    id_movie: number;
-    title: string;
-    release_date: string;
-    status: string;
-    poster_image: string;
-}
+import { Movie, MovieFilters, MoviePagination } from '@/types/movie';
 
 export default function AdminMoviesPage() {
     const [movies, setMovies] = useState<Movie[]>([]);
+    const [pagination, setPagination] = useState<MoviePagination>({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0
+    });
     const [loading, setLoading] = useState(true);
     const [syncingMovies, setSyncingMovies] = useState(false);
     const [syncStatus, setSyncStatus] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [filters, setFilters] = useState<MovieFilters>({
+        status: 'all',
+        search: ''
+    });
     const router = useRouter();
 
     // Fetch movies from the database
@@ -26,7 +29,14 @@ export default function AdminMoviesPage() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get('/api/admin/movies', {
+            const params = new URLSearchParams({
+                page: pagination.page.toString(),
+                limit: pagination.limit.toString(),
+                ...(filters.status !== 'all' && { status: filters.status }),
+                ...(filters.search && { search: filters.search })
+            });
+
+            const response = await axios.get(`/api/admin/movies?${params}`, {
                 timeout: 30000, // set timeout
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -35,7 +45,8 @@ export default function AdminMoviesPage() {
             });
 
             if (response.data.success) {
-                setMovies(response.data.data || []);
+                setMovies(response.data.data.movies || []);
+                setPagination(response.data.data.pagination);
             } else {
                 setError(response.data.message || 'Không thể tải danh sách phim');
             }
@@ -117,10 +128,21 @@ export default function AdminMoviesPage() {
         }
     };
 
-    // Load movies when the component mounts
+    // Handle filter changes
+    const handleFilterChange = (key: string, value: string) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+        setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
+    };
+
+    // Handle pagination
+    const handlePageChange = (newPage: number) => {
+        setPagination(prev => ({ ...prev, page: newPage }));
+    };
+
+    // Load movies when the component mounts or filters change
     useEffect(() => {
         fetchMovies();
-    }, []);
+    }, [pagination.page, filters]);
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -157,6 +179,43 @@ export default function AdminMoviesPage() {
                 </div>
             )}
 
+            {/* Filters */}
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className='text-dark'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                        <select
+                            value={filters.status}
+                            onChange={(e) => handleFilterChange('status', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="all">Tất cả</option>
+                            <option value="now showing">Đang chiếu</option>
+                            <option value="coming soon">Sắp chiếu</option>
+                            <option value="ended">Đã kết thúc</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
+                        <input
+                            type="text"
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            placeholder="Tìm theo tên phim, mô tả..."
+                            className="w-full px-3 py-2 border text-dark border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div className="flex items-end">
+                        <button
+                            onClick={fetchMovies}
+                            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                        >
+                            Làm mới
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             {loading ? (
                 <div className="text-center py-10">
                     <p className="text-xl">Đang tải danh sách phim...</p>
@@ -169,6 +228,8 @@ export default function AdminMoviesPage() {
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">ID</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Poster</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Tên phim</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Ngôn ngữ</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Thời lượng</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Ngày chiếu</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Trạng thái</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Thao tác</th>
@@ -185,18 +246,43 @@ export default function AdminMoviesPage() {
                                             className="w-16 h-auto"
                                         />
                                     </td>
-                                    <td className="py-3 px-4 border-b text-dark">{movie.title}</td>
+                                    <td className="py-3 px-4 border-b text-dark">
+                                        <div>
+                                            <div className="font-medium">{movie.title}</div>
+                                            {movie.description && (
+                                                <div className="text-sm text-gray-500 mt-1">
+                                                    {movie.description.length > 100
+                                                        ? movie.description.substring(0, 100) + '...'
+                                                        : movie.description
+                                                    }
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="py-3 px-4 border-b text-dark">
+                                        {movie.language || 'Chưa có thông tin'}
+                                    </td>
+                                    <td className="py-3 px-4 border-b text-dark">
+                                        {movie.duration ? `${movie.duration} phút` : 'Chưa có thông tin'}
+                                    </td>
                                     <td className="py-3 px-4 border-b text-dark">
                                         {new Date(movie.release_date).toLocaleDateString('vi-VN')}
                                     </td>
                                     <td className="py-3 px-4 border-b">
                                         <span
-                                            className={`px-2 py-1 rounded ${movie.status === 'now showing'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-yellow-100 text-yellow-800'
+                                            className={`px-2 py-1 rounded text-sm ${movie.status === 'now showing'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : movie.status === 'coming soon'
+                                                        ? 'bg-yellow-100 text-yellow-800'
+                                                        : 'bg-gray-100 text-gray-800'
                                                 }`}
                                         >
-                                            {movie.status === 'now showing' ? 'Đang chiếu' : 'Sắp chiếu'}
+                                            {movie.status === 'now showing'
+                                                ? 'Đang chiếu'
+                                                : movie.status === 'coming soon'
+                                                    ? 'Sắp chiếu'
+                                                    : 'Đã kết thúc'
+                                            }
                                         </span>
                                     </td>
                                     <td className="py-3 px-4 border-b">
@@ -218,6 +304,52 @@ export default function AdminMoviesPage() {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Pagination */}
+                    {pagination.totalPages > 1 && (
+                        <div className="bg-gray-50 text-dark px-6 py-3 flex items-center justify-between border-t">
+                            <div className="text-sm text-gray-700">
+                                {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)}
+                                / {pagination.total} phim
+                            </div>
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={() => handlePageChange(pagination.page - 1)}
+                                    disabled={pagination.page === 1}
+                                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Trước
+                                </button>
+
+                                {/* Page numbers */}
+                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                    const pageNum = Math.max(1, pagination.page - 2) + i;
+                                    if (pageNum > pagination.totalPages) return null;
+
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => handlePageChange(pageNum)}
+                                            className={`px-3 py-1 text-sm border rounded ${pageNum === pagination.page
+                                                ? 'bg-blue-500 text-white border-blue-500'
+                                                : 'border-gray-300 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+
+                                <button
+                                    onClick={() => handlePageChange(pagination.page + 1)}
+                                    disabled={pagination.page === pagination.totalPages}
+                                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Sau
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="text-center py-10">

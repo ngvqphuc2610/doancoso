@@ -17,6 +17,7 @@ interface CustomerInfo {
   email: string;
   agreeToTerms: boolean;
   agreeToPromotions: boolean;
+  id_users?: number; // Add user ID for logged-in users
 }
 
 interface PaymentMethod {
@@ -103,7 +104,8 @@ export default function CheckoutContainer({ searchParams }: CheckoutContainerPro
         phone: user.phone || '',
         email: user.email || '',
         agreeToTerms: true, // Auto-agree for logged-in users
-        agreeToPromotions: false
+        agreeToPromotions: false,
+        id_users: user.id 
       });
 
       // Skip to step 2 (payment) if user is logged in and has complete info

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from "@/config/db";
 import nodemailer from "nodemailer";
 import { ResultSetHeader } from "mysql2";
-import ContactEmail from "@/components/contact/ContactEmail"
+
 
 
 export async function POST(req: NextRequest) {
@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Save to database first
-        const query = "INSERT INTO CONTACT (name, email, subject, message, status) VALUES (?, ?, ?, ?, 'unread')";
+        // Save to database first (id_staff sẽ là NULL cho đến khi admin reply)
+        const query = "INSERT INTO CONTACT (name, email, subject, message, status, id_staff) VALUES (?, ?, ?, ?, 'unread', NULL)";
         const [result] = await pool.execute<ResultSetHeader>(query, [name, email, subject, message]);
 
         try {
@@ -64,12 +64,12 @@ export async function POST(req: NextRequest) {
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                         <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Tin nhắn mới từ form CSKH</h2>
-                        
+
                         <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
                             <p><strong>Người gửi:</strong> ${name}</p>
                             <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
                             <p><strong>Chủ đề:</strong> ${subject}</p>
-                            
+
                             <div style="margin-top: 20px;">
                                 <strong>Nội dung:</strong>
                                 <div style="padding: 15px; background-color: #ffffff; border-left: 4px solid #3498db; margin-top: 10px;">
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <p style="color: #7f8c8d; font-size: 0.9em;">
                             Bạn có thể trả lời trực tiếp email này để phản hồi tới ${name}.
                         </p>
