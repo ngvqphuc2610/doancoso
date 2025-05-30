@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { MovieProps } from '@/components/movies/MovieCard';
 import { getNowShowingMovies, getComingSoonMovies } from '@/lib/film';
 import ProCarousel from '../components/promotions/ProCarousel';
-import MemberCardCarousel from '../components/member/MemberCardCarousel';
+import MembershipCarousel from '@/components/membership/MembershipCarousel';
 import TaimentCarousel from '@/components/taiment/TaimentCarousel';
 import ContactPage from '../components/contact/ContactPage';
 import { useTranslation } from 'react-i18next';
@@ -57,7 +57,7 @@ export default function Home() {
       let imageUrl = movie.banner_image || movie.poster;
 
       // Nếu không có cả banner_image và poster, sử dụng ảnh mặc định
-      
+
 
       return {
         id: movie.id,
@@ -68,7 +68,7 @@ export default function Home() {
       };
     });
 
-   
+
 
     return movieBanners;
   };
@@ -179,7 +179,7 @@ export default function Home() {
               className="mt-6 sm:mt-8 pb-16 sm:pb-24 lg:pb-[100px]"
             />
             <ProCarousel className="pb-16 sm:pb-24 lg:pb-[100px]" />
-            <MemberCardCarousel className="" />
+            <MembershipCarousel className="pb-16 sm:pb-24 lg:pb-[100px]" />
             <TaimentCarousel className="pt-16 sm:pt-24 lg:pt-[120px]" />
             <ContactPage />
           </>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import TaimentCard, { TaimentProps } from '@/components/taiment/TaimentCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperType } from 'swiper';
@@ -9,7 +9,7 @@ import { SwiperProvider, useSwiper } from '../swiper/SwiperContext';
 import SwiperNavigation from '@/components/swiper/SwiperNavigation';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
-import { taimentItems } from '@/lib/taiment';
+import { getAllEntertainments, fallbackTaimentItems } from '@/lib/taiment';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -27,19 +27,50 @@ interface TaimentCarouselProps {
 
 const TaimentCarouselInner = ({
     title = "TẤT CẢ CÁC GIẢI TRÍ",
-    taiment = taimentItems,
+    taiment,
     className = '',
     showNavigation = true
 }: TaimentCarouselProps) => {
     const { t } = useTranslation();
     const { swiperRef, setCurrentSlide, setTotalSlides } = useSwiper();
+    const [entertainments, setEntertainments] = useState<TaimentProps[]>(taiment || []);
+    const [loading, setLoading] = useState(!taiment);
 
-    if (!taiment || taiment.length === 0) {
+    useEffect(() => {
+        if (!taiment) {
+            const fetchEntertainments = async () => {
+                setLoading(true);
+                try {
+                    const data = await getAllEntertainments();
+                    setEntertainments(data);
+                } catch (error) {
+                    console.error('Error fetching entertainments:', error);
+                    setEntertainments(fallbackTaimentItems);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchEntertainments();
+        }
+    }, [taiment]);
+
+    if (loading) {
         return (
             <div className={`py-8 ${className}`}>
                 <h2 className="text-4xl font-bold mb-6 text-center text-[#464545]">{t('taiment.title')}</h2>
                 <div className="flex justify-center items-center h-[300px]">
                     <LoadingSpinner />
+                </div>
+            </div>
+        );
+    }
+
+    if (!entertainments || entertainments.length === 0) {
+        return (
+            <div className={`py-8 ${className}`}>
+                <h2 className="text-4xl font-bold mb-6 text-center text-[#464545]">{t('taiment.title')}</h2>
+                <div className="flex justify-center items-center h-[300px]">
+                    <p className="text-gray-500">Không có dữ liệu giải trí</p>
                 </div>
             </div>
         );
@@ -52,7 +83,7 @@ const TaimentCarouselInner = ({
     const onSwiper = (swiper: SwiperType) => {
         swiperRef.current = swiper;
         const slidesPerView = swiper.params.slidesPerView as number;
-        const totalSlides = Math.ceil(taiment.length / (slidesPerView * 2)); // 2 rows
+        const totalSlides = Math.ceil(entertainments.length / (slidesPerView * 2)); // 2 rows
         setTotalSlides(totalSlides);
     };
 
@@ -102,7 +133,7 @@ const TaimentCarouselInner = ({
                 pagination={false}
                 className="grid-swiper"
             >
-                {taiment.map((item) => (
+                {entertainments.map((item) => (
                     <SwiperSlide key={item.id} className="pb-1">
                         <TaimentCard {...item} />
                     </SwiperSlide>

@@ -1,19 +1,12 @@
-"use client";
+'use client';
 
+import React from 'react';
 import Layout from '@/components/layout/Layout';
-import { useState, useEffect } from 'react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import MemberCardCarousel from '@/components/member/MemberCardCarousel';
-import { useTranslation } from 'react-i18next';
-
-
-export default function Home() {
-  const { t } = useTranslation();
+import MembershipCarousel from '@/components/membership/MembershipCarousel';
+export default function MembershipPage() {
   return (
     <Layout>
-      <div className="container mx-auto px-4 ">
-            <MemberCardCarousel className="" />
-      </div>
+      <MembershipCarousel />
     </Layout>
   );
 }

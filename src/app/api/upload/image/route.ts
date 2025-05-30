@@ -4,7 +4,7 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 
 // Valid upload types
-const VALID_TYPES = ['movies', 'products', 'entertainment'] as const;
+const VALID_TYPES = ['movies', 'products', 'entertainment', 'memberships'] as const;
 type UploadType = typeof VALID_TYPES[number];
 
 export async function POST(request: NextRequest) {

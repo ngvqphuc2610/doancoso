@@ -162,16 +162,18 @@ export interface Promotion {
 // Entertainment related types
 export interface Entertainment {
     id_entertainment: ID;
-    name: string;
-    type: string;
-    location: string;
+    id_cinema?: ID;
+    title: string;
     description?: string;
     image_url?: string;
-    price?: number;
-    opening_hours?: string;
+    start_date: string;
+    end_date?: string;
     status: 'active' | 'inactive';
-    created_at?: Timestamp;
-    updated_at?: Timestamp;
+    views_count?: number;
+    featured?: boolean;
+    id_staff?: ID;
+    cinema_name?: string;
+    staff_name?: string;
 }
 
 // Contact related types

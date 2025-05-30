@@ -18,8 +18,9 @@ async function getEntertainment(id: string): Promise<Entertainment | null> {
     }
 }
 
-export default async function EditEntertainmentPage({ params }: { params: { id: string } }) {
-    const entertainment = await getEntertainment(params.id);
+export default async function EditEntertainmentPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const entertainment = await getEntertainment(id);
 
     if (!entertainment) {
         return <div className="p-6 text-red-500">Không tìm thấy mục giải trí</div>;

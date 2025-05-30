@@ -7,16 +7,17 @@ const API_URL = process.env.NGROK_URL || process.env.API_URL || 'http://localhos
 // Route để lấy chi tiết một khuyến mãi
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const response = await axios.get(`${API_URL}/api/admin/promotions/${id}`, {
             timeout: 5000
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error fetching promotion ${params.id}:`, error.message);
+        const resolvedParams = await params;
+        console.error(`Error fetching promotion ${resolvedParams.id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể tải thông tin khuyến mãi' },
             { status: error.response?.status || 500 }

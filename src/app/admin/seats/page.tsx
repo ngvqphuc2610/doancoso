@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -13,13 +14,58 @@ interface Seat {
     seat_row: string;
     seat_number: number;
     status: string;
+    screen_name?: string;
+    cinema_name?: string;
+    seat_type_name?: string;
+}
+
+interface Screen {
+    id_screen: number;
+    screen_name: string;
+    cinema_name: string;
+}
+
+interface SeatType {
+    id_seattype: number;
+    type_name: string;
+    description?: string;
 }
 
 export default function AdminSeatsPage() {
     const [seats, setSeats] = useState<Seat[]>([]);
+    const [allSeats, setAllSeats] = useState<Seat[]>([]);
+    const [screens, setScreens] = useState<Screen[]>([]);
+    const [seatTypes, setSeatTypes] = useState<SeatType[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedScreen, setSelectedScreen] = useState<string>('all');
+    const [selectedStatus, setSelectedStatus] = useState<string>('all');
+    const [selectedSeatType, setSelectedSeatType] = useState<string>('all');
     const router = useRouter();
+
+    // Fetch screens from the database
+    const fetchScreens = async () => {
+        try {
+            const response = await axios.get('/api/admin/screen', apiConfig);
+            if (response.data.success) {
+                setScreens(response.data.data || []);
+            }
+        } catch (err) {
+            console.error('Lỗi khi tải danh sách phòng chiếu:', err);
+        }
+    };
+
+    // Fetch seat types from the database
+    const fetchSeatTypes = async () => {
+        try {
+            const response = await axios.get('/api/admin/seat-types', apiConfig);
+            if (response.data.success) {
+                setSeatTypes(response.data.data || []);
+            }
+        } catch (err) {
+            console.error('Lỗi khi tải danh sách loại ghế:', err);
+        }
+    };
 
     // Fetch seats from the database
     const fetchSeats = async () => {
@@ -34,7 +80,9 @@ export default function AdminSeatsPage() {
             console.log('Response data:', response.data);
 
             if (response.data.success) {
-                setSeats(response.data.data || []);
+                const seatsData = response.data.data || [];
+                setAllSeats(seatsData);
+                setSeats(seatsData);
             } else {
                 setError(response.data.message || 'Không thể tải danh sách ghế ngồi');
             }
@@ -53,12 +101,51 @@ export default function AdminSeatsPage() {
         }
     };
 
+    // Filter seats based on selected criteria
+    const filterSeats = () => {
+        let filtered = allSeats;
+
+        // Filter by screen
+        if (selectedScreen !== 'all') {
+            filtered = filtered.filter(seat => seat.id_screen?.toString() === selectedScreen);
+        }
+
+        // Filter by status
+        if (selectedStatus !== 'all') {
+            filtered = filtered.filter(seat => seat.status === selectedStatus);
+        }
+
+        // Filter by seat type
+        if (selectedSeatType !== 'all') {
+            filtered = filtered.filter(seat => seat.id_seattype?.toString() === selectedSeatType);
+        }
+
+        setSeats(filtered);
+    };
+
+    // Handle screen filter change
+    const handleScreenChange = (screenId: string) => {
+        setSelectedScreen(screenId);
+    };
+
+    // Handle status filter change
+    const handleStatusChange = (status: string) => {
+        setSelectedStatus(status);
+    };
+
+    // Handle seat type filter change
+    const handleSeatTypeChange = (seatTypeId: string) => {
+        setSelectedSeatType(seatTypeId);
+    };
+
     // Delete a seat
     const handleDeleteSeat = async (id: number) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa ghế này?')) {
             try {
                 const response = await axios.delete(`/api/admin/seat/${id}`);
                 if (response.data.success) {
+                    const updatedSeats = allSeats.filter(seat => seat.id_seats !== id);
+                    setAllSeats(updatedSeats);
                     setSeats(seats.filter(seat => seat.id_seats !== id));
                     alert('Xóa ghế thành công!');
                 } else {
@@ -71,20 +158,97 @@ export default function AdminSeatsPage() {
         }
     };
 
-    // Load seats when the component mounts
+    // Load seats, screens and seat types when the component mounts
     useEffect(() => {
         fetchSeats();
+        fetchScreens();
+        fetchSeatTypes();
     }, []);
+
+    // Filter seats when filter criteria change
+    useEffect(() => {
+        filterSeats();
+    }, [selectedScreen, selectedStatus, selectedSeatType, allSeats]);
 
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-dark">Quản lý ghế ngồi</h1>
-                <Link href="/admin/seat/add">
+                <Link href="/admin/seats/add">
                     <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
                         Thêm ghế mới
                     </button>
                 </Link>
+            </div>
+
+            {/* Filter Section */}
+            <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Lọc thông tin ghế</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-dark">
+                    {/* Screen Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Phòng chiếu
+                        </label>
+                        <select
+                            value={selectedScreen}
+                            onChange={(e) => handleScreenChange(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">Tất cả phòng chiếu</option>
+                            {screens.map((screen) => (
+                                <option key={screen.id_screen} value={screen.id_screen.toString()}>
+                                    {screen.screen_name} - {screen.cinema_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Status Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Trạng thái
+                        </label>
+                        <select
+                            value={selectedStatus}
+                            onChange={(e) => handleStatusChange(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="active">Hoạt động</option>
+                            <option value="maintenance">Bảo trì</option>
+                            <option value="inactive">Không hoạt động</option>
+                        </select>
+                    </div>
+
+                    {/* Seat Type Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Loại ghế
+                        </label>
+                        <select
+                            value={selectedSeatType}
+                            onChange={(e) => handleSeatTypeChange(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">Tất cả loại ghế</option>
+                            {seatTypes.map((seatType) => (
+                                <option key={seatType.id_seattype} value={seatType.id_seattype.toString()}>
+                                    {seatType.type_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Results Count */}
+                    <div className="flex items-end">
+                        <div className="bg-blue-50 px-4 py-2 rounded-md">
+                            <span className="text-sm text-blue-800 font-medium">
+                                Hiển thị: {seats.length} / {allSeats.length} ghế
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {error && (
@@ -115,8 +279,15 @@ export default function AdminSeatsPage() {
                             {seats.map((seat) => (
                                 <tr key={seat.id_seats}>
                                     <td className="py-3 px-4 border-b text-dark">{seat.id_seats}</td>
-                                    <td className="py-3 px-4 border-b text-dark">{seat.id_screen || 'N/A'}</td>
-                                    <td className="py-3 px-4 border-b text-dark">{seat.id_seattype || 'N/A'}</td>
+                                    <td className="py-3 px-4 border-b text-dark">
+                                        {seat.screen_name ?
+                                            `${seat.screen_name} (${seat.cinema_name})` :
+                                            seat.id_screen || 'N/A'
+                                        }
+                                    </td>
+                                    <td className="py-3 px-4 border-b text-dark">
+                                        {seat.seat_type_name || seat.id_seattype || 'N/A'}
+                                    </td>
                                     <td className="py-3 px-4 border-b text-dark">{seat.seat_row}</td>
                                     <td className="py-3 px-4 border-b text-dark">{seat.seat_number}</td>
                                     <td className="py-3 px-4 border-b text-dark">
@@ -124,20 +295,20 @@ export default function AdminSeatsPage() {
                                             className={`px-2 py-1 rounded ${seat.status === 'active'
                                                 ? 'bg-green-100 text-green-800'
                                                 : seat.status === 'maintenance'
-                                                ? 'bg-yellow-100 text-yellow-800'
-                                                : 'bg-red-100 text-red-800'
+                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                    : 'bg-red-100 text-red-800'
                                                 }`}
                                         >
                                             {seat.status === 'active'
                                                 ? 'Hoạt động'
                                                 : seat.status === 'maintenance'
-                                                ? 'Bảo trì'
-                                                : 'Không hoạt động'}
+                                                    ? 'Bảo trì'
+                                                    : 'Không hoạt động'}
                                         </span>
                                     </td>
                                     <td className="py-3 px-4 border-b">
                                         <div className="flex gap-2">
-                                            <Link href={`/admin/seat/edit/${seat.id_seats}`}>
+                                            <Link href={`/admin/seats/edit/${seat.id_seats}`}>
                                                 <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded text-sm">
                                                     Sửa
                                                 </button>

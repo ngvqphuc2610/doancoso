@@ -26,8 +26,15 @@ interface Showtime {
 
 export default function AdminShowtimesPage() {
     const [showtimes, setShowtimes] = useState<Showtime[]>([]);
+    const [filteredShowtimes, setFilteredShowtimes] = useState<Showtime[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [filters, setFilters] = useState({
+        status: 'all',
+        search: '',
+        screen: 'all',
+        cinema: 'all'
+    });
     const router = useRouter();
 
     // Fetch showtimes from the database
@@ -43,7 +50,9 @@ export default function AdminShowtimesPage() {
             console.log('Response data:', response.data);
 
             if (response.data.success) {
-                setShowtimes(response.data.data || []);
+                const showtimesData = response.data.data || [];
+                setShowtimes(showtimesData);
+                setFilteredShowtimes(showtimesData);
             } else {
                 setError(response.data.message || 'Không thể tải danh sách lịch chiếu');
             }
@@ -60,28 +69,92 @@ export default function AdminShowtimesPage() {
         } finally {
             setLoading(false);
         }
-    };    // Delete a showtime
+    };
+
+    // Load showtimes when the component mounts
+    // Filter logic
+    const applyFilters = () => {
+        let filtered = [...showtimes];
+
+        // Filter by status
+        if (filters.status !== 'all') {
+            filtered = filtered.filter(showtime => showtime.status === filters.status);
+        }
+
+        // Filter by search (movie title, screen name, cinema name)
+        if (filters.search.trim()) {
+            const searchTerm = filters.search.toLowerCase().trim();
+            filtered = filtered.filter(showtime =>
+                (showtime.movie_title?.toLowerCase().includes(searchTerm)) ||
+                (showtime.screen_name?.toLowerCase().includes(searchTerm)) ||
+                (showtime.cinema_name?.toLowerCase().includes(searchTerm))
+            );
+        }
+
+        // Filter by screen name
+        if (filters.screen !== 'all') {
+            filtered = filtered.filter(showtime => showtime.screen_name === filters.screen);
+        }
+
+        // Filter by cinema name
+        if (filters.cinema !== 'all') {
+            filtered = filtered.filter(showtime => showtime.cinema_name === filters.cinema);
+        }
+
+        setFilteredShowtimes(filtered);
+    };
+
+    // Handle filter changes
+    const handleFilterChange = (key: string, value: string) => {
+        setFilters(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
+
+    // Handle delete showtime
     const handleDeleteShowtime = async (id: number) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa lịch chiếu này?')) {
+        if (confirm('Bạn có chắc chắn muốn xóa lịch chiếu này?')) {
             try {
                 const response = await axios.delete(`/api/admin/showtimes/${id}`);
                 if (response.data.success) {
-                    setShowtimes(showtimes.filter(showtime => showtime.id_showtime !== id));
                     alert('Xóa lịch chiếu thành công!');
+                    fetchShowtimes(); // Reload data
                 } else {
-                    alert(`Lỗi: ${response.data.message}`);
+                    alert('Có lỗi xảy ra khi xóa lịch chiếu');
                 }
-            } catch (err) {
-                console.error('Lỗi khi xóa lịch chiếu:', err);
-                alert('Đã xảy ra lỗi khi xóa lịch chiếu');
+            } catch (error) {
+                console.error('Error deleting showtime:', error);
+                alert('Có lỗi xảy ra khi xóa lịch chiếu');
             }
         }
     };
 
-    // Load showtimes when the component mounts
+    // Get unique screen names for filter dropdown
+    const getUniqueScreens = () => {
+        const screens = showtimes
+            .map(showtime => showtime.screen_name)
+            .filter((screen, index, arr) => screen && arr.indexOf(screen) === index)
+            .sort();
+        return screens;
+    };
+    // Get unique screen names for filter dropdown
+    const getUniqueCinemas = () => {
+        const cinemas = showtimes
+            .map(showtime => showtime.cinema_name)
+            .filter((cinema, index, arr) => cinema && arr.indexOf(cinema) === index)
+            .sort();
+        return cinemas;
+    };
+
+
     useEffect(() => {
         fetchShowtimes();
     }, []);
+
+    useEffect(() => {
+        applyFilters();
+    }, [filters, showtimes]);
 
     return (
         <div className="container mx-auto px-4 py-8">            <div className="flex justify-between items-center mb-6">
@@ -99,12 +172,81 @@ export default function AdminShowtimesPage() {
                 </div>
             )}
 
+            {/* Filters */}
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                        <select
+                            value={filters.status}
+                            onChange={(e) => handleFilterChange('status', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-dark"
+                        >
+                            <option value="all">Tất cả</option>
+                            <option value="available">Có sẵn</option>
+                            <option value="sold out">Hết vé</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Phòng chiếu</label>
+                        <select
+                            value={filters.screen}
+                            onChange={(e) => handleFilterChange('screen', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-dark"
+                        >
+                            <option value="all">Tất cả phòng</option>
+                            {getUniqueScreens().map(screen => (
+                                <option key={screen} value={screen}>{screen}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Rạp chiếu</label>
+                        <select
+                            value={filters.cinema}
+                            onChange={(e) => handleFilterChange('cinema', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-dark"
+                        >
+                            <option value="all">Tất cả rạp</option>
+                            {getUniqueCinemas().map(cinema => (
+                                <option key={cinema} value={cinema}>{cinema}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm</label>
+                        <input
+                            type="text"
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            placeholder="Tìm theo phim, phòng, rạp..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-dark"
+                        />
+                    </div>
+
+                    <div className="flex items-end">
+                        <button
+                            onClick={fetchShowtimes}
+                            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                        >
+                            Làm mới
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             {loading ? (
                 <div className="text-center py-10">
                     <p className="text-xl">Đang tải danh sách lịch chiếu...</p>
                 </div>
             ) : showtimes.length > 0 ? (
                 <div className="overflow-x-auto">
+                    <div className="bg-white px-6 py-4 border-b border-gray-200">
+                        <p className="text-sm text-gray-600">
+                            Hiển thị {filteredShowtimes.length} / {showtimes.length} lịch chiếu
+                        </p>
+                    </div>
                     <table className="min-w-full bg-white border border-gray-300">
                         <thead>
                             <tr>
@@ -119,7 +261,7 @@ export default function AdminShowtimesPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {showtimes.map((showtime) => (<tr key={showtime.id_showtime}>
+                            {filteredShowtimes.map((showtime) => (<tr key={showtime.id_showtime}>
                                 <td className="py-3 px-4 border-b text-dark">{showtime.id_showtime}</td>
                                 <td className="py-3 px-4 border-b text-dark">{showtime.movie_title || 'N/A'}</td>
                                 <td className="py-3 px-4 border-b text-dark">
@@ -135,10 +277,10 @@ export default function AdminShowtimesPage() {
                                 <td className="py-3 px-4 border-b text-dark">
                                     <span
                                         className={`px-2 py-1 rounded ${showtime.status === 'available'
-                                                ? 'bg-green-100 text-green-800'
-                                                : showtime.status === 'cancelled'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-yellow-100 text-yellow-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : showtime.status === 'cancelled'
+                                                ? 'bg-red-100 text-red-800'
+                                                : 'bg-yellow-100 text-yellow-800'
                                             }`}
                                     >
                                         {showtime.status === 'available' ? 'Còn vé' :

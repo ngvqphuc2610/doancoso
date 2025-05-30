@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const id = params.id;
+        const { id } = await params;
 
         if (!id) {
             return NextResponse.json(
@@ -16,7 +16,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
         }
 
         const movies = await query(`
-      SELECT m.*, 
+      SELECT m.*,
         GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
       FROM movies m
       LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
@@ -40,7 +40,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
             data: movies[0]
         });
     } catch (error) {
-        console.error(`Error fetching movie details for ID ${params.id}:`, error);
+        const resolvedParams = await params;
+        console.error(`Error fetching movie details for ID ${resolvedParams.id}:`, error);
         return NextResponse.json(
             {
                 success: false,

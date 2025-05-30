@@ -103,7 +103,7 @@ export default function AddShowtimePage() {
     };
 
     return (
-        <div className="container mx-auto p-6 bg-white">
+        <div className="container mx-auto p-6 bg-white text-dark">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">Thêm Lịch Chiếu Mới</h1>
                 <Link href="/admin/showtimes">
