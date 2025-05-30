@@ -21,6 +21,7 @@ export interface Movie {
     country: string | null;
     description: string | null;
     poster_image: string | null;
+    banner_image: string | null;
     trailer_url: string | null;
     age_restriction: string | null;
     status: 'coming soon' | 'now showing' | 'ended';
@@ -150,6 +151,7 @@ export async function createMovie(movieData: any): Promise<{ success: boolean; m
             subtitle,
             country,
             poster_url,
+            banner_url,
             trailer_url,
             age_restriction,
             status,
@@ -168,13 +170,13 @@ export async function createMovie(movieData: any): Promise<{ success: boolean; m
         const params = sanitizeParams([
             title, original_title, director, cast, description, duration,
             release_date, end_date, language, subtitle, country,
-            poster_url, trailer_url, age_restriction, status
+            poster_url, banner_url, trailer_url, age_restriction, status
         ]);
 
         const result = await query(`
             INSERT INTO movies
-                (title, original_title, director, actors, description, duration, release_date, end_date, language, subtitle, country, poster_image, trailer_url, age_restriction, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (title, original_title, director, actors, description, duration, release_date, end_date, language, subtitle, country, poster_image, banner_image, trailer_url, age_restriction, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, params);
 
         const movieId = (result as any).insertId;
@@ -236,6 +238,7 @@ export async function updateMovie(id: number, movieData: any): Promise<{ success
             subtitle,
             country,
             poster_url,
+            banner_url,
             trailer_url,
             age_restriction,
             status,
@@ -256,6 +259,7 @@ export async function updateMovie(id: number, movieData: any): Promise<{ success
             subtitle || existingMovie.subtitle,
             country || existingMovie.country,
             poster_url || existingMovie.poster_image,
+            banner_url || existingMovie.banner_image,
             trailer_url || existingMovie.trailer_url,
             age_restriction || existingMovie.age_restriction,
             status || existingMovie.status,
@@ -276,6 +280,7 @@ export async function updateMovie(id: number, movieData: any): Promise<{ success
                 subtitle = ?,
                 country = ?,
                 poster_image = ?,
+                banner_image = ?,
                 trailer_url = ?,
                 age_restriction = ?,
                 status = ?
@@ -345,8 +350,8 @@ export async function deleteMovie(id: number): Promise<{ success: boolean; messa
         // Xóa các liên kết với thể loại
         await query('DELETE FROM genre_movies WHERE id_movie = ?', [id]);
 
-        // Xóa các đánh giá của phim nếu có
-        await query('DELETE FROM ratings WHERE movie_id = ?', [id]);
+        // Xóa các banner liên quan nếu có
+        await query('DELETE FROM homepage_banners WHERE id_movie = ?', [id]);
 
         // Xóa phim
         await query('DELETE FROM movies WHERE id_movie = ?', [id]);
@@ -395,6 +400,7 @@ function formatMovies(movies: any[]): Movie[] {
             country: movie.country || null,
             description: movie.description || null,
             poster_image: movie.poster_image || movie.poster_url || null,
+            banner_image: movie.banner_image || null,
             trailer_url: movie.trailer_url || null,
             age_restriction: movie.age_restriction || null,
             status: (movie.status || 'coming soon') as 'coming soon' | 'now showing' | 'ended',

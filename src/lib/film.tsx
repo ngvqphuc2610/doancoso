@@ -20,6 +20,7 @@ interface DatabaseMovie {
   country: string | null;
   description: string | null;
   poster_image: string | null;
+  banner_image: string | null;
   trailer_url: string | null;
   age_restriction: string | null;
   status: 'coming soon' | 'now showing' | 'ended';
@@ -41,6 +42,7 @@ function formatMovieResponse(movie: DatabaseMovie): MovieProps {
     country: movie.country ?? 'Việt Nam',
     description: movie.description ?? undefined,
     poster: movie.poster_image ?? '/images/movie-placeholder.jpg',
+    banner_image: movie.banner_image ?? undefined,
     trailerUrl: movie.trailer_url ?? undefined,
     ageRestriction: movie.age_restriction ?? 'P',
     status: movie.status ?? 'coming soon',

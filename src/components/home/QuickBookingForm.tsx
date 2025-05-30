@@ -123,11 +123,11 @@ export default function QuickBookingForm() {
   }
 
   return (
-    <NavigationFilter className="-mt-6 z-20 mx-auto max-w-full">
-      <div className="flex items-center space-x-6">
-        <h2 className="text-xl text-[#464545] font-bold whitespace-nowrap">{t('select.title')}</h2>
+    <NavigationFilter className="mt-6 z-20 mx-auto max-w-full">
+      <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-6">
+        <h2 className="text-lg sm:text-xl text-[#464545] font-bold text-center lg:text-left lg:whitespace-nowrap">{t('select.title')}</h2>
 
-        <div className="flex-1 grid grid-cols-4 gap-4">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Select
             value={selectedCinema}
             onChange={(e) => setSelectedCinema(e.target.value)}
@@ -178,16 +178,18 @@ export default function QuickBookingForm() {
           </Select>
         </div>
 
-        <Button
-          variant={selectedCinema && selectedMovie && selectedDate && selectedTime ? 'custom6' : 'custom5'}
-          size="custom5"
-          width="custom5"
-          onClick={handleBook}
-          disabled={!selectedCinema || !selectedMovie || !selectedDate || !selectedTime}
-          className="whitespace-nowrap transform transition duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-        >
-          {t('select.button')}
-        </Button>
+        <div className="flex justify-center lg:justify-start">
+          <Button
+            variant={selectedCinema && selectedMovie && selectedDate && selectedTime ? 'custom6' : 'custom5'}
+            size="custom5"
+            width="custom5"
+            onClick={handleBook}
+            disabled={!selectedCinema || !selectedMovie || !selectedDate || !selectedTime}
+            className="w-full sm:w-auto whitespace-nowrap transform transition duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {t('select.button')}
+          </Button>
+        </div>
       </div>
 
       {

@@ -238,6 +238,7 @@ CREATE TABLE `movies` (
   `country` varchar(50) DEFAULT NULL,
   `description` text,
   `poster_image` varchar(255) DEFAULT NULL,
+  `banner_image` VARCHAR(255) DEFAULT NULL,
   `trailer_url` varchar(255) DEFAULT NULL,
   `age_restriction` varchar(10) DEFAULT NULL,
   `status` varchar(20) DEFAULT 'coming soon',
@@ -788,3 +789,26 @@ CREATE TABLE `seat_locks` (
   CONSTRAINT `FK_SeatLock_Seat` FOREIGN KEY (`id_seats`) REFERENCES `seat` (`id_seats`) ON DELETE CASCADE,
   CONSTRAINT `FK_SeatLock_Showtime` FOREIGN KEY (`id_showtime`) REFERENCES `showtimes` (`id_showtime`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS homepage_banners (
+    id_banner INT AUTO_INCREMENT PRIMARY KEY,
+    id_movie INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    display_order INT NOT NULL DEFAULT 1,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Foreign key constraint
+    FOREIGN KEY (id_movie) REFERENCES movies(id_movie) ON DELETE CASCADE,
+    
+    -- Unique constraint để tránh duplicate movie banners
+    UNIQUE KEY unique_active_movie (id_movie, is_active),
+    
+    -- Index cho performance
+    INDEX idx_display_order (display_order),
+    INDEX idx_is_active (is_active),
+    INDEX idx_movie_id (id_movie)
+);
+

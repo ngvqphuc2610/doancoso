@@ -14,9 +14,10 @@ import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
 interface Banner {
     id: string;
-    image: StaticImageData;
+    image: StaticImageData | string; // Hỗ trợ cả StaticImageData và string URL
     title: string;
     link: string;
+    isBanner?: boolean; // Flag để biết có phải banner thật không
 }
 
 interface CarouselProps {
@@ -63,24 +64,76 @@ const Carousel = ({ banners }: CarouselProps) => {
                     clickable: true,
                 }}
                 navigation={false}
-                modules={[Navigation]}
+                modules={[Navigation, Pagination, Autoplay]}
                 effect="fade"  // Chỉnh hiệu ứng chuyển slide thành fade
                 speed={750}   // Chỉnh tốc độ chuyển slide (1s)
-                className="mySwiper w-1200 h-361"
+                className="mySwiper w-[1200px] h-[361px]"
             >
                 {banners.map((banner, index) => (
                     <SwiperSlide key={banner.id}>
-                        <div className="w-1200 h-361 flex justify-center items-center relative">
-                            <Image
-                                src={banner.image}
-                                alt={banner.title}
-                                width={1200}
-                                height={361}
-                                className='object-contain'
-                                priority={index === 0}
-                            />
-                            <div className="absolute right-[100px] bottom-[10px] z-20 w-[260px] h-[45px] ">
-                                <Link href={banner.link} className="cinestar-button-to font-bold text-sm md:text-base button-datve">
+                        <div className="w-[1200px] h-[361px] relative overflow-hidden">
+                            {banner.isBanner ? (
+                                // Hiển thị banner image (ngang) bình thường
+                                <Image
+                                    src={banner.image}
+                                    alt={banner.title}
+                                    fill
+                                    className='object-cover'
+                                    priority={index === 0}
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.src = '/images/movie-placeholder.svg';
+                                    }}
+                                />
+                            ) : (
+                                // Hiển thị poster (dọc) với blur background effect
+                                <>
+                                    {/* Blurred background */}
+                                    <div
+                                        className="absolute inset-0 w-full h-full"
+                                        style={{
+                                            backgroundImage: `url(${banner.image})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                            backgroundRepeat: 'no-repeat',
+                                            filter: 'blur(8px)',
+                                            transform: 'scale(1.1)'
+                                        }}
+                                    />
+                                    {/* Poster overlay */}
+                                    <div className="absolute left-8 top-1/2 transform -translate-y-1/2 z-10">
+                                        <Image
+                                            src={banner.image}
+                                            alt={banner.title}
+                                            width={200}
+                                            height={300}
+                                            className='object-cover rounded-lg shadow-2xl'
+                                            priority={index === 0}
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.src = '/images/movie-placeholder.svg';
+                                            }}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Overlay gradient for better text readability */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
+
+                            {/* Movie title overlay */}
+                            <div className={`absolute z-20 ${banner.isBanner ? 'left-4 sm:left-8 bottom-16 sm:bottom-20' : 'left-64 top-1/2 transform -translate-y-1/2'}`}>
+                                
+                                {!banner.isBanner && (
+                                    <p className="text-white/80 text-sm sm:text-base max-w-md">
+                                        Khám phá bộ phim đầy hấp dẫn này
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Book ticket button */}
+                            <div className="absolute right-4 sm:right-8 md:right-[100px] bottom-4 sm:bottom-[10px] z-20 w-[200px] sm:w-[260px] h-[40px] sm:h-[45px]">
+                                <Link href={banner.link} className="cinestar-button-to font-bold text-xs sm:text-sm md:text-base button-datve">
                                     ĐẶT VÉ NGAY
                                 </Link>
                             </div>
