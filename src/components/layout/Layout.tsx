@@ -11,14 +11,20 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex flex-col min-h-screen bg-cinestar-darkblue">
-      <div className="grid grid-cols-12 gap-4 flex-grow container mx-auto px-4">
-        <div className="col-span-1 bg-cinestar-darkblue hidden lg:block"></div>
-        <main className="col-span-10">
-          <Header />
-         
-          {children}
-        </main>
-        <div className="col-span-1 bg-cinestar-darkblue hidden lg:block"></div>
+      <div className="flex-grow container mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="grid grid-cols-12 gap-2 sm:gap-4 lg:gap-6">
+          {/* Left spacer - hidden on mobile and tablet */}
+          <div className="col-span-0 lg:col-span-1 bg-cinestar-darkblue hidden lg:block"></div>
+
+          {/* Main content - full width on mobile/tablet, centered on desktop */}
+          <main className="col-span-12 lg:col-span-10">
+            <Header />
+            {children}
+          </main>
+
+          {/* Right spacer - hidden on mobile and tablet */}
+          <div className="col-span-0 lg:col-span-1 bg-cinestar-darkblue hidden lg:block"></div>
+        </div>
       </div>
       <Footer />
     </div>

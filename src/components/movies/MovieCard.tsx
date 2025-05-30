@@ -29,7 +29,9 @@ export interface MovieProps {
   country?: string;
   description?: string;
   poster: string;
-  trailerUrl?: string; ageRestriction?: string;
+  banner_image?: string;
+  trailerUrl?: string;
+  ageRestriction?: string;
   status?: 'coming soon' | 'now showing' | 'ended';
   genre?: string;
   genres?: string[];

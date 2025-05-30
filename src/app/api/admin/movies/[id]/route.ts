@@ -4,11 +4,11 @@ import { getMovieById, updateMovie, deleteMovie } from '@/lib/movieDb';
 // Route để lấy chi tiết một phim
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = await params.id;
-        const movie = await getMovieById(id);
+        const { id } = await params;
+        const movie = await getMovieById(parseInt(id));
 
         if (!movie) {
             return NextResponse.json(
@@ -19,7 +19,8 @@ export async function GET(
 
         return NextResponse.json({ success: true, data: movie });
     } catch (error: any) {
-        console.error(`Error fetching movie ${await params.id}:`, error);
+        const { id } = await params;
+        console.error(`Error fetching movie ${id}:`, error);
         return NextResponse.json(
             { success: false, message: `Không thể tải thông tin phim: ${error.message}` },
             { status: 500 }
@@ -30,10 +31,10 @@ export async function GET(
 // Route để cập nhật thông tin phim
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = await params.id;
+        const { id } = await params;
         const movieId = parseInt(id);
         const body = await req.json();
 
@@ -53,7 +54,8 @@ export async function PUT(
             );
         }
     } catch (error: any) {
-        console.error(`Error updating movie ${await params.id}:`, error);
+        const { id } = await params;
+        console.error(`Error updating movie ${id}:`, error);
         return NextResponse.json(
             { success: false, message: `Không thể cập nhật thông tin phim: ${error.message}` },
             { status: 500 }
@@ -64,10 +66,10 @@ export async function PUT(
 // Route để xóa phim
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = await params.id;
+        const { id } = await params;
         const movieId = parseInt(id);
 
         // Sử dụng hàm deleteMovie trực tiếp từ movieDb.ts
@@ -85,7 +87,8 @@ export async function DELETE(
             );
         }
     } catch (error: any) {
-        console.error(`Error deleting movie ${await params.id}:`, error);
+        const { id } = await params;
+        console.error(`Error deleting movie ${id}:`, error);
         return NextResponse.json(
             { success: false, message: `Không thể xóa phim: ${error.message}` },
             { status: 500 }

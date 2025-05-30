@@ -91,7 +91,10 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
             formData.append('file', file);
 
             try {
-                const response = await fetch('/api/admin/upload', {
+                // Add type parameter for entertainment uploads
+                formData.append('type', 'entertainment');
+
+                const response = await fetch('/api/upload/image', {
                     method: 'POST',
                     body: formData,
                 });
@@ -102,12 +105,12 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
 
                 const data = await response.json();
 
-                if (data.url) {
+                if (data.success && data.url) {
                     const imageUrl = data.url;
                     form.setValue('image_url', imageUrl);
                     setImagePreview(imageUrl);
                 } else {
-                    throw new Error('No URL returned from server');
+                    throw new Error(data.message || 'No URL returned from server');
                 }
             } catch (err) {
                 console.error('Upload error:', err);
@@ -146,7 +149,7 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
                                 <FormControl>
                                     <select
                                         {...field}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        className="flex text-white h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     >
                                         <option value="">Chọn loại giải trí</option>
                                         <option value="bowling">Bowling</option>

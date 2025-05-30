@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AdminGuard from '@/components/auth/AdminGuard';
@@ -34,6 +34,7 @@ const SidebarItem = ({ href, icon, title, currentPath }: SidebarItemProps) => {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { logout, user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -42,15 +43,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <AdminGuard>
       <div className="flex min-h-screen bg-gray-50">
+        {/* Mobile menu button */}
+        <div className="lg:hidden fixed top-4 left-4 z-50">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 bg-white rounded-md shadow-md"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-md p-5">
+        <div className={`
+          fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white shadow-md p-5 transform transition-transform duration-300 ease-in-out
+          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
           <div className="mb-8">
             <Link href="/admin">
-              <h1 className="text-2xl font-bold text-blue-600">CineStar Admin</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-blue-600">CineStar Admin</h1>
             </Link>
             <div className="mt-4 p-3 bg-gray-100 rounded-md">
               <p className="text-sm text-gray-600">Xin chào,</p>
-              <p className="font-medium text-gray-800">{user?.fullName}</p>
+              <p className="font-medium text-gray-800 truncate">{user?.fullName}</p>
               <button
                 onClick={handleLogout}
                 className="mt-2 text-sm text-red-600 hover:text-red-800"
@@ -64,6 +80,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               href="/admin/movies"
               icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h18M3 16h18" /></svg>}
               title="Phim"
+              currentPath={pathname}
+            />
+            <SidebarItem
+              href="/admin/banners"
+              icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+              title="Banner"
               currentPath={pathname}
             />
             <SidebarItem
@@ -149,9 +171,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
         </div>
 
+        {/* Overlay for mobile menu */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
-          <main className="p-6">{children}</main>
+        <div className="flex-1 overflow-auto lg:ml-0">
+          <main className="p-4 sm:p-6 pt-16 lg:pt-6">{children}</main>
         </div>
       </div>
     </AdminGuard>

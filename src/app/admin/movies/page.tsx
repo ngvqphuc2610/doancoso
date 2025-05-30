@@ -228,7 +228,7 @@ export default function AdminMoviesPage() {
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">ID</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Poster</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Tên phim</th>
-                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Ngôn ngữ</th>
+                                <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Ngôn ngữ/Quốc gia</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Thời lượng</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Ngày chiếu</th>
                                 <th className="py-3 px-4 bg-gray-100 border-b text-left text-dark">Trạng thái</th>
@@ -249,10 +249,15 @@ export default function AdminMoviesPage() {
                                     <td className="py-3 px-4 border-b text-dark">
                                         <div>
                                             <div className="font-medium">{movie.title}</div>
+                                            {movie.original_title && (
+                                                <div className="text-sm text-gray-500 mt-1">
+                                                    {movie.original_title}
+                                                </div>
+                                            )}
                                             {movie.description && (
                                                 <div className="text-sm text-gray-500 mt-1">
-                                                    {movie.description.length > 100
-                                                        ? movie.description.substring(0, 100) + '...'
+                                                    {movie.description.length > 80
+                                                        ? movie.description.substring(0, 80) + '...'
                                                         : movie.description
                                                     }
                                                 </div>
@@ -260,7 +265,16 @@ export default function AdminMoviesPage() {
                                         </div>
                                     </td>
                                     <td className="py-3 px-4 border-b text-dark">
-                                        {movie.language || 'Chưa có thông tin'}
+                                        <div>
+                                            <div className="text-sm">
+                                                {movie.language || 'Chưa có thông tin'}
+                                            </div>
+                                            {movie.country && (
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    {movie.country}
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="py-3 px-4 border-b text-dark">
                                         {movie.duration ? `${movie.duration} phút` : 'Chưa có thông tin'}
@@ -271,10 +285,10 @@ export default function AdminMoviesPage() {
                                     <td className="py-3 px-4 border-b">
                                         <span
                                             className={`px-2 py-1 rounded text-sm ${movie.status === 'now showing'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : movie.status === 'coming soon'
-                                                        ? 'bg-yellow-100 text-yellow-800'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : movie.status === 'coming soon'
+                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                    : 'bg-gray-100 text-gray-800'
                                                 }`}
                                         >
                                             {movie.status === 'now showing'

@@ -3,9 +3,9 @@ import MovieForm from '@/components/admin/MovieForm';
 import { getMovieById, getGenres } from '@/lib/movieDb';
 
 interface Props {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 export const metadata = {
@@ -13,10 +13,11 @@ export const metadata = {
 };
 
 export default async function EditMoviePage({ params }: Props) {
-    const id = parseInt(await params.id);
+    const { id } = await params;
+    const movieId = parseInt(id);
 
     // Fetch thông tin phim cần chỉnh sửa
-    const movie = await getMovieById(id);
+    const movie = await getMovieById(movieId);
 
     // Nếu không tìm thấy phim, chuyển hướng về trang quản lý phim
     if (!movie) {

@@ -2,6 +2,11 @@
 
 import { query } from './db';
 
+// Helper function to convert undefined to null for MySQL
+function sanitizeParams(params: any[]): any[] {
+    return params.map(param => param === undefined ? null : param);
+}
+
 export interface Movie {
     id_movie: number;
     title: string;
@@ -16,6 +21,7 @@ export interface Movie {
     country: string | null;
     description: string | null;
     poster_image: string | null;
+    banner_image: string | null;
     trailer_url: string | null;
     age_restriction: string | null;
     status: 'coming soon' | 'now showing' | 'ended';
@@ -25,7 +31,7 @@ export interface Movie {
 export async function getNowShowingMovies(): Promise<Movie[]> {
     try {
         const movies = await query<Movie[]>(`
-            SELECT m.*, 
+            SELECT m.*,
                 GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
             FROM movies m
             LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
@@ -45,7 +51,7 @@ export async function getNowShowingMovies(): Promise<Movie[]> {
 export async function getComingSoonMovies(): Promise<Movie[]> {
     try {
         const movies = await query<Movie[]>(`
-            SELECT m.*, 
+            SELECT m.*,
                 GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
             FROM movies m
             LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
@@ -65,7 +71,7 @@ export async function getComingSoonMovies(): Promise<Movie[]> {
 export async function getMovieById(id: number | string): Promise<Movie | null> {
     try {
         const movies = await query<Movie[]>(`
-            SELECT m.*, 
+            SELECT m.*,
                 GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
             FROM movies m
             LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
@@ -90,7 +96,7 @@ export async function getPopularMovies(): Promise<Movie[]> {
     try {
         // Lấy các phim phổ biến dựa trên số lượng showtime
         const movies = await query<Movie[]>(`
-            SELECT m.*, 
+            SELECT m.*,
                 COUNT(s.id_showtime) as showtime_count,
                 GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
             FROM movies m
@@ -113,7 +119,7 @@ export async function getPopularMovies(): Promise<Movie[]> {
 export async function getAllMovies(): Promise<Movie[]> {
     try {
         const movies = await query<Movie[]>(`
-            SELECT m.*, 
+            SELECT m.*,
                 GROUP_CONCAT(DISTINCT g.genre_name ORDER BY g.genre_name SEPARATOR ', ') as genres
             FROM movies m
             LEFT JOIN genre_movies gm ON m.id_movie = gm.id_movie
@@ -134,13 +140,18 @@ export async function createMovie(movieData: any): Promise<{ success: boolean; m
     try {
         const {
             title,
+            original_title,
             director,
             cast,
             description,
             duration,
             release_date,
             end_date,
+            language,
+            subtitle,
+            country,
             poster_url,
+            banner_url,
             trailer_url,
             age_restriction,
             status,
@@ -153,12 +164,20 @@ export async function createMovie(movieData: any): Promise<{ success: boolean; m
                 success: false,
                 message: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc (tiêu đề, ngày chiếu, trạng thái)'
             };
-        }        // Thêm phim vào database
+        }
+
+        // Thêm phim vào database
+        const params = sanitizeParams([
+            title, original_title, director, cast, description, duration,
+            release_date, end_date, language, subtitle, country,
+            poster_url, banner_url, trailer_url, age_restriction, status
+        ]);
+
         const result = await query(`
-            INSERT INTO movies 
-                (title, director, actors, description, duration, release_date, end_date, poster_image, trailer_url, age_restriction, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [title, director, cast, description, duration, release_date, end_date, poster_url, trailer_url, age_restriction, status]);
+            INSERT INTO movies
+                (title, original_title, director, actors, description, duration, release_date, end_date, language, subtitle, country, poster_image, banner_image, trailer_url, age_restriction, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, params);
 
         const movieId = (result as any).insertId;
 
@@ -208,13 +227,18 @@ export async function updateMovie(id: number, movieData: any): Promise<{ success
 
         const {
             title,
+            original_title,
             director,
             cast,
             description,
             duration,
             release_date,
             end_date,
+            language,
+            subtitle,
+            country,
             poster_url,
+            banner_url,
             trailer_url,
             age_restriction,
             status,
@@ -222,34 +246,48 @@ export async function updateMovie(id: number, movieData: any): Promise<{ success
         } = movieData;
 
         // Cập nhật thông tin phim
-        await query(`
-            UPDATE movies SET
-                title = ?,
-                director = ?,
-                actors = ?,
-                description = ?,
-                duration = ?,
-                release_date = ?,
-                end_date = ?,
-                poster_image = ?,
-                trailer_url = ?,
-                age_restriction = ?,
-                status = ?
-            WHERE id_movie = ?
-        `, [
+        const updateParams = sanitizeParams([
             title || existingMovie.title,
+            original_title || existingMovie.original_title,
             director || existingMovie.director,
             cast || existingMovie.actors,
             description || existingMovie.description,
             duration || existingMovie.duration,
             release_date || existingMovie.release_date,
             end_date || existingMovie.end_date,
+            language || existingMovie.language,
+            subtitle || existingMovie.subtitle,
+            country || existingMovie.country,
             poster_url || existingMovie.poster_image,
+            banner_url || existingMovie.banner_image,
             trailer_url || existingMovie.trailer_url,
             age_restriction || existingMovie.age_restriction,
             status || existingMovie.status,
             id
         ]);
+
+        const updateQuery = `
+            UPDATE movies SET
+                title = ?,
+                original_title = ?,
+                director = ?,
+                actors = ?,
+                description = ?,
+                duration = ?,
+                release_date = ?,
+                end_date = ?,
+                language = ?,
+                subtitle = ?,
+                country = ?,
+                poster_image = ?,
+                banner_image = ?,
+                trailer_url = ?,
+                age_restriction = ?,
+                status = ?
+            WHERE id_movie = ?
+        `;
+
+        await query(updateQuery, updateParams);
 
         // Cập nhật thể loại nếu có
         if (genres && genres.length > 0) {
@@ -312,8 +350,8 @@ export async function deleteMovie(id: number): Promise<{ success: boolean; messa
         // Xóa các liên kết với thể loại
         await query('DELETE FROM genre_movies WHERE id_movie = ?', [id]);
 
-        // Xóa các đánh giá của phim nếu có
-        await query('DELETE FROM ratings WHERE movie_id = ?', [id]);
+        // Xóa các banner liên quan nếu có
+        await query('DELETE FROM homepage_banners WHERE id_movie = ?', [id]);
 
         // Xóa phim
         await query('DELETE FROM movies WHERE id_movie = ?', [id]);
@@ -362,6 +400,7 @@ function formatMovies(movies: any[]): Movie[] {
             country: movie.country || null,
             description: movie.description || null,
             poster_image: movie.poster_image || movie.poster_url || null,
+            banner_image: movie.banner_image || null,
             trailer_url: movie.trailer_url || null,
             age_restriction: movie.age_restriction || null,
             status: (movie.status || 'coming soon') as 'coming soon' | 'now showing' | 'ended',
