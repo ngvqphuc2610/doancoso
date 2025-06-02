@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
                 `INSERT INTO bookings
                  (id_users,id_showtime, total_amount, payment_status, booking_status, booking_code)
                  VALUES (?,?, ?, ?, ?, ?)`,
-                [id_users, id_showtime, total_amount, 'unpaid', status || 'pending', booking_code || null]
+                [id_users || null, id_showtime, total_amount, 'unpaid', status || 'pending', booking_code || null]
             );
 
             const bookingId = (bookingResult as any).insertId;

@@ -16,8 +16,7 @@ const buttonVariants = cva(
           "bg-[#EBDB40] font-bold  text-dark shadow hover:bg-primary/90 ",
         custom2: //button dat bap nuoc
           "bg-[#7436A7] text-primary-foreground shadow hover:bg-primary/90",
-        custom3: //button dat ve card
-          "bg-[#EBDB40] text-primary-foreground text-dark font-bold shadow hover:bg-primary/90 flex ",
+       custom3: "bg-[#EBDB40] text-primary-foreground text-dark font-bold shadow hover:bg-gradient-to-r hover:from-[#6a11cb] hover:to-[#2575fc] flex transition-all duration-300",
         custom4: //button contact
           "bg-primary/90 text-primary-foreground font-bold shadow flex ",
         custom5: //button dat ve card
