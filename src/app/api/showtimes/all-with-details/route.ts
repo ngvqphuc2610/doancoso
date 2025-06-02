@@ -7,6 +7,9 @@ export async function GET() {
         // Query để lấy showtimes với thông tin cinema và movie
         console.log('[ALL SHOWTIMES WITH DETAILS API] Fetching detailed showtimes from database');
 
+        // Debug: Log current date
+        console.log('[DEBUG] Current date (CURDATE()):', new Date().toISOString().split('T')[0]);
+
         const result = await query(`
             SELECT
                 st.id_showtime,
@@ -24,19 +27,21 @@ export async function GET() {
                 m.title as movie_title,
                 m.poster_image,
                 m.duration,
-                m.genre,
-                m.rating,
+                m.director,
+                m.actors,
+                m.country,
+                m.age_restriction,
                 sc.screen_name,
                 sc.capacity,
                 c.id_cinema,
                 c.cinema_name,
                 c.address as cinema_address,
-                c.phone as cinema_phone
+                c.contact_number as cinema_phone
             FROM showtimes st
             LEFT JOIN movies m ON st.id_movie = m.id_movie
             LEFT JOIN screen sc ON st.id_screen = sc.id_screen
             LEFT JOIN cinemas c ON sc.id_cinema = c.id_cinema
-            WHERE st.show_date >= CURDATE()
+            WHERE st.show_date >= '2025-06-02'
             AND st.status = 'available'
             ORDER BY st.show_date ASC, st.start_time ASC, c.cinema_name ASC
         `);

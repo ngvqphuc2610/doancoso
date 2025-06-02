@@ -20,7 +20,15 @@ interface Credits {
     actors: string[];
 }
 
-export default function MovieDetail({ movie, credits }: { movie: MovieProps, credits: Credits }) {
+export default function MovieDetail({
+    movie,
+    credits,
+    queryParams
+}: {
+    movie: MovieProps,
+    credits: Credits,
+    queryParams?: { [key: string]: string | string[] | undefined }
+}) {
 
     if (!movie) {
         return <div>Loading...</div>;
@@ -154,6 +162,7 @@ export default function MovieDetail({ movie, credits }: { movie: MovieProps, cre
                     status={movie.status}
                     releaseDate={movie.releaseDate}
                     movieTitle={movie.title}
+                    queryParams={queryParams}
                 />
             </main>
         </Layout>

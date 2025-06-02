@@ -2,8 +2,15 @@ import { getMovieById } from '@/lib/film';
 import MovieDetail from '@/components/movies/MovieDetail';
 import { notFound } from 'next/navigation';
 
-export default async function MovieDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MovieDetailsPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
     const { id } = await params;
+    const queryParams = await searchParams;
 
     if (!id) {
         console.error('Movie ID is missing from params');
@@ -32,7 +39,7 @@ export default async function MovieDetailsPage({ params }: { params: Promise<{ i
             hasCredits: !!movie.director || (movie.actors && movie.actors.length > 0)
         });
 
-        return <MovieDetail movie={movie} credits={credits} />;
+        return <MovieDetail movie={movie} credits={credits} queryParams={queryParams} />;
     } catch (error) {
         console.error(`Error loading movie details for ID ${id}:`, error);
         notFound();
