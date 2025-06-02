@@ -102,7 +102,24 @@ function formatTime(t: string) {
 
 function transformShowtimeData(rows: ShowtimeRow[]) {
     const showtimesByDate = rows.reduce((acc: any, row: ShowtimeRow) => {
-        const date = new Date(row.show_date).toISOString().split('T')[0];
+        // Sử dụng date string trực tiếp từ database để tránh timezone issues
+        let date: string;
+        if (typeof row.show_date === 'string') {
+            // Nếu là string và có format ISO, lấy phần date
+            date = row.show_date.includes('T') ? row.show_date.split('T')[0] : row.show_date;
+        } else {
+            // Nếu là Date object, convert về YYYY-MM-DD
+            date = new Date(row.show_date).toISOString().split('T')[0];
+        }
+
+        // Debug log để kiểm tra date conversion
+        if (rows.indexOf(row) === 0) {
+            console.log('🗓️ Date conversion debug:', {
+                original: row.show_date,
+                type: typeof row.show_date,
+                converted: date
+            });
+        }
         const availableSeats = row.capacity - (row.booked_seats || 0);
 
         if (!acc[date]) {

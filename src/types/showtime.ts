@@ -41,6 +41,7 @@ export interface MovieShowtimesProps {
     releaseDate?: string;
     movieTitle?: string;
     moviePoster?: string;
+    queryParams?: { [key: string]: string | string[] | undefined };
 }
 
 export interface TicketSelection {

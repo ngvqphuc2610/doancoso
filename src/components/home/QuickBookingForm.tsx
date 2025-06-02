@@ -370,21 +370,20 @@ export default function QuickBookingForm() {
       return;
     }
 
-    // Get movie info for URL
-    const movie = movies.find(m => m.id_movie.toString() === selectedMovie);
-    const cinema = cinemas.find(c => c.id_cinema.toString() === selectedCinema);
+    // Movie info is already in matchedShowtime
 
     console.log('🎫 Booking showtime:', matchedShowtime);
 
     // Navigate to booking page
-    const bookingUrl = `/booking/${matchedShowtime.id_showtime}?` +
-      `movie=${selectedMovie}&` +
-      `movieTitle=${encodeURIComponent(movie?.title || '')}&` +
-      `cinema=${encodeURIComponent(cinema?.cinema_name || '')}&` +
+    // Chuyển đến trang movie detail với thông tin đã chọn
+    const movieUrl = `/movie/${selectedMovie}?` +
+      `showtime=${matchedShowtime.id_showtime}&` +
+      `screen=${matchedShowtime.id_screen}&` +
+      `cinema=${matchedShowtime.id_cinema}&` +
       `date=${selectedDate}&` +
       `time=${selectedTime}`;
 
-    router.push(bookingUrl);
+    router.push(movieUrl);
   };
 
   if (loading) {

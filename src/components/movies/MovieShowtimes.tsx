@@ -20,7 +20,7 @@ import { useGlobalTimer } from '@/contexts/GlobalTimerContext';
 // Import types
 import { MovieShowtimesProps } from '@/types/showtime';
 
-export default function MovieShowtimes({ movieId, status, releaseDate, movieTitle }: MovieShowtimesProps) {
+export default function MovieShowtimes({ movieId, status, releaseDate, movieTitle, queryParams }: MovieShowtimesProps) {
 
 
     // Sử dụng custom hooks
@@ -74,6 +74,76 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
         // Reset products khi movieId thay đổi (người dùng chọn phim khác)
         resetProducts();
     }, [movieId, resetProducts]);
+
+    // Effect để tự động chọn các giá trị từ QuickBookingForm (chỉ chạy một lần)
+    useEffect(() => {
+        if (queryParams && showtimes.length > 0 && !selectedDate && !selectedCinema && !selectedTime) {
+            const { showtime, screen, cinema, date, time } = queryParams;
+
+            console.log('🎯 Auto-selecting from queryParams:', {
+                showtime, screen, cinema, date, time
+            });
+
+            console.log('📊 Available showtimes data:', showtimes);
+
+            // Tự động chọn date nếu có
+            if (date && typeof date === 'string') {
+                // Convert DD/MM/YYYY to YYYY-MM-DD
+                const [day, month, year] = date.split('/');
+                const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+                console.log('🗓️ Looking for date:', formattedDate);
+                console.log('📅 Available dates:', showtimes.map(st => st.date));
+
+                // Kiểm tra xem date có trong showtimes không
+                const dateExists = showtimes.some(st => st.date === formattedDate);
+                console.log('✅ Date exists:', dateExists);
+
+                if (dateExists) {
+                    handleDateSelection(formattedDate);
+                    console.log('✅ Auto-selected date:', formattedDate);
+
+                    // Debug cinema và showtime data
+                    const dateShowtime = showtimes.find(st => st.date === formattedDate);
+                    console.log('🏢 Available cinemas for date:', dateShowtime?.cinemas);
+
+                    // Tự động chọn cinema và time sau khi date được chọn
+                    setTimeout(() => {
+                        if (cinema && typeof cinema === 'string') {
+                            const cinemaId = parseInt(cinema);
+                            const cinemaExists = dateShowtime?.cinemas.some(c => c.id === cinemaId);
+                            console.log('🏢 Cinema exists:', cinemaExists, 'for ID:', cinemaId);
+
+                            if (cinemaExists) {
+                                handleCinemaSelection(cinemaId);
+                                console.log('✅ Auto-selected cinema:', cinema);
+
+                                // Debug showtime data
+                                const cinemaData = dateShowtime?.cinemas.find(c => c.id === cinemaId);
+                                console.log('⏰ Available showtimes for cinema:', cinemaData?.showTimes);
+                            }
+                        }
+
+                        if (showtime && typeof showtime === 'string') {
+                            const showtimeId = parseInt(showtime);
+                            // Tìm showtime trong tất cả cinemas
+                            const showtimeExists = dateShowtime?.cinemas.some(c =>
+                                c.showTimes.some(st => st.id === showtimeId)
+                            );
+                            console.log('⏰ Showtime exists:', showtimeExists, 'for ID:', showtimeId);
+
+                            if (showtimeExists) {
+                                handleTimeSelection(showtimeId);
+                                console.log('✅ Auto-selected showtime:', showtime);
+                            }
+                        }
+                    }, 100);
+                } else {
+                    console.log('❌ Date not found in showtimes');
+                }
+            }
+        }
+    }, [queryParams, showtimes.length]); // Chỉ depend vào queryParams và showtimes.length
 
     // Tính tổng tiền (vé + sản phẩm)
     const calculateTotalPrice = () => {
