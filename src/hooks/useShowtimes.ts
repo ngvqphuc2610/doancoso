@@ -137,17 +137,22 @@ export function useCities() {
 
                 if (data.success) {
                     const cinemas: CinemaData[] = data.data;
+                    console.log('🏙️ useCities: Received cinemas data:', cinemas);
+
                     const uniqueCities = [...new Set(cinemas.map(cinema => cinema.city))].filter(Boolean);
                     setCities(uniqueCities);
+                    console.log('🏙️ useCities: Set cities:', uniqueCities);
 
                     // Create mapping of cinema names to their cities
                     const mapping: { [key: string]: string } = {};
                     cinemas.forEach(cinema => {
                         if (cinema.cinema_name && cinema.city) {
                             mapping[cinema.cinema_name] = cinema.city;
+                            console.log(`🏙️ useCities: Mapping "${cinema.cinema_name}" -> "${cinema.city}"`);
                         }
                     });
                     setCinemaToCity(mapping);
+                    console.log('🏙️ useCities: Final mapping:', mapping);
                 }
             } catch (error) {
                 console.error('Error fetching cities:', error);

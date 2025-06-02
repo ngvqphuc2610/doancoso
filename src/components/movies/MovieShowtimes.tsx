@@ -77,7 +77,7 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
 
     // Effect để tự động chọn các giá trị từ QuickBookingForm (chỉ chạy một lần)
     useEffect(() => {
-        if (queryParams && showtimes.length > 0 && !selectedDate && !selectedCinema && !selectedTime) {
+        if (queryParams && showtimes.length > 0 && Object.keys(cinemaToCity).length > 0 && !selectedDate && !selectedCinema && !selectedTime) {
             const { showtime, screen, cinema, date, time } = queryParams;
 
             console.log('🎯 Auto-selecting from queryParams:', {
@@ -111,15 +111,43 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
                     setTimeout(() => {
                         if (cinema && typeof cinema === 'string') {
                             const cinemaId = parseInt(cinema);
+                            console.log('🎯 Trying to auto-select cinema ID:', cinemaId);
+                            console.log('🏢 Available cinemas:', dateShowtime?.cinemas?.map(c => ({ id: c.id, name: c.name })));
+
                             const cinemaExists = dateShowtime?.cinemas.some(c => c.id === cinemaId);
                             console.log('🏢 Cinema exists:', cinemaExists, 'for ID:', cinemaId);
 
                             if (cinemaExists) {
+                                console.log('🎯 Calling handleCinemaSelection with ID:', cinemaId);
                                 handleCinemaSelection(cinemaId);
                                 console.log('✅ Auto-selected cinema:', cinema);
 
-                                // Debug showtime data
+                                // Auto-select city tương ứng với cinema
                                 const cinemaData = dateShowtime?.cinemas.find(c => c.id === cinemaId);
+                                if (cinemaData) {
+                                    console.log('🔍 Debug cinema mapping:');
+                                    console.log('- Cinema name from showtime:', `"${cinemaData.name}"`);
+                                    console.log('- Available cinemaToCity mapping:', cinemaToCity);
+                                    console.log('- All mapping keys:', Object.keys(cinemaToCity));
+                                    console.log('- Looking for city:', cinemaToCity[cinemaData.name]);
+
+                                    // Thử tìm key tương tự
+                                    const similarKeys = Object.keys(cinemaToCity).filter(key =>
+                                        key.toLowerCase().includes('cinestar') ||
+                                        key.toLowerCase().includes('đà lạt')
+                                    );
+                                    console.log('- Similar keys found:', similarKeys);
+
+                                    const cinemaCity = cinemaToCity[cinemaData.name];
+                                    if (cinemaCity && cinemaCity !== selectedCity) {
+                                        console.log('🏙️ Auto-selecting city:', cinemaCity, 'for cinema:', cinemaData.name);
+                                        handleCitySelection(cinemaCity);
+                                    } else {
+                                        console.log('❌ No city found for cinema:', cinemaData.name);
+                                    }
+                                }
+
+                                // Debug showtime data
                                 console.log('⏰ Available showtimes for cinema:', cinemaData?.showTimes);
                             }
                         }
@@ -143,7 +171,7 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
                 }
             }
         }
-    }, [queryParams, showtimes.length]); // Chỉ depend vào queryParams và showtimes.length
+    }, [queryParams, showtimes.length, cinemaToCity]); // Thêm cinemaToCity để chạy lại khi mapping sẵn sàng
 
     // Tính tổng tiền (vé + sản phẩm)
     const calculateTotalPrice = () => {

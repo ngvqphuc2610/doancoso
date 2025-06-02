@@ -6,7 +6,7 @@ export function useSelectionState() {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedCinema, setSelectedCinema] = useState<number | null>(null);
     const [selectedTime, setSelectedTime] = useState<number | null>(null);
-    const [selectedCity, setSelectedCity] = useState('Hồ Chí Minh');
+    const [selectedCity, setSelectedCity] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     // Ticket selection
