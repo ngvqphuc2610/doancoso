@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { TicketSelection } from '@/types/showtime';
+import { isValidDateFormat, dateFormats } from '@/utils/dateUtils';
 
 export function useSelectionState() {
     const [selectedDate, setSelectedDate] = useState<string>('');
@@ -7,25 +8,30 @@ export function useSelectionState() {
     const [selectedTime, setSelectedTime] = useState<number | null>(null);
     const [selectedCity, setSelectedCity] = useState('Hồ Chí Minh');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    
+
     // Ticket selection
     const [ticketSelection, setTicketSelection] = useState<TicketSelection>({});
     const [totalTicketPrice, setTotalTicketPrice] = useState<number>(0);
     const [showTicketSelector, setShowTicketSelector] = useState<boolean>(false);
-    
+
     // Seat selection
     const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
     const [showBookingBar, setShowBookingBar] = useState<boolean>(false);
 
     const handleDateSelection = useCallback((date: string) => {
-        setSelectedDate(date);
-        setSelectedCinema(null);
-        setSelectedTime(null);
-        setTicketSelection({});
-        setTotalTicketPrice(0);
-        setShowTicketSelector(false);
-        setSelectedSeats([]);
-        setShowBookingBar(false);
+        // Make sure we only accept valid dates
+        if (date) {
+            setSelectedDate(date);
+            setSelectedCinema(null);
+            setSelectedTime(null);
+            setTicketSelection({});
+            setTotalTicketPrice(0);
+            setShowTicketSelector(false);
+            setSelectedSeats([]);
+            setShowBookingBar(false);
+        } else {
+            console.error('Empty date received');
+        }
     }, []);
 
     const handleCinemaSelection = useCallback((cinemaId: number) => {
@@ -61,7 +67,7 @@ export function useSelectionState() {
     const handleTicketSelection = useCallback((selection: TicketSelection, totalPrice: number) => {
         setTicketSelection(selection);
         setTotalTicketPrice(totalPrice);
-        
+
         const totalTickets = Object.values(selection).reduce((sum, qty) => sum + qty, 0);
         setShowTicketSelector(totalTickets > 0);
     }, []);
@@ -91,7 +97,7 @@ export function useSelectionState() {
         showTicketSelector,
         selectedSeats,
         showBookingBar,
-        
+
         // Actions
         handleDateSelection,
         handleCinemaSelection,

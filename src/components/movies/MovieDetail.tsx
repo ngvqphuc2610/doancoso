@@ -104,7 +104,7 @@ export default function MovieDetail({ movie, credits }: { movie: MovieProps, cre
                                     )}
 
                                     <div className="text-white">
-                                        <p>Khởi chiếu: {new Date(movie.releaseDate).toLocaleDateString('vi-VN')}</p>
+                                        <p>Khởi chiếu: {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString('vi-VN') : 'Chưa xác định'}</p>
                                         {movie.endDate && (
                                             <p>Kết thúc: {new Date(movie.endDate).toLocaleDateString('vi-VN')}</p>
                                         )}
