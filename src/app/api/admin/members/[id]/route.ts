@@ -4,10 +4,11 @@ import { getMemberById, updateMember, deleteMember } from '@/lib/memberDb';
 // Route để lấy chi tiết một thành viên
 export async function GET(
     _request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = parseInt(params.id);
+        const { id: idString } = await params;
+        const id = parseInt(idString);
         if (isNaN(id)) {
             return NextResponse.json(
                 { success: false, message: 'ID không hợp lệ' },
@@ -28,7 +29,8 @@ export async function GET(
             data: member
         });
     } catch (error: any) {
-        console.error(`Error fetching member ${params.id}:`, error.message);
+        const { id } = await params;
+        console.error(`Error fetching member ${id}:`, error.message);
         return NextResponse.json(
             {
                 success: false,
@@ -43,10 +45,11 @@ export async function GET(
 // Route để cập nhật thông tin thành viên
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = parseInt(params.id);
+        const { id: idString } = await params;
+        const id = parseInt(idString);
         if (isNaN(id)) {
             return NextResponse.json(
                 { success: false, message: 'ID không hợp lệ' },
@@ -69,7 +72,8 @@ export async function PUT(
             message: result.message
         });
     } catch (error: any) {
-        console.error(`Error updating member ${params.id}:`, error.message);
+        const { id } = await params;
+        console.error(`Error updating member ${id}:`, error.message);
         return NextResponse.json(
             {
                 success: false,
@@ -84,10 +88,11 @@ export async function PUT(
 // Route để xóa thành viên
 export async function DELETE(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = parseInt(params.id);
+        const { id: idString } = await params;
+        const id = parseInt(idString);
         if (isNaN(id)) {
             return NextResponse.json(
                 { success: false, message: 'ID không hợp lệ' },
@@ -109,7 +114,8 @@ export async function DELETE(
             message: result.message
         });
     } catch (error: any) {
-        console.error(`Error deleting member ${params.id}:`, error.message);
+        const { id } = await params;
+        console.error(`Error deleting member ${id}:`, error.message);
         return NextResponse.json(
             {
                 success: false,

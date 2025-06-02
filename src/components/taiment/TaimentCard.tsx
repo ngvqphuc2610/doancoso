@@ -13,16 +13,19 @@ export interface TaimentProps {
   translationKey?: string;
 }
 
-export default function TaimentCard({ id, translationKey, image, link }: TaimentProps) {
+export default function TaimentCard({ id, translationKey, image, link, title }: TaimentProps) {
   const { t } = useTranslation();
+
+  // Tạo URL động: nếu có link thì dùng link, không thì dùng /entertainment/[id]
+  const href = link || `/entertainment/${id}`;
 
   return (
     <Card className="relative rounded-lg overflow-hidden shadow-lg hover:scale-105 transition-transform">
-      <Link href={link || '#'}>
+      <Link href={href}>
         <div className="relative aspect-[4/3] w-full">
           <Image
             src={image}
-            alt={t(`taiment.items.${translationKey}.title`)}
+            alt={title || t(`taiment.items.${translationKey}.title`)}
             className="object-cover"
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"

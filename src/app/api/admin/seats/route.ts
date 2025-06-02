@@ -55,25 +55,38 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         // Validate required fields
-        if (!body.seat_number || !body.id_screen) {
+        if (!body.seat_number || !body.id_screen || !body.id_seattype || !body.seat_row) {
             return NextResponse.json(
-                { success: false, message: 'Số ghế và phòng chiếu là bắt buộc' },
+                { success: false, message: 'Số ghế, phòng chiếu, loại ghế và hàng ghế là bắt buộc' },
+                { status: 400 }
+            );
+        }
+
+        // Check if seat already exists
+        const existingSeat = await query(
+            `SELECT id_seats FROM seat
+             WHERE id_screen = ? AND seat_row = ? AND seat_number = ?`,
+            [body.id_screen, body.seat_row, body.seat_number]
+        );
+
+        if (Array.isArray(existingSeat) && existingSeat.length > 0) {
+            return NextResponse.json(
+                { success: false, message: 'Ghế này đã tồn tại trong phòng chiếu' },
                 { status: 400 }
             );
         }
 
         // Thêm ghế mới vào database
         const result = await query(
-            `INSERT INTO SEATS
-             (seat_number, seat_row, seat_column, id_screen, seat_type, status)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO seat
+             (id_screen, id_seattype, seat_row, seat_number, status)
+             VALUES (?, ?, ?, ?, ?)`,
             [
-                body.seat_number,
-                body.seat_row || 'A',
-                body.seat_column || 1,
                 body.id_screen,
-                body.seat_type || 'Standard',
-                body.status || 'available'
+                body.id_seattype,
+                body.seat_row.toUpperCase(),
+                body.seat_number,
+                body.status || 'active'
             ]
         );
 
@@ -83,7 +96,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             message: 'Ghế đã được thêm thành công',
-            data: { id_seat: seatId }
+            data: { id_seats: seatId }
         });
     } catch (error: any) {
         console.error('Error creating seat:', error.message);

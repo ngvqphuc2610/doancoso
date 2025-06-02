@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, use } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -34,9 +34,9 @@ interface Screen {
     id_cinema: number;
 }
 
-export default function EditShowtimePage({ params }: { params: { id: string } }) {
+export default function EditShowtimePage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
-    const { id } = params;
+    const { id } = use(params);
     const [showtime, setShowtime] = useState<ShowtimeData | null>(null);
     const [movies, setMovies] = useState<Movie[]>([]);
     const [screens, setScreens] = useState<Screen[]>([]);
@@ -190,7 +190,7 @@ export default function EditShowtimePage({ params }: { params: { id: string } })
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-dark">
                     <div>
                         <label className="block text-gray-700 font-semibold mb-2" htmlFor="id_movie">
                             Phim <span className="text-red-500">*</span>

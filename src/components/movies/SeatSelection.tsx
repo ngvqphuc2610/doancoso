@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useSeatLocking } from '@/hooks/useSeatLocking';
 // Removed WebSocket - using database polling only
+
 interface SeatProps {
     id: string;  // Đổi thành string để dễ xử lý định dạng A01, B02...
     row: string;
     number: string;
-    type: 'regular' | 'couple' | 'vip';
-    status: 'available' | 'booked' | 'selected' | 'locked';
+    type: 'regular' | 'couple' | 'vip' | 'imax';
+    status: 'available' | 'booked' | 'selected' | 'locked' | 'maintenance' | 'inactive';
     price: number;
     onSelect: (id: string) => void;
+}
+
+interface Seat {
+    id: string;
+    row: string;
+    number: string;
+    type: 'regular' | 'couple' | 'vip' | 'imax';
+    status: 'available' | 'booked' | 'selected' | 'locked' | 'maintenance' | 'inactive';
+    price: number;
+    position: number;
 }
 
 interface TicketSelection {
@@ -33,19 +44,25 @@ const Seat = ({ id, number, type, status, price, onSelect }: SeatProps) => {
                 return 'bg-yellow-400 text-black';  // Ghế đang chọn
             case 'locked':
                 return 'bg-red-400 text-white';  // Ghế đang được người khác chọn
+            case 'maintenance':
+                return 'bg-orange-400 text-white';  // Ghế bảo trì
+            case 'inactive':
+                return 'bg-gray-400 text-white';  // Ghế không hoạt động
             default:
                 switch (type) {
                     case 'couple':
                         return 'bg-pink-200 text-black';  // Ghế đôi
                     case 'vip':
                         return 'bg-purple-200 text-black';  // Ghế VIP
+                    case 'imax':
+                        return 'bg-blue-200 text-black';  // Ghế IMAX
                     default:
                         return 'bg-white text-black';     // Ghế thường
                 }
         }
     };
 
-    const isDisabled = status === 'booked' || status === 'locked';
+    const isDisabled = status === 'booked' || status === 'locked' || status === 'maintenance' || status === 'inactive';
 
     return (
         <button
@@ -74,6 +91,7 @@ export default function SeatMap({ showtimeId, screenName, onConfirm, totalTicket
     const [seats, setSeats] = useState<Seat[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [unavailableSeats, setUnavailableSeats] = useState<Set<string>>(new Set());
 
     // Use seat locking hook
@@ -139,165 +157,69 @@ export default function SeatMap({ showtimeId, screenName, onConfirm, totalTicket
         } catch (error) {
             console.error('Error refreshing seat status:', error);
         }
-    };
+    };    // Fetch seats data from API
+    const fetchSeats = async () => {
+        setIsLoading(true);
+        setLoadError(null);
+        try {
+            const response = await fetch(`/api/seats?showtimeId=${showtimeId}`);
 
-    interface Seat {
-        id: string;
-        row: string;
-        number: string;
-        type: 'regular' | 'couple' | 'vip';
-        status: 'available' | 'booked' | 'selected' | 'locked';
-        price: number;
-        position: number;
-    }
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("API không trả về dữ liệu JSON");
+            }
 
-    // Tạo dữ liệu mẫu giống với hình ảnh được chia sẻ
-    const generateSampleSeats = (): Seat[] => {
-        const sampleSeats: Seat[] = [];
-        const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
-        const priceRegular = 90000;
-        const priceCouple = 160000;
+            const data = await response.json();
 
-        // Ghế đã đặt mẫu (để hiển thị UI)
-        const bookedSeats = ['E04', 'E05', 'E06', 'E07', 'E08', 'F05', 'F06', 'F07', 'F08'];
+            if (data.success) {
+                // Map dữ liệu từ API sang định dạng của component
+                const mappedSeats = data.data.map((seat: any) => ({
+                    id: `${seat.seat_row}${seat.seat_number.toString().padStart(2, '0')}`,
+                    row: seat.seat_row,
+                    number: seat.seat_number.toString().padStart(2, '0'),
+                    type: seat.seat_type.toLowerCase(),
+                    status: seat.status,
+                    price: seat.price,
+                    position: parseInt(seat.seat_number)
+                }));
 
-        // Ghế đôi
-        const coupleSeats = ['E06', 'E07', 'E08', 'F06', 'F07', 'F08'];
-
-        for (const row of rows) {
-            if (row === 'I') {
-                // Hàng I chỉ có 4 ghế đặc biệt (I01, I02, I03, I04)
-                for (const num of ['01', '02', '03', '04']) {
-                    // Giả định I01, I02 ở bên trái, I03, I04 ở bên phải
-                    if (num === '01' || num === '02') {
-                        sampleSeats.push({
-                            id: `${row}${num}`,
-                            row,
-                            number: num,
-                            type: 'regular',
-                            status: bookedSeats.includes(`${row}${num}`) ? 'booked' : 'available',
-                            price: priceRegular,
-                            position: parseInt(num) // Vị trí bên trái
-                        });
-                    } else {
-                        sampleSeats.push({
-                            id: `${row}${num}`,
-                            row,
-                            number: num,
-                            type: 'regular',
-                            status: bookedSeats.includes(`${row}${num}`) ? 'booked' : 'available',
-                            price: priceRegular,
-                            position: parseInt(num) + 4 // Vị trí bên phải (để tạo khoảng cách)
-                        });
-                    }
+                // Debug: Check for duplicates
+                const seatIds = mappedSeats.map((seat: any) => seat.id);
+                const duplicates = seatIds.filter((id: string, index: number) => seatIds.indexOf(id) !== index);
+                if (duplicates.length > 0) {
+                    console.error('🚨 Duplicate seat IDs found:', duplicates);
+                    console.error('🚨 All seat data:', mappedSeats);
                 }
+
+                // Remove duplicates by keeping the first occurrence
+                const uniqueSeats = mappedSeats.filter((seat: any, index: number, self: any[]) =>
+                    self.findIndex(s => s.id === seat.id) === index
+                );
+
+                console.log('✅ Seats loaded:', {
+                    total: mappedSeats.length,
+                    unique: uniqueSeats.length,
+                    duplicatesRemoved: mappedSeats.length - uniqueSeats.length
+                });
+
+                setSeats(uniqueSeats);
             } else {
-                // Các hàng khác có 12 ghế
-                for (let i = 1; i <= 12; i++) {
-                    const num = i.toString().padStart(2, '0');
-                    const seatId = `${row}${num}`;
-                    const isCouple = coupleSeats.includes(seatId);
-
-                    sampleSeats.push({
-                        id: seatId,
-                        row,
-                        number: num,
-                        type: isCouple ? 'couple' : 'regular',
-                        status: bookedSeats.includes(seatId) ? 'booked' : 'available',
-                        price: isCouple ? priceCouple : priceRegular,
-                        position: i
-                    });
-                }
+                throw new Error(data.error || 'Lỗi khi tải thông tin ghế');
             }
+        } catch (error) {
+            console.error("Failed to load seats:", error);
+            setLoadError(error instanceof Error ? error.message : 'Không thể tải thông tin ghế từ server');
+            setSeats([]);
+        } finally {
+            setIsLoading(false);
         }
-
-        return sampleSeats;
     };
 
-    // Tải dữ liệu ghế từ API
+    // Load seats when component mounts or showtimeId changes
     useEffect(() => {
-        const fetchSeats = async () => {
-            setIsLoading(true);
-            try {
-                const response = await fetch(`/api/seats?showtimeId=${showtimeId}`);
-
-                // Kiểm tra response
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("API không trả về dữ liệu JSON");
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Map dữ liệu từ API sang định dạng của component
-                    const mappedSeats = data.data.map((seat: any) => ({
-                        id: `${seat.seat_row}${seat.seat_number.toString().padStart(2, '0')}`,
-                        row: seat.seat_row,
-                        number: seat.seat_number.toString().padStart(2, '0'),
-                        type: seat.seat_type.toLowerCase(),
-                        status: seat.status,
-                        price: seat.price,
-                        position: parseInt(seat.seat_number)
-                    }));
-
-                    // Debug: Check for duplicates
-                    const seatIds = mappedSeats.map((seat: any) => seat.id);
-                    const duplicates = seatIds.filter((id: string, index: number) => seatIds.indexOf(id) !== index);
-                    if (duplicates.length > 0) {
-                        console.error('🚨 Duplicate seat IDs found:', duplicates);
-                        console.error('🚨 All seat data:', mappedSeats);
-                    }
-
-                    // Remove duplicates by keeping the first occurrence
-                    const uniqueSeats = mappedSeats.filter((seat: any, index: number, self: any[]) =>
-                        self.findIndex(s => s.id === seat.id) === index
-                    );
-
-                    console.log('✅ Seats loaded:', {
-                        total: mappedSeats.length,
-                        unique: uniqueSeats.length,
-                        duplicatesRemoved: mappedSeats.length - uniqueSeats.length
-                    });
-
-                    setSeats(uniqueSeats);
-                } else {
-                    throw new Error(data.error || 'Lỗi khi tải thông tin ghế');
-                }
-            } catch (error) {
-                console.error("Failed to load seats:", error);
-                // Trong môi trường development, sử dụng dữ liệu mẫu
-                if (process.env.NODE_ENV === 'development') {
-                    const sampleData = generateSampleSeats();
-
-                    // Debug: Check for duplicates in sample data
-                    const sampleIds = sampleData.map(seat => seat.id);
-                    const sampleDuplicates = sampleIds.filter((id, index) => sampleIds.indexOf(id) !== index);
-                    if (sampleDuplicates.length > 0) {
-                        console.error('🚨 Duplicate seat IDs in sample data:', sampleDuplicates);
-                    }
-
-                    // Remove duplicates from sample data
-                    const uniqueSampleSeats = sampleData.filter((seat, index, self) =>
-                        self.findIndex(s => s.id === seat.id) === index
-                    );
-
-                    console.log('✅ Sample seats loaded:', {
-                        total: sampleData.length,
-                        unique: uniqueSampleSeats.length,
-                        duplicatesRemoved: sampleData.length - uniqueSampleSeats.length
-                    });
-
-                    setSeats(uniqueSampleSeats);
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         if (showtimeId) {
             fetchSeats();
         }
@@ -438,10 +360,45 @@ export default function SeatMap({ showtimeId, screenName, onConfirm, totalTicket
         }
 
         return acc;
-    }, {});
+    }, {}); if (isLoading) {
+        return <div className="text-center p-10 text-white">Đang tải sơ đồ ghế...</div>;
+    }
 
-    if (isLoading) {
-        return <div className="text-center p-10">Đang tải sơ đồ ghế...</div>;
+    if (loadError) {
+        return (
+            <div className="bg-gray-900 p-6 rounded-lg">
+                <div className="text-center">
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        <h3 className="font-bold text-lg mb-2">Không thể tải thông tin ghế</h3>
+                        <p>{loadError}</p>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setLoadError(null);
+                            setIsLoading(true);
+                            // Retry loading
+                            if (showtimeId) {
+                                fetchSeats();
+                            }
+                        }}
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Thử lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (seats.length === 0) {
+        return (
+            <div className="bg-gray-900 p-6 rounded-lg">
+                <div className="text-center text-white">
+                    <h3 className="text-lg font-bold mb-2">Không có thông tin ghế</h3>
+                    <p>Không tìm thấy thông tin ghế cho suất chiếu này.</p>
+                </div>
+            </div>
+        );
     }
 
     return (

@@ -1,12 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { useGlobalTimer } from '@/contexts/GlobalTimerContext';
+import { useEffect } from 'react';
+import { convertDateFormat } from '@/utils/dateUtils';
 
 interface BookingBarProps {
     movieTitle: string;
     cinemaName: string;
     screenName: string;
     productName: string;
-    selectedDate: string;
+    selectedDate: string; // Expected in YYYY-MM-DD format from API
     showTime: string;
     selectedSeats: string[];
     totalPrice: number;
@@ -27,6 +29,28 @@ export default function BookingBar({
     onBookingClick
 }: BookingBarProps) {
     const { formatTime } = useGlobalTimer();
+
+    // For display purposes - convert date from API format (YYYY-MM-DD) to UI format (DD/MM/YYYY)
+    const displayDate = (() => {
+        try {
+            // Check if the date is already in DD/MM/YYYY format
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(selectedDate)) {
+                return selectedDate; // Already in UI format
+            }
+
+            // If it's in YYYY-MM-DD format (from API), convert to DD/MM/YYYY
+            if (/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+                return convertDateFormat(selectedDate, 'YYYY-MM-DD', 'DD/MM/YYYY');
+            }
+
+            // Log error but return the original to avoid breaking the UI
+            console.error('Invalid date format in BookingBar:', selectedDate);
+            return selectedDate;
+        } catch (error) {
+            console.error('Error formatting date in BookingBar:', error);
+            return selectedDate;
+        }
+    })();
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-3 sm:p-4 z-50">

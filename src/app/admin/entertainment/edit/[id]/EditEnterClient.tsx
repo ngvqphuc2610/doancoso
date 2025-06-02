@@ -20,13 +20,13 @@ import Image from 'next/image';
 import { Entertainment } from '@/lib/types/database';
 
 const formSchema = z.object({
-    name: z.string().min(1, "Tên không được để trống"),
-    type: z.string().min(1, "Loại không được để trống"),
-    location: z.string().min(1, "Vị trí không được để trống"),
+    title: z.string().min(1, "Tiêu đề không được để trống"),
     description: z.string().optional(),
     image_url: z.string().optional(),
-    price: z.number().min(0, "Giá không được âm").optional(),
-    opening_hours: z.string().optional(),
+    start_date: z.string().min(1, "Ngày bắt đầu không được để trống"),
+    end_date: z.string().optional(),
+    status: z.enum(['active', 'inactive']),
+    featured: z.boolean().optional(),
 });
 
 export default function EditEnterClient({ entertainment }: { entertainment: Entertainment }) {
@@ -38,13 +38,13 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: entertainment.name,
-            type: entertainment.type,
-            location: entertainment.location,
+            title: entertainment.title,
             description: entertainment.description || "",
             image_url: entertainment.image_url || "",
-            price: entertainment.price || 0,
-            opening_hours: entertainment.opening_hours || "",
+            start_date: entertainment.start_date ? new Date(entertainment.start_date).toISOString().split('T')[0] : "",
+            end_date: entertainment.end_date ? new Date(entertainment.end_date).toISOString().split('T')[0] : "",
+            status: entertainment.status,
+            featured: entertainment.featured || false,
         },
     });
 
@@ -128,10 +128,10 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
                     <FormField
                         control={form.control}
-                        name="name"
+                        name="title"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Tên</FormLabel>
+                                <FormLabel>Tiêu đề</FormLabel>
                                 <FormControl>
                                     <Input {...field} />
                                 </FormControl>
@@ -142,23 +142,12 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
 
                     <FormField
                         control={form.control}
-                        name="type"
+                        name="start_date"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Loại</FormLabel>
+                                <FormLabel>Ngày bắt đầu</FormLabel>
                                 <FormControl>
-                                    <select
-                                        {...field}
-                                        className="flex text-white h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                    >
-                                        <option value="">Chọn loại giải trí</option>
-                                        <option value="bowling">Bowling</option>
-                                        <option value="billiards">Billiards</option>
-                                        <option value="karaoke">Karaoke</option>
-                                        <option value="gym">Gym</option>
-                                        <option value="kidzone">Kid Zone</option>
-                                        <option value="restaurant">Restaurant</option>
-                                    </select>
+                                    <Input type="date" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -167,12 +156,12 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
 
                     <FormField
                         control={form.control}
-                        name="location"
+                        name="end_date"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Vị trí</FormLabel>
+                                <FormLabel>Ngày kết thúc</FormLabel>
                                 <FormControl>
-                                    <Input {...field} />
+                                    <Input type="date" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -195,17 +184,15 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
 
                     <FormField
                         control={form.control}
-                        name="price"
-                        render={({ field: { value, onChange, ...field } }) => (
+                        name="status"
+                        render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Giá (VNĐ)</FormLabel>
+                                <FormLabel>Trạng thái</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        type="number"
-                                        {...field}
-                                        value={value || ''}
-                                        onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
-                                    />
+                                    <select {...field} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                        <option value="active">Hoạt động</option>
+                                        <option value="inactive">Không hoạt động</option>
+                                    </select>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -214,12 +201,17 @@ export default function EditEnterClient({ entertainment }: { entertainment: Ente
 
                     <FormField
                         control={form.control}
-                        name="opening_hours"
+                        name="featured"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Giờ mở cửa</FormLabel>
+                                <FormLabel>Nổi bật</FormLabel>
                                 <FormControl>
-                                    <Input {...field} placeholder="VD: 08:00 - 22:00" />
+                                    <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        className="h-4 w-4"
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

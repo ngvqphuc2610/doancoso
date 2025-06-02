@@ -30,6 +30,9 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ status, releaseDate }: EmptyStateProps) {
+    // Debug output for status and release date
+    console.log(`EmptyState rendered with status: "${status}", releaseDate: "${releaseDate}"`);
+
     return (
         <div className="flex flex-col items-center justify-center py-12 px-4">
             <img
@@ -45,13 +48,16 @@ export function EmptyState({ status, releaseDate }: EmptyStateProps) {
                     ? `Phim sẽ khởi chiếu từ ngày ${new Date(releaseDate).toLocaleDateString('vi-VN')}`
                     : 'Vui lòng quay lại sau để xem lịch chiếu của phim này.'}
             </p>
+            <p className="text-xs text-gray-500 mt-2">
+                Status: {status || 'N/A'} | ID: {window.location.pathname.split('/').pop() || 'unknown'}
+            </p>
             {status === 'coming soon' && releaseDate && (
                 <div className="mt-6 flex items-center gap-2">
                     <span className="px-4 py-2 bg-red-600 text-white rounded-full text-sm">
                         Sắp chiếu
                     </span>
                     <span className="text-gray-400">
-                        ⌛ {Math.ceil((new Date(releaseDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} ngày nữa
+                        ⌛ {Math.max(0, Math.ceil((new Date(releaseDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} ngày nữa
                     </span>
                 </div>
             )}

@@ -55,26 +55,44 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         // Validate required fields
-        if (!body.start_time || !body.id_movie || !body.id_cinema) {
+        if (!body.start_time || !body.id_movie || !body.id_screen) {
             return NextResponse.json(
-                { success: false, message: 'Thời gian bắt đầu, phim và rạp là bắt buộc' },
+                { success: false, message: 'Thời gian bắt đầu, phim và phòng chiếu là bắt buộc' },
                 { status: 400 }
             );
         }
 
+        // Lấy id_cinema từ id_screen
+        const screenInfo = await query(
+            'SELECT id_cinema FROM screen WHERE id_screen = ?',
+            [body.id_screen]
+        ) as any[];
+
+        if (!screenInfo || screenInfo.length === 0) {
+            return NextResponse.json(
+                { success: false, message: 'Phòng chiếu không tồn tại' },
+                { status: 400 }
+            );
+        }
+
+        const id_cinema = screenInfo[0].id_cinema;
+
         // Thêm lịch chiếu mới vào database
         const result = await query(
-            `INSERT INTO SHOWTIMES
-             (id_movie, id_cinema, id_screen, start_time, end_time, price, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO showtimes
+             (id_movie, id_screen, start_time, end_time, show_date, price, format, language, subtitle, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 body.id_movie,
-                body.id_cinema,
-                body.id_screen || null,
+                body.id_screen,
                 body.start_time,
                 body.end_time || null,
+                body.show_date,
                 body.price || 0,
-                body.status || 'active'
+                body.format || '2D',
+                body.language || 'Tiếng Việt',
+                body.subtitle || 'Tiếng Anh',
+                body.status || 'available'
             ]
         );
 

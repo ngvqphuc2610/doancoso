@@ -93,7 +93,7 @@ export default function BannerManagementPage() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Quản lý Banner Trang Chủ</h1>
+                <h1 className="text-3xl font-bold text-dark">Quản lý Banner Trang Chủ</h1>
                 {!showForm && (
                     <button
                         onClick={handleAddNew}
@@ -124,17 +124,7 @@ export default function BannerManagementPage() {
                 />
             ) : (
                 <div className="space-y-6">
-                    {/* Instructions */}
-                    <div className="text-dark bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h3 className="font-bold text-blue-800 mb-2">Hướng dẫn sử dụng:</h3>
-                        <ul className="text-blue-700 text-sm space-y-1">
-                            <li>• Chọn phim từ danh sách để tạo banner cho trang chủ</li>
-                            <li>• Phim có banner image sẽ hiển thị đẹp hơn (tỷ lệ 16:9)</li>
-                            <li>• Phim chỉ có poster sẽ sử dụng blur effect</li>
-                            <li>• Thứ tự hiển thị: số nhỏ hơn sẽ hiển thị trước</li>
-                            <li>• Chỉ banner được kích hoạt mới hiển thị trên trang chủ</li>
-                        </ul>
-                    </div>
+                   
 
                     <BannerList
                         onEdit={handleEdit}

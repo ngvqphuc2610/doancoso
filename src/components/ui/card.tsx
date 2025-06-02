@@ -102,7 +102,7 @@ const CardProduct = React.forwardRef<HTMLDivElement, ProductCardProps>(
       {/* product */}
       <div className="flex gap-4 items-stretch min-h-[187px] w-full">
         {/* Image Section */}
-        <div className="w-36 h-[187px] bg-[#EFEFEF] rounded-sm flex-shrink-0">
+        <div className="w-36 h-[187px] bg-gray-600 rounded-sm flex-shrink-0">
           <div className="relative w-full h-full group  overflow-hidden">
             <img
               src={image}

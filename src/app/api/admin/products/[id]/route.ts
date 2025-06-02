@@ -4,24 +4,19 @@ import { NextRequest, NextResponse } from 'next/server';
 // Get API URL from environment variables with fallback
 const API_URL = 'http://localhost:5000';
 
-// Hàm helper để lấy id từ params an toàn
-async function getParams(params: { id: string }) {
-    return params;
-}
-
 // Route để lấy chi tiết một sản phẩm
 export async function GET(
     req: NextRequest,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await getParams(context.params);
+        const { id } = await context.params;
         const response = await axios.get(`${API_URL}/api/admin/products/${id}`, {
             timeout: 5000
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        const { id } = await getParams(context.params);
+        const { id } = await context.params;
         console.error(`Error fetching product ${id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể tải sản phẩm' },

@@ -143,7 +143,13 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
                 ) : error ? (
                     <ErrorState error={error} />
                 ) : showtimes.length === 0 ? (
-                    <EmptyState status={status} releaseDate={releaseDate} />
+                    <>
+                        <div className="p-2 mb-4 text-xs text-gray-500 bg-gray-800 rounded">
+                            <p>Debug: Movie ID {movieId}, Status: {status}, Release: {releaseDate || 'N/A'}</p>
+                            <p>Showtimes array length: {showtimes.length}</p>
+                        </div>
+                        <EmptyState status={status} releaseDate={releaseDate} />
+                    </>
                 ) : (
                     <>
                         {/* Chọn ngày */}
@@ -167,18 +173,36 @@ export default function MovieShowtimes({ movieId, status, releaseDate, movieTitl
                                     />
                                 </div>
 
-                                <CinemaList
-                                    cinemas={showtimes
-                                        .find(st => st.date === selectedDate)
-                                        ?.cinemas.filter(cinema => {
-                                            const cinemaCity = cinemaToCity[cinema.name];
-                                            return !selectedCity || cinemaCity === selectedCity;
-                                        }) || []}
-                                    selectedCinema={selectedCinema}
-                                    selectedTime={selectedTime}
-                                    onCinemaSelect={handleCinemaSelection}
-                                    onTimeSelect={handleTimeSelection}
-                                />
+                                {(() => {
+                                    const dateShowtimes = showtimes.find(st => st.date === selectedDate);
+                                    const filteredCinemas = dateShowtimes?.cinemas.filter(cinema => {
+                                        const cinemaCity = cinemaToCity[cinema.name];
+                                        return !selectedCity || cinemaCity === selectedCity;
+                                    }) || [];
+
+                                    if (filteredCinemas.length === 0 && selectedCity) {
+                                        return (
+                                            <div className="p-6 bg-gray-800 rounded-lg text-center my-4">
+                                                <p className="text-lg text-white">
+                                                    Không có lịch chiếu tại {selectedCity} cho ngày {selectedDate.split('-').reverse().join('/')}
+                                                </p>
+                                                <p className="text-sm text-gray-400 mt-2">
+                                                    Vui lòng chọn ngày khác hoặc thành phố khác
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <CinemaList
+                                            cinemas={filteredCinemas}
+                                            selectedCinema={selectedCinema}
+                                            selectedTime={selectedTime}
+                                            onCinemaSelect={handleCinemaSelection}
+                                            onTimeSelect={handleTimeSelection}
+                                        />
+                                    );
+                                })()}
 
                                 {/* Chọn loại vé */}
                                 {selectedTime && (
