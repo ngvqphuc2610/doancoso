@@ -1,6 +1,7 @@
 npm i
 
-npm run dev
+npm run dev trên môi trường dev
+npm run build && npm run start trên môi trường production
 
 NEXT_PUBLIC_TMDB_API_KEY= //lấy trên themoviedb
 
@@ -23,4 +24,10 @@ Sử dụng Tailwind, Radix ui
 I18n để translate trang
 Sử dụng qrcode để xuất ra qr form thanh toán
 
-Sử dụng websocket để update trạng thái ghế ngồi
+    Sử dụng websocket để update trạng thái ghế ngồi
+        nodemailer để gửi mail
+        zod để validate form
+        swiper để slider
+        react-i18next để translate
+        react-hot-toast để hiển thị thông báo
+        react-icons để hiển thị icon

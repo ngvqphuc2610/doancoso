@@ -50,3 +50,27 @@ next-env.d.ts
 !/public/uploads/entertainment/.gitkeep
 # Legacy product uploads (to be migrated)
 /public/uploads/product_*
+
+# Test files and temporary files
+test-*.md
+test-*.js
+test-*.html
+**/test-*
+**/*test*
+**/*debug*
+**/*temp*
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+.DS_Store

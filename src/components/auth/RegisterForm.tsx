@@ -14,7 +14,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const [formData, setFormData] = useState({
     fullname: '',
     birthday: '',
@@ -25,6 +25,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
     password: '',
     confirmPassword: ''
   });
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const { register } = useAuth();
 
@@ -34,7 +35,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       ...formData,
       [name]: value
     });
-    
+
     // Clear specific field error when user starts typing
     if (errors[name]) {
       setErrors({
@@ -42,7 +43,22 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
         [name]: ''
       });
     }
-    
+
+    // Clear general message
+    if (message) setMessage('');
+  };
+
+  const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAgreeToTerms(e.target.checked);
+
+    // Clear terms error when user checks the box
+    if (e.target.checked && errors.terms) {
+      setErrors({
+        ...errors,
+        terms: ''
+      });
+    }
+
     // Clear general message
     if (message) setMessage('');
   };
@@ -112,13 +128,18 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
     }
 
+    // Validate terms agreement
+    if (!agreeToTerms) {
+      newErrors.terms = 'Bạn phải đồng ý với các điều khoản và điều kiện';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -139,6 +160,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           password: '',
           confirmPassword: ''
         });
+        setAgreeToTerms(false);
         if (onSuccess) onSuccess();
       } else {
         setMessage(result.message);
@@ -154,11 +176,10 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6 text-dark">
       {/* Message display */}
       {message && (
-        <div className={`p-3 rounded text-sm ${
-          message.includes('thành công') 
-            ? 'bg-green-100 text-green-700' 
-            : 'bg-red-100 text-red-700'
-        }`}>
+        <div className={`p-3 rounded text-sm ${message.includes('thành công')
+          ? 'bg-green-100 text-green-700'
+          : 'bg-red-100 text-red-700'
+          }`}>
           {message}
         </div>
       )}
@@ -173,9 +194,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           name="fullname"
           value={formData.fullname}
           onChange={handleChange}
-          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.fullname ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.fullname ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder="Nhập họ và tên"
         />
         {errors.fullname && <p className="text-red-500 text-sm mt-1">{errors.fullname}</p>}
@@ -191,9 +211,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           name="birthday"
           value={formData.birthday}
           onChange={handleChange}
-          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.birthday ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.birthday ? 'border-red-500' : 'border-gray-300'
+            }`}
         />
         {errors.birthday && <p className="text-red-500 text-sm mt-1">{errors.birthday}</p>}
       </div>
@@ -208,9 +227,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           name="phone"
           value={formData.phone}
           onChange={handleChange}
-          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.phone ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder="Nhập số điện thoại"
         />
         {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
@@ -226,9 +244,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           name="username"
           value={formData.username}
           onChange={handleChange}
-          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.username ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.username ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder="Nhập tên đăng nhập"
         />
         {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
@@ -244,9 +261,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           name="cmnd"
           value={formData.cmnd}
           onChange={handleChange}
-          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.cmnd ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.cmnd ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder="Nhập số CCCD/CMND"
         />
         {errors.cmnd && <p className="text-red-500 text-sm mt-1">{errors.cmnd}</p>}
@@ -262,9 +278,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.email ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder="Nhập email"
         />
         {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -281,9 +296,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.password ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Nhập mật khẩu"
           />
           <button
@@ -308,9 +322,8 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
-            className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Nhập lại mật khẩu"
           />
           <button
@@ -324,17 +337,32 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
         {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
       </div>
 
-      <div className="flex items-start gap-2">
-        <input
-          type="checkbox"
-          id="terms"
-          className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-          required
-        />
-        <label htmlFor="terms" className="block text-sm text-gray-700">
-          Tôi đồng ý với các điều khoản và điều kiện của Cinestar
-        </label>
+      <div className="space-y-2">
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={agreeToTerms}
+            onChange={handleTermsChange}
+            className={`mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded cursor-pointer ${errors.terms ? 'border-red-500' : 'border-gray-300'
+              }`}
+            required
+          />
+          <label htmlFor="terms" className="block text-sm text-gray-700 cursor-pointer">
+            Tôi đồng ý với{' '}
+            <a
+              href="#"
+              target="_blank"
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              các điều khoản và điều kiện
+            </a>{' '}
+            của CineStar <span className="text-red-500">*</span>
+          </label>
+        </div>
+        {errors.terms && <p className="text-red-500 text-sm">{errors.terms}</p>}
       </div>
+
 
       <button
         type="submit"
@@ -343,6 +371,11 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
       >
         {loading ? 'ĐANG ĐĂNG KÝ...' : 'ĐĂNG KÝ'}
       </button>
+
+      <div className='flex justify-center'>
+        <label>Bạn đã có tài khoản?<a href="/login" className="text-blue-600 hover:text-blue-800 underline"> Đăng nhập ngay!</a></label>
+
+      </div>
     </form>
   );
 }

@@ -108,7 +108,7 @@ export default function QuickBookingForm() {
 
       try {
         // Fetch cinemas
-        const cinemasResponse = await fetch('/api/admin/cinema');
+        const cinemasResponse = await fetch('/api/cinemas');
         const cinemasData = await cinemasResponse.json();
 
         if (cinemasData.success) {
@@ -131,9 +131,10 @@ export default function QuickBookingForm() {
 
         // Fetch showtimes with joined data - try detailed API first, fallback to basic API
         let showtimesData;
-        try {
+        try {          // Thêm timestamp để tránh cache
+          const timestamp = new Date().getTime();
           console.log('🔄 Fetching showtimes from /api/showtimes/all-with-details');
-          const showtimesResponse = await fetch('/api/showtimes/all-with-details');
+          const showtimesResponse = await fetch(`/api/showtimes/all-with-details?_=${timestamp}`);
           console.log('📡 Showtimes response status:', showtimesResponse.status);
 
           if (showtimesResponse.ok) {

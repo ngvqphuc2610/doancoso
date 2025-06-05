@@ -10,10 +10,10 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import './MovieCard.scss';
 import { FaEarthAsia } from "react-icons/fa6";
 import { useTranslation } from 'react-i18next';
 import { createMovieSlug } from '@/lib/utils';
+import '@/components/movies/MovieCard.scss';
 
 export interface MovieProps {
   id: string;

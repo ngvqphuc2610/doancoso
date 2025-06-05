@@ -86,11 +86,12 @@ export default function CinemaList({
                                                     <Button
                                                         key={time.id}
                                                         onClick={() => onTimeSelect(time.id)}
-                                                        variant={selectedTime === time.id ? "custom13" : "custom12"}
-                                                        size="custom12"
+                                                        variant={selectedTime === time.id ? "custom2" : "custom3"}
+                                                        size="sm"
+                                                        width="custom3"    
                                                         disabled={time.available_seats === 0}
                                                         title={time.available_seats === 0 ? 'Hết ghế' : `Còn ${time.available_seats} ghế trống`}
-                                                        className="text-xs sm:text-sm"
+                                                        className="text-xs sm:text-sm gap-2 "
                                                     >
                                                         {time.time}
                                                     </Button>

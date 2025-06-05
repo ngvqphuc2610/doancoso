@@ -16,7 +16,7 @@ CREATE TABLE `bookings` (
   `id_promotions` int DEFAULT NULL,
   `booking_date` datetime DEFAULT CURRENT_TIMESTAMP,
   `total_amount` decimal(10,2) NOT NULL,
-  `payment_status` varchar(20) DEFAULT 'unpaid',
+  `payment_status` varchar(20) DEFAULT 'unpaid',t
   `booking_status` varchar(20) DEFAULT 'pending',
   `booking_code` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id_booking`),
