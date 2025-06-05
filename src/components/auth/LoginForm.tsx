@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,8 +17,23 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     username: '',
     password: ''
   });
+  const [rememberPassword, setRememberPassword] = useState(false);
 
   const { login } = useAuth();
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('savedCredentials');
+    if (savedCredentials) {
+      try {
+        const { username, password, remember } = JSON.parse(savedCredentials);
+        setFormData({ username, password });
+        setRememberPassword(remember);
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+      }
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -56,6 +71,19 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     try {
       const result = await login(formData.username, formData.password);
       if (result.success) {
+        // Save credentials if remember password is checked
+        if (rememberPassword) {
+          const credentialsToSave = {
+            username: formData.username,
+            password: formData.password,
+            remember: true
+          };
+          localStorage.setItem('savedCredentials', JSON.stringify(credentialsToSave));
+        } else {
+          // Remove saved credentials if remember is unchecked
+          localStorage.removeItem('savedCredentials');
+        }
+
         // AuthContext sẽ tự động chuyển hướng, không cần làm gì thêm
         if (onSuccess) onSuccess();
       } else {
@@ -122,9 +150,11 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         <input
           type="checkbox"
           id="remember"
+          checked={rememberPassword}
+          onChange={(e) => setRememberPassword(e.target.checked)}
           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
         />
-        <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+        <label htmlFor="remember" className="ml-2 block text-sm text-gray-700 cursor-pointer">
           Lưu mật khẩu đăng nhập
         </label>
       </div>

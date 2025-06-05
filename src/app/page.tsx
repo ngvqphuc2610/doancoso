@@ -6,14 +6,12 @@ import QuickBookingForm from '@/components/home/QuickBookingForm';
 import MovieCarousel from '@/components/movies/MovieCarousel';
 import { useState, useEffect } from 'react';
 import { MovieProps } from '@/components/movies/MovieCard';
-import { getNowShowingMovies, getComingSoonMovies } from '@/lib/film';
 import ProCarousel from '../components/promotions/ProCarousel';
 import MembershipCarousel from '@/components/membership/MembershipCarousel';
 import TaimentCarousel from '@/components/taiment/TaimentCarousel';
 import ContactPage from '../components/contact/ContactPage';
 import { useTranslation } from 'react-i18next';
-import bannerImage1 from '../../public/images/banner.png';
-import bannerImage2 from '../../public/images/banner2.jpg';
+import { getNowShowingMovies, getComingSoonMovies } from '@/lib/film';
 import { BannerItem } from '@/components/home/HeroBanner';
 
 

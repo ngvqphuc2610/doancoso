@@ -22,7 +22,7 @@ export default function ContactIcon({ className = '' }: ContactIconProps) {
         <div className={`space-y-6 ${className}`}>
             <h1 className=" text-4xl font-bold text-white text-center mb-8">{t('contact.title')}</h1>
             <div className='flex justify-center items-center flex-col'>
-                <Link href="https://www.facebook.com/cinestarcinemasvietnam/" target="_blank" rel="noopener noreferrer">
+                <Link href="https://www.facebook.com/phuc.nguyenvq" target="_blank" rel="noopener noreferrer">
                     <Button
                         variant="custom4"
                         width="custom4"
