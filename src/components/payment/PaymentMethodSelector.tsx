@@ -134,7 +134,7 @@ export default function PaymentMethodSelector({
           <div>
             <p><strong>Ghế:</strong> {bookingInfo.selectedSeats.join(', ')}</p>
             <p><strong>Khách hàng:</strong> {bookingInfo.customerName}</p>
-            <p><strong>Mã đặt vé:</strong> {bookingInfo.bookingCode}</p>
+            <p><strong>Mã đặt vé: </strong> {bookingInfo.bookingCode}</p>
           </div>
         </div>
         <div className="border-t mt-3 pt-3">

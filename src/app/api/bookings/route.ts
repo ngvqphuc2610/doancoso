@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
         // Extract data from the actual structure
         const {
             customerInfo,
+            memberInfo,
             showtimeId,
             selectedSeats,
             ticketInfo,
@@ -40,23 +41,36 @@ export async function POST(request: NextRequest) {
             paymentMethod,
             transactionId,
             bookingCode,
-            status
+            status,
+            paymentStatus
         } = body;
+
+        // Generate booking code if not provided
+        const generateBookingCode = (): string => {
+            const timestamp = Date.now().toString();
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            return `CS${timestamp.slice(-6)}${random}`;
+        };
+
+        const finalBookingCode = bookingCode || generateBookingCode();
 
         // Extract customer details
         const customer_name = customerInfo?.name;
         const customer_email = customerInfo?.email;
         const customer_phone = customerInfo?.phone;
         const id_users = customerInfo?.id_users;
+        const id_member = memberInfo?.id_member || null;
+        const member_name = memberInfo?.full_name;
         const id_showtime = showtimeId;
         const selected_seats = selectedSeats;
         const total_amount = totalPrice;
         const payment_method = paymentMethod;
         const transaction_id = transactionId;
-        const booking_code = bookingCode;
+        const booking_code = finalBookingCode;
 
         console.log('🔍 Field validation:', {
             customer_name: !!customer_name,
+            member_name: !!member_name,
             customer_email: !!customer_email,
             customer_phone: !!customer_phone,
             id_showtime: !!id_showtime,
@@ -72,6 +86,7 @@ export async function POST(request: NextRequest) {
                 error: 'Missing required booking information',
                 received_fields: {
                     customer_name: !!customer_name,
+                    member_name: !!member_name,
                     customer_email: !!customer_email,
                     customer_phone: !!customer_phone,
                     id_showtime: !!id_showtime,
@@ -91,6 +106,7 @@ export async function POST(request: NextRequest) {
 
             console.log('💾 Creating booking with data:', {
                 id_users,
+                id_member,
                 id_showtime,
                 total_amount,
                 booking_code,
@@ -100,14 +116,21 @@ export async function POST(request: NextRequest) {
             });
 
             // 1. Create booking record
-            // Note: Database schema doesn't have customer fields directly in bookings table
-            // For now, we'll create booking without user reference (guest booking)
             const [bookingResult] = await connection.execute(
                 `INSERT INTO bookings
-                 (id_users,id_showtime, total_amount, payment_status, booking_status, booking_code)
-                 VALUES (?,?, ?, ?, ?, ?)`,
-                [id_users || null, id_showtime, total_amount, 'unpaid', status || 'pending', booking_code || null]
+                 (id_users, id_member, id_showtime, total_amount, payment_status, booking_status, booking_code, booking_date)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+                [id_users || null, id_member || null, id_showtime, total_amount, 'unpaid', status || 'pending', booking_code]
             );
+
+            console.log('✅ Booking inserted with ID:', (bookingResult as any).insertId);
+
+            // Verify booking_code was saved
+            const [verifyResult] = await connection.execute(
+                `SELECT id_booking, booking_code FROM bookings WHERE id_booking = ?`,
+                [(bookingResult as any).insertId]
+            );
+            console.log('🔍 Verification - booking saved:', verifyResult);
 
             const bookingId = (bookingResult as any).insertId;
 
@@ -207,6 +230,7 @@ export async function POST(request: NextRequest) {
             }
 
             // 4. Get showtime info for response
+            //4. lấy thông tin của showtime
             const showtimeInfo = await getShowtimeInfo(connection, id_showtime);
             console.log('✅ Booking created successfully');
 
@@ -219,7 +243,9 @@ export async function POST(request: NextRequest) {
                 message: 'Booking created successfully',
                 data: {
                     booking_id: bookingId,
+                    booking_code: booking_code,
                     booking_status: status || 'pending',
+                    payment_status: 'unpaid',
                     seats: selected_seats,
                     showtime_info: {
                         id: id_showtime,
@@ -229,6 +255,13 @@ export async function POST(request: NextRequest) {
                         start_time: showtimeInfo?.start_time,
                         show_date: showtimeInfo?.show_date
                     }
+                },
+                booking: {
+                    bookingCode: booking_code,
+                    transactionId: transaction_id || `TXN_${bookingId}`,
+                    tickets: selected_seats.map((seat: string) => ({
+                        ticketCode: `${booking_code}_${seat}`
+                    }))
                 }
             }, { status: 201 });
 
@@ -247,6 +280,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
+// GET - Lấy danh sách bookings
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);

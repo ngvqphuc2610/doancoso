@@ -236,7 +236,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
 
                 {/* Member info */}
                 {profile?.member && (
-                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg text-dark">
                         <h3 className="font-medium text-blue-900 mb-2">Thông tin thành viên</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div>

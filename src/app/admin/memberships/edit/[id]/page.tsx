@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ interface EditMembershipPageProps {
 
 export default function EditMembershipPage({ params }: EditMembershipPageProps) {
     const router = useRouter();
-    const [id, setId] = useState<string>('');
+    const { id } = use(params);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -63,18 +63,8 @@ export default function EditMembershipPage({ params }: EditMembershipPageProps) 
         status: 'active'
     });
 
-    // Resolve params
-    useEffect(() => {
-        const resolveParams = async () => {
-            const resolvedParams = await params;
-            setId(resolvedParams.id);
-        };
-        resolveParams();
-    }, [params]);
-
     // Fetch membership data
     useEffect(() => {
-        if (!id) return;
 
         const fetchMembership = async () => {
             try {

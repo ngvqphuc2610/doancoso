@@ -28,17 +28,18 @@ export async function GET(
 // Route để cập nhật thông tin khuyến mãi
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const body = await req.json();
         const response = await axios.put(`${API_URL}/api/admin/promotions/${id}`, body, {
             timeout: 5000
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error updating promotion ${params.id}:`, error.message);
+        const { id } = await params;
+        console.error(`Error updating promotion ${id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể cập nhật thông tin khuyến mãi' },
             { status: error.response?.status || 500 }
@@ -49,16 +50,17 @@ export async function PUT(
 // Route để xóa khuyến mãi
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const response = await axios.delete(`${API_URL}/api/admin/promotions/${id}`, {
             timeout: 5000
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error deleting promotion ${params.id}:`, error.message);
+        const { id } = await params;
+        console.error(`Error deleting promotion ${id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể xóa khuyến mãi' },
             { status: error.response?.status || 500 }
@@ -69,17 +71,18 @@ export async function DELETE(
 // Route để cập nhật trạng thái khuyến mãi (PATCH)
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         const body = await req.json();
         const response = await axios.patch(`${API_URL}/api/admin/promotions/${id}`, body, {
             timeout: 5000
         });
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error(`Error updating promotion status ${params.id}:`, error.message);
+        const { id } = await params;
+        console.error(`Error updating promotion status ${id}:`, error.message);
         return NextResponse.json(
             { success: false, message: 'Không thể cập nhật trạng thái khuyến mãi' },
             { status: error.response?.status || 500 }

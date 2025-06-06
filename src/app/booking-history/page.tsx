@@ -240,10 +240,10 @@ export default function BookingHistoryPage() {
                                                     {booking.products.map((product, index) => (
                                                         <div key={index} className="flex justify-between text-sm">
                                                             <span className="text-gray-600">
-                                                                {product.name} x{product.quantity}
+                                                                {product.name} x{product.quantity}  
                                                             </span>
                                                             <span className="text-gray-900">
-                                                                {product.totalPrice.toLocaleString('vi-VN')}đ
+                                                                {product.totalPrice.toLocaleString('vi-VN')}đ 
                                                             </span>
                                                         </div>
                                                     ))}
