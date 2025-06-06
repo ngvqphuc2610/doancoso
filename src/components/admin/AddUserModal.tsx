@@ -209,7 +209,7 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
                     </div>
 
                     {/* Address */}
-                    <div className="mt-4">
+                    <div className="mt-4 text-dark">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Địa chỉ
                         </label>

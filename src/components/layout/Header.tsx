@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -23,8 +24,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const [cinemaList, setCinemaList] = useState<Cinema[]>([]);
   const { user, logout, isAuthenticated } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch cinemas on component mount
   useEffect(() => {
@@ -46,6 +49,17 @@ export default function Header() {
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
   const menuItems = [
@@ -135,14 +149,18 @@ export default function Header() {
 
         {/* Search and location */}
         <div className="flex items-center gap-2">
-          <div className="relative hidden md:block">
+          <form onSubmit={handleSearch} className="relative hidden md:block">
             <Input
               type="search"
               placeholder={t('header.search')}
+              value={searchQuery}
+              onChange={handleSearchInputChange}
               className="bg-white text-black pl-5 pr-9 py-1 rounded-full w-[250px] h-[40px]"
             />
-            <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          </div>
+            <button type="submit" className="absolute right-2.5 top-2.5">
+              <Search className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+            </button>
+          </form>
           <div className="flex items-center gap-4 ">
             {isAuthenticated() ? (
               <div className="flex items-center gap-2 pl-7">

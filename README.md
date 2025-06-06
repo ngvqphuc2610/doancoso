@@ -31,3 +31,14 @@ Sử dụng qrcode để xuất ra qr form thanh toán
         react-i18next để translate
         react-hot-toast để hiển thị thông báo
         react-icons để hiển thị icon
+
+    🔄 Cấu hình Email cho tính năng Forgot Password
+
+        ##  Quy trình hoạt động
+
+        ```
+        1. User nhập email → API tạo reset_token + expiry
+        2. Lưu vào DB → Gửi email chứa link reset
+        3. User click link → Kiểm tra token hợp lệ & chưa hết hạn  
+        4. Đặt lại mật khẩu → Xóa token khỏi DB
+        ```
