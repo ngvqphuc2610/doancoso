@@ -214,7 +214,7 @@ export default function ProfileInfo({ profile }: ProfileInfoProps) {
                 </div>
 
                 {/* Địa chỉ */}
-                <div className="mt-6">
+                <div className="mt-6 text-dark">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Địa chỉ
                     </label>

@@ -105,8 +105,8 @@ export default function AdminProductPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-6">
+        <div className="container mx-auto px-4 py-8 text-dark">
+            <div className="flex justify-between items-center mb-6 ">
                 <h1 className="text-3xl font-bold">Quản lý sản phẩm</h1>
                 <Link href="/admin/products/add">
                     <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">

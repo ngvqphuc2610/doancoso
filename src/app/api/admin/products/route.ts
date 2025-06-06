@@ -51,25 +51,31 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         // Validate required fields
-        if (!body.title) {
+        if (!body.product_name) {
             return NextResponse.json(
                 { success: false, message: 'Tên sản phẩm là bắt buộc' },
                 { status: 400 }
             );
         }
 
+        if (!body.price) {
+            return NextResponse.json(
+                { success: false, message: 'Giá sản phẩm là bắt buộc' },
+                { status: 400 }
+            );
+        }
+
         // Thêm sản phẩm mới vào database
         const result = await query(
-            `INSERT INTO PRODUCT 
-             (title, description, price, image_url, type_id, status)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO product
+             (product_name, description, price, image, id_typeproduct)
+             VALUES (?, ?, ?, ?, ?)`,
             [
-                body.title,
+                body.product_name,
                 body.description || '',
-                body.price || 0,
-                body.image_url || '',
-                body.type_id || 1,
-                body.status || 'active'
+                body.price,
+                body.image || '',
+                body.id_typeproduct || 1
             ]
         );
 
