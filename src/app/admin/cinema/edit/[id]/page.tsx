@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
@@ -13,9 +13,9 @@ interface Cinema {
     status: string;
 }
 
-export default function EditCinema({ params }: { params: { id: string } }) {
+export default function EditCinema({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
-    const { id } = params;
+    const { id } = use(params);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import CryptoJS from 'crypto-js';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 
 interface BookingInfo {
   movieTitle: string;
@@ -24,6 +26,8 @@ interface PaymentResult {
 export const usePayment = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
+  const { user } = useAuth();
+  const { profile } = useProfile();
 
   const generateBookingCode = (): string => {
     const timestamp = Date.now().toString();
@@ -142,7 +146,11 @@ export const usePayment = () => {
           email: bookingInfo.customerEmail,
           phone: bookingInfo.customerPhone,
           agreeToTerms: true,
-          agreeToPromotions: false
+          agreeToPromotions: false,
+          id_users: user?.id || null
+        },
+        memberInfo: {
+          id_member: profile?.member?.id || null // Get member ID from profile
         },
         showtimeId: 14, // TODO: Get actual showtime ID from booking flow
         selectedSeats: bookingInfo.selectedSeats, // Keep as seat names like ["A10"]

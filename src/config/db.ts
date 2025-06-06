@@ -42,7 +42,9 @@ export default db;
 // Helper function cho các truy vấn với retry logic
 export async function query(sql: string, params?: any[], retries = 2): Promise<any> {
     try {
-        const [rows] = await db.execute(sql, params);
+        // Đảm bảo params luôn là array, không phải undefined
+        const queryParams = params || [];
+        const [rows] = await db.execute(sql, queryParams);
         return rows;
     } catch (err: any) {
         // Nếu lỗi là do mất kết nối và còn lần retry

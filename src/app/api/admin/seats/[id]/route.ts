@@ -4,10 +4,10 @@ import { query } from '@/lib/db';
 // Route để lấy chi tiết một ghế
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         console.log('[SEAT API] Fetching seat with ID:', id);
 
         const result = await query(`

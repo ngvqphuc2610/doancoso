@@ -105,7 +105,7 @@ export default function CheckoutContainer({ searchParams }: CheckoutContainerPro
         email: user.email || '',
         agreeToTerms: true, // Auto-agree for logged-in users
         agreeToPromotions: false,
-        id_users: user.id 
+        id_users: user.id
       });
 
       // Skip to step 2 (payment) if user is logged in and has complete info
@@ -206,6 +206,12 @@ export default function CheckoutContainer({ searchParams }: CheckoutContainerPro
     setIsProcessingPayment(true);
 
     try {
+      // Generate booking code if not already generated (for direct payment)
+      const finalBookingCode = bookingCode || generateBookingCode();
+      if (!bookingCode) {
+        setBookingCode(finalBookingCode);
+      }
+
       const bookingData = {
         customerInfo,
         showtimeId: parseInt(searchParams.showtime),
@@ -213,7 +219,9 @@ export default function CheckoutContainer({ searchParams }: CheckoutContainerPro
         ticketInfo,
         productInfo,
         totalPrice,
-        paymentMethod: selectedPaymentMethod
+        paymentMethod: selectedPaymentMethod,
+        bookingCode: finalBookingCode,
+        status: 'confirmed' // Set status to confirmed for successful payment
       };
 
       const response = await fetch('/api/bookings', {
@@ -248,6 +256,7 @@ export default function CheckoutContainer({ searchParams }: CheckoutContainerPro
 
   const handleQRPaymentSuccess = async () => {
     // Process the actual booking after QR payment success
+    // The booking code is already generated and stored in state
     await processPayment();
   };
 
