@@ -271,6 +271,7 @@ export default function AddShowtimePage() {
                         />
                     </div>
 
+                    {/* Cập nhật status options */}
                     <div>
                         <label className="block text-gray-700 font-semibold mb-2" htmlFor="status">
                             Trạng thái
@@ -283,8 +284,11 @@ export default function AddShowtimePage() {
                             className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                         >
                             <option value="available">Còn vé</option>
-                            <option value="sold out">Hết vé</option>
+                            <option value="sold_out">Hết vé</option>
                             <option value="cancelled">Đã hủy</option>
+                            <option value="upcoming">Sắp chiếu</option>
+                            <option value="active">Đang chiếu</option>
+                            {/* Không có option 'deleted' vì đây là trạng thái hệ thống */}
                         </select>
                     </div>
                 </div>

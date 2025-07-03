@@ -94,7 +94,7 @@ export async function PUT(
     }
 }
 
-// Route để xóa showtime
+// Route để "xóa" showtime (soft delete)
 export async function DELETE(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -102,16 +102,43 @@ export async function DELETE(
     try {
         const { id } = await params;
 
-        // Xóa showtime từ database
-        await query('DELETE FROM showtimes WHERE id_showtime = ?', [id]);
+        // Kiểm tra xem showtime có bookings không
+        const bookings = await query(`
+            SELECT COUNT(*) as booking_count 
+            FROM bookings 
+            WHERE id_showtime = ?
+        `, [id]) as any[];
 
-        return NextResponse.json({
-            success: true,
-            message: 'Xóa lịch chiếu thành công'
-        });
+        const bookingCount = bookings[0]?.booking_count || 0;
+
+        if (bookingCount > 0) {
+            // Nếu có bookings, thực hiện soft delete
+            await query(`
+                UPDATE showtimes 
+                SET status = 'deleted', deleted_at = NOW() 
+                WHERE id_showtime = ?
+            `, [id]);
+
+            return NextResponse.json({
+                success: true,
+                message: `Đã ẩn lịch chiếu (có ${bookingCount} vé đã đặt). Lịch chiếu sẽ không hiển thị trong hệ thống nhưng vẫn giữ lại dữ liệu booking.`,
+                action: 'soft_delete',
+                data: { bookingCount }
+            });
+        } else {
+            // Nếu không có bookings, thực hiện hard delete
+            await query('DELETE FROM showtimes WHERE id_showtime = ?', [id]);
+
+            return NextResponse.json({
+                success: true,
+                message: 'Xóa lịch chiếu thành công',
+                action: 'hard_delete'
+            });
+        }
     } catch (error: any) {
         const resolvedParams = await params;
         console.error(`Error deleting showtime ${resolvedParams.id}:`, error.message);
+
         return NextResponse.json(
             { success: false, message: 'Không thể xóa lịch chiếu' },
             { status: 500 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllMovies } from '@/lib/movieDb';
-
+import { createSuccessResponse, handleApiError } from '@/lib/apiUtils';
 /**
  * GET /api/movies - Lấy tất cả phim
  * Query params:
@@ -38,13 +38,7 @@ export async function GET(request: NextRequest) {
 
     } catch (error: any) {
         console.error('Error fetching movies:', error);
-        return NextResponse.json(
-            { 
-                success: false, 
-                message: `Lỗi khi lấy danh sách phim: ${error.message}`,
-                data: []
-            },
-            { status: 500 }
-        );
+        return handleApiError(error, 'Failed to fetch movies');
     }
 }
+

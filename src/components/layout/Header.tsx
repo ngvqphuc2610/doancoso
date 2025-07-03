@@ -85,7 +85,7 @@ export default function Header() {
         {/* Closing tag for the container */}
       </div>
 
-
+      {/* giao dien mobile */}
       {/* Main navigation */}
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-4">
@@ -98,12 +98,12 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="bg-cinestar-darkblue text-white">
               <nav className="flex flex-col gap-4 mt-8">
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.home')}</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('header.bookTicket')}</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('header.bookSnacks')}</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.showtimes')}</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.promotion')}</Link>
-                <Link href="/" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.membership')}</Link>
+                <Link href="#" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.home')}</Link>
+                <Link href="/movie" className="text-lg font-bold hover:text-cinestar-yellow">{t('header.bookTicket')}</Link>
+                <Link href="/popcorn-drink" className="text-lg font-bold hover:text-cinestar-yellow">{t('header.bookSnacks')}</Link>
+                <Link href="/showtimes" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.showtimes')}</Link>
+                <Link href="/promotions" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.promotion')}</Link>
+                <Link href="/membership" className="text-lg font-bold hover:text-cinestar-yellow">{t('navigation.membership')}</Link>
               </nav>
             </SheetContent>
           </Sheet>

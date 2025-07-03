@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { createSuccessResponse, createErrorResponse, handleApiError } from '@/lib/apiUtils';
+import { MOVIE, CINEMA, SCREEN, SHOWTIME } from '@/lib/constants';
 
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
-        const movieId = searchParams.get('movieId') || '43'; // Default to movie ID 43
+        const movieId = searchParams.get('movieId') || MOVIE.DEFAULT_ID.toString();
 
         console.log(`🔍 Kiểm tra chi tiết showtimes cho movie ID: ${movieId}`);
 
@@ -13,15 +15,10 @@ export async function GET(request: NextRequest) {
         const movieData = await query(movieCheckSql, [movieId]);
         
         if (!Array.isArray(movieData) || movieData.length === 0) {
-            return new NextResponse(
-                JSON.stringify({ 
-                    success: false, 
-                    error: `Không tìm thấy phim với ID: ${movieId}` 
-                }),
-                { 
-                    status: 404,
-                    headers: { 'Content-Type': 'application/json' }
-                }
+            return createErrorResponse(
+                `Không tìm thấy phim với ID: ${movieId}`,
+                404,
+                'NOT_FOUND'
             );
         }
         
@@ -67,12 +64,17 @@ export async function GET(request: NextRequest) {
             JOIN cinemas c ON scr.id_cinema = c.id_cinema
             JOIN movies m ON s.id_movie = m.id_movie
             WHERE s.id_movie = ?
-            AND s.status = 'available'
-            AND c.status = 'active'
-            AND scr.status = 'active'
+            AND s.status = ?
+            AND c.status = ?
+            AND scr.status = ?
         `;
         
-        const filteredShowtimes = await query(filteredShowtimesSql, [movieId]);
+        const filteredShowtimes = await query(filteredShowtimesSql, [
+            movieId, 
+            SHOWTIME.STATUS.AVAILABLE, 
+            CINEMA.STATUS.ACTIVE, 
+            SCREEN.STATUS.ACTIVE
+        ]);
         const filteredCount = Array.isArray(filteredShowtimes) ? filteredShowtimes.length : 0;
         
         console.log(`🔍 Sau khi lọc: ${filteredCount} showtimes`);
@@ -99,38 +101,20 @@ export async function GET(request: NextRequest) {
         console.log(`🔮 Từ hôm nay trở đi: ${futureCount} showtimes`);
 
         // Trả về kết quả phân tích
-        return new NextResponse(
-            JSON.stringify({
-                success: true,
-                movie: movieData[0],
-                analysis: {
-                    totalShowtimes: allShowtimes.length,
-                    filteredShowtimes: filteredCount,
-                    futureShowtimes: futureCount,
-                    lostInFiltering: allShowtimes.length - filteredCount,
-                    lostInFutureCheck: filteredCount - futureCount
-                },
-                allShowtimes: allShowtimes,
-                filteredShowtimes: filteredShowtimes,
-                futureShowtimes: futureShowtimes
-            }),
-            {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        return createSuccessResponse({
+            movie: movieData[0],
+            analysis: {
+                totalShowtimes: allShowtimes.length,
+                filteredShowtimes: filteredCount,
+                futureShowtimes: futureCount,
+                lostInFiltering: allShowtimes.length - filteredCount,
+                lostInFutureCheck: filteredCount - futureCount
+            },
+            allShowtimes: allShowtimes,
+            filteredShowtimes: filteredShowtimes,
+            futureShowtimes: futureShowtimes
+        });
     } catch (error) {
-        console.error('Error checking showtimes:', error);
-        return new NextResponse(
-            JSON.stringify({ success: false, error: 'Lỗi hệ thống khi kiểm tra showtimes' }),
-            {
-                status: 500,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        return handleApiError(error, 'Lỗi hệ thống khi kiểm tra showtimes');
     }
 }

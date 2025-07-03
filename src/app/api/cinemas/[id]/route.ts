@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { createSuccessResponse, handleApiError } from '@/lib/apiUtils';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -29,19 +30,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            data: cinemas[0]
-        });
+        return createSuccessResponse(cinemas[0]);
     } catch (error) {
         const resolvedParams = await params;
         console.error(`Error fetching cinema details for ID ${resolvedParams.id}:`, error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: 'Failed to fetch cinema details'
-            },
-            { status: 500 }
-        );
+        return handleApiError(error, 'Failed to fetch cinema details');
     }
 }
