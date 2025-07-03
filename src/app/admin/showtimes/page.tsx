@@ -18,6 +18,7 @@ interface Showtime {
     language: string;
     subtitle: string;
     status: string;
+    display_status?: string; // Thêm trường này để hiển thị trạng thái
     // Joined fields
     movie_title?: string;
     screen_name?: string;
@@ -35,6 +36,7 @@ export default function AdminShowtimesPage() {
         screen: 'all',
         cinema: 'all'
     });
+    const [showDeleted, setShowDeleted] = useState(false); // State để quản lý hiển thị lịch chiếu đã xóa
     const router = useRouter();
 
     // Fetch showtimes from the database
@@ -43,7 +45,13 @@ export default function AdminShowtimesPage() {
         setError(null);
         try {
             console.log('Calling API at: /api/admin/showtimes');
-            const response = await axios.get('/api/admin/showtimes', {
+            const params = new URLSearchParams({
+                // page: currentPage.toString(),
+                limit: '10',
+                include_deleted: showDeleted.toString()
+            });
+
+            const response = await axios.get(`/api/admin/showtimes?${params}`, {
                 ...apiConfig,
                 timeout: 10000
             });
@@ -72,6 +80,10 @@ export default function AdminShowtimesPage() {
     };
 
     // Load showtimes when the component mounts
+    useEffect(() => {
+        fetchShowtimes();
+    }, []);
+
     // Filter logic
     const applyFilters = () => {
         let filtered = [...showtimes];
@@ -130,6 +142,33 @@ export default function AdminShowtimesPage() {
         }
     };
 
+    // Toggle để hiển thị/ẩn deleted records
+    const handleToggleShowDeleted = () => {
+        setShowDeleted(prev => !prev);
+    };
+
+    // Restore function
+    const handleRestore = async (id: number) => {
+        if (confirm('Bạn có chắc muốn khôi phục lịch chiếu này?')) {
+            try {
+                const response = await fetch(`/api/admin/showtimes/${id}/restore`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Khôi phục thành công!');
+                    fetchShowtimes();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Có lỗi xảy ra khi khôi phục');
+            }
+        }
+    };
+
     // Get unique screen names for filter dropdown
     const getUniqueScreens = () => {
         const screens = showtimes
@@ -157,14 +196,15 @@ export default function AdminShowtimesPage() {
     }, [filters, showtimes]);
 
     return (
-        <div className="container mx-auto px-4 py-8">            <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-dark">Quản lý lịch chiếu</h1>
-            <Link href="/admin/showtimes/add">
-                <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
-                    Thêm lịch chiếu mới
-                </button>
-            </Link>
-        </div>
+        <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold text-dark">Quản lý lịch chiếu</h1>
+                <Link href="/admin/showtimes/add">
+                    <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">
+                        Thêm lịch chiếu mới
+                    </button>
+                </Link>
+            </div>
 
             {error && (
                 <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
@@ -236,6 +276,19 @@ export default function AdminShowtimesPage() {
                 </div>
             </div>
 
+            {/* Toggle để hiển thị/ẩn deleted records */}
+            <div className="mb-4 text-dark">
+                <label className="flex items-center">
+                    <input
+                        type="checkbox"
+                        checked={showDeleted}
+                        onChange={handleToggleShowDeleted}
+                        className="mr-2"
+                    />
+                    Hiển thị lịch chiếu đã xóa
+                </label>
+            </div>
+
             {loading ? (
                 <div className="text-center py-10">
                     <p className="text-xl">Đang tải danh sách lịch chiếu...</p>
@@ -276,30 +329,43 @@ export default function AdminShowtimesPage() {
                                 <td className="py-3 px-4 border-b text-dark">{showtime.end_time}</td>
                                 <td className="py-3 px-4 border-b text-dark">
                                     <span
-                                        className={`px-2 py-1 rounded ${showtime.status === 'available'
-                                            ? 'bg-green-100 text-green-800'
-                                            : showtime.status === 'cancelled'
-                                                ? 'bg-red-100 text-red-800'
+                                        className={`px-2 py-1 rounded ${showtime.display_status === 'deleted'
+                                            ? 'bg-red-100 text-red-800'
+                                            : showtime.status === 'available'
+                                                ? 'bg-green-100 text-green-800'
                                                 : 'bg-yellow-100 text-yellow-800'
                                             }`}
                                     >
-                                        {showtime.status === 'available' ? 'Còn vé' :
-                                            showtime.status === 'cancelled' ? 'Đã hủy' : 'Hết vé'}
+                                        {showtime.display_status === 'deleted' ? 'Đã xóa' :
+                                            showtime.status === 'available' ? 'Còn vé' :
+                                                showtime.status === 'sold_out' ? 'Hết vé' :
+                                                    'Đã hủy'}
                                     </span>
                                 </td>
                                 <td className="py-3 px-4 border-b">
                                     <div className="flex gap-2">
-                                        <Link href={`/admin/showtimes/edit/${showtime.id_showtime}`}>
-                                            <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded text-sm">
-                                                Sửa
+                                        {showtime.display_status === 'deleted' ? (
+                                            <button
+                                                onClick={() => handleRestore(showtime.id_showtime)}
+                                                className="text-green-600 hover:text-green-900 mr-2"
+                                            >
+                                                Khôi phục
                                             </button>
-                                        </Link>
-                                        <button
-                                            onClick={() => handleDeleteShowtime(showtime.id_showtime)}
-                                            className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
-                                        >
-                                            Xóa
-                                        </button>
+                                        ) : (
+                                            <>
+                                                <Link href={`/admin/showtimes/edit/${showtime.id_showtime}`}>
+                                                    <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded text-sm">
+                                                        Sửa
+                                                    </button>
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDeleteShowtime(showtime.id_showtime)}
+                                                    className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
+                                                >
+                                                    Xóa
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

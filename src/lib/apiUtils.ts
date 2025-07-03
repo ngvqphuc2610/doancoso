@@ -1,3 +1,78 @@
+import { NextResponse } from 'next/server';
+
+export type ApiError = {
+  code: string;
+  message: string;
+  details?: any;
+};
+
+export type ApiResponse<T = any> = {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+  message?: string;
+};
+
+/**
+ * Tạo response thành công chuẩn hóa
+ */
+export function createSuccessResponse<T>(data: T, message?: string) {
+  return NextResponse.json({
+    success: true,
+    data,
+    message
+  });
+}
+
+/**
+ * Tạo response lỗi chuẩn hóa
+ */
+export function createErrorResponse(
+  message: string,
+  status: number = 500,
+  code: string = 'INTERNAL_SERVER_ERROR',
+  details?: any
+) {
+  const error: ApiError = {
+    code,
+    message
+  };
+
+  if (process.env.NODE_ENV === 'development' && details) {
+    error.details = details;
+  }
+
+  return NextResponse.json(
+    {
+      success: false,
+      error,
+      message
+    },
+    { status }
+  );
+}
+
+/**
+ * Xử lý lỗi từ try-catch blocks
+ */
+export function handleApiError(error: unknown, defaultMessage: string = 'Đã xảy ra lỗi') {
+  console.error('API Error:', error);
+  
+  if (error instanceof Error) {
+    return createErrorResponse(
+      error.message || defaultMessage,
+      500,
+      'INTERNAL_SERVER_ERROR',
+      {
+        stack: error.stack,
+        name: error.name
+      }
+    );
+  }
+  
+  return createErrorResponse(defaultMessage);
+}
+
 /**
  * Tiện ích để quản lý các API endpoint trong ứng dụng
  */

@@ -246,7 +246,7 @@ export default function EditBookingPage({ params }: EditBookingPageProps) {
         </div>
 
         {/* Edit Form */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border p-6">
+        <div className="lg:col-span-2 text-dark bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Cập nhật trạng thái</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

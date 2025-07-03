@@ -99,7 +99,7 @@ export default function ImageUpload({
                 
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="custom8"
                     size="sm"
                     onClick={handleFileSelect}
                     disabled={disabled || uploading}
@@ -115,7 +115,7 @@ export default function ImageUpload({
                 {value && (
                     <Button
                         type="button"
-                        variant="outline"
+                        variant="custom8"
                         size="sm"
                         onClick={handleClearImage}
                         disabled={disabled || uploading}
